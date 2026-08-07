@@ -4,6 +4,10 @@
 
 **翻译说明：** SQLite 官方文档目前已进入**公共领域（Public Domain）**，允许自由复制、分发和再创作。
 
+## 项目背景
+
+此前 [Water-Run/llm-translate-documents](https://github.com/Water-Run/llm-translate-documents) 曾用大语言模型翻译过 SQLite 文档，但由于上下文限制，对 `capi3ref` 等大型文档在刚开始就中断了，目前还没有完整的翻译文件，所以做了本项目，对 SQLite 文档进行完整翻译。
+
 ## 现状与计划
 
 - 当前已翻译：*C-language Interface Specification for SQLite*（[capi3ref](https://sqlite.org/capi3ref.html)，SQLite 版本 3 的 C 语言接口规范）一页，见 `capi3ref_完整翻译.md`。

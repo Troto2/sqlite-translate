@@ -1,6 +1,7 @@
 # SQLite 文档中文翻译
 
-本项目是 [SQLite 官方文档](https://sqlite.org/) 的中文翻译仓库。
+本项目是 基于[SQLite 官方文档](https://sqlite.org/) 的ai中文翻译仓库。
+本项目开始时文档版本为3.53.4.
 
 **翻译说明：** SQLite 官方文档目前已进入**公共领域（Public Domain）**，允许自由复制、分发和再创作。
 

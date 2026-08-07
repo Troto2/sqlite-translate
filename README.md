@@ -6,7 +6,8 @@
 
 ## 项目背景
 
-此前 [Water-Run/llm-translate-documents](https://github.com/Water-Run/llm-translate-documents) 曾用大语言模型翻译过 SQLite 文档，但由于上下文限制，对 `capi3ref` 等大型文档在刚开始就中断了，目前还没有完整的翻译文件，所以做了本项目，对 SQLite 文档进行完整翻译。
+此前 [Water-Run/llm-translate-documents](https://github.com/Water-Run/llm-translate-documents) 曾用大语言模型翻译过 SQLite 文档，但由于上下文限制，对 `capi3ref` 等大型文档在刚开始就中断了。
+目前sqlite目前还没有完整的翻译文件(有些机翻也不完整)，所以做了本项目，对 SQLite 文档进行完整翻译。
 
 ## 现状与计划
 

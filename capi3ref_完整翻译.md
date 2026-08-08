@@ -1,6 +1,6 @@
 # C/C++ Interface For SQLite Version 3
 
-> 原文来源：https://sqlite.org/capi3ref.html（sqlite.org，全文照录，供翻译对照）
+> 原文来源：https://sqlite.org/capi3ref.html （sqlite.org，全文照录，供翻译对照）
 >
 > 本文件是通过分片成42个分片完成的，所以会存在一些问题。
 > 对象、常量、函数名一律保留英文。

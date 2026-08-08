@@ -1,2121 +1,1133 @@
+# C/C++ Interface For SQLite Version 3
 
-# C-language Interface Specification for SQLite
-
-This page is intended to be a precise and detailed specification.
-For a tutorial introduction, see instead:
-
-- SQLite In 3 Minutes Or Less and/or
-
-- the Introduction To The SQLite C/C++ Interface.
-
-This same content is also available split out into
-some smaller pages.
-
----
-
-## Experimental And Deprecated Interfaces
-
-SQLite interfaces can be subdivided into three categories:
-
-1. Stable
-
-2. Experimental
-
-3. Deprecated
-
-Stable interfaces will be maintained indefinitely in a backwards
-compatible way.  An application that uses only stable interfaces
-should always be able to relink against a newer version of SQLite
-without any changes.
-
-Experimental interfaces are subject to change.
-Applications that use experimental interfaces
-may need to be modified when upgrading to a newer SQLite release, though
-this is rare.
-When new interfaces are added to SQLite, they generally begin
-as experimental interfaces.  After an interface has been in use for
-a while and the developers are confident that the design of the interface
-is sound and worthy of long-term support, the interface is marked
-as stable.
-
-Deprecated interfaces have been superseded by better methods of
-accomplishing the same thing and should be avoided in new applications.
-Deprecated interfaces continue to be supported for the sake of
-backwards compatibility.  At some point in the future, it is possible
-that deprecated interfaces may be removed.
-
-Key points:
-
-- Experimental interfaces are subject to change and/or removal
-at any time.
-
-- Deprecated interfaces should not be used in new code and might
-be removed in some future release.
+> 原文来源：https://sqlite.org/capi3ref.html（sqlite.org，全文照录，供翻译对照）
+>
+> 本文件是通过分片成42个分片完成的，所以会存在一些问题。
+> 对象、常量、函数名一律保留英文，中文释义以本表为准，保证各分片术语统一。
+> 本表随翻译进度分批补充；原始英文清单见 ch_0_raw_capi3ref.md（只读参照）。
+> 后续分片涉及新名词时补入下表。
+>
+> 维护方式：每批翻译完成后，把该批新出现的专有名词追加到对应表格末尾
+> （用脚本按表格定位插入，勿手动打散表格）。
 
 ---
 
-## List Of Objects:
-
-- sqlite3
-
-- sqlite3_api_routines
-
-- sqlite3_backup
-
-- sqlite3_blob
-
-- sqlite3_context
-
-- sqlite3_data_directory
-
-- sqlite3_file
-
-- sqlite3_filename
-
-- sqlite3_index_info
-
-- sqlite3_int64
-
-- sqlite3_uint64
-
-- sqlite_int64
-
-- sqlite_uint64
-
-- sqlite3_io_methods
-
-- sqlite3_mem_methods
-
-- sqlite3_module
-
-- sqlite3_mutex
-
-- sqlite3_mutex_methods
-
-- sqlite3_pcache
-
-- sqlite3_pcache_methods2
-
-- sqlite3_pcache_page
-
-- sqlite3_snapshot
-
-- sqlite3_stmt
-
-- sqlite3_str
-
-- sqlite3_temp_directory
-
-- sqlite3_value
-
-- sqlite3_vfs
-
-- sqlite3_vtab
-
-- sqlite3_vtab_cursor
-
----
-
-## List Of Constants:
-
-Also available: list of error codes
-
-- SQLITE_ABORT
-
-- SQLITE_ABORT_ROLLBACK
-
-- SQLITE_ACCESS_EXISTS
-
-- SQLITE_ACCESS_READ
-
-- SQLITE_ACCESS_READWRITE
-
-- SQLITE_ALTER_TABLE
-
-- SQLITE_ANALYZE
-
-- SQLITE_ANY
-
-- SQLITE_ATTACH
-
-- SQLITE_AUTH
-
-- SQLITE_AUTH_USER
-
-- SQLITE_BLOB
-
-- SQLITE_BUSY
-
-- SQLITE_BUSY_RECOVERY
-
-- SQLITE_BUSY_SNAPSHOT
-
-- SQLITE_BUSY_TIMEOUT
-
-- SQLITE_CANTOPEN
-
-- SQLITE_CANTOPEN_CONVPATH
-
-- SQLITE_CANTOPEN_DIRTYWAL
-
-- SQLITE_CANTOPEN_FULLPATH
-
-- SQLITE_CANTOPEN_ISDIR
-
-- SQLITE_CANTOPEN_NOTEMPDIR
-
-- SQLITE_CANTOPEN_SYMLINK
-
-- SQLITE_CARRAY_BLOB
-
-- SQLITE_CARRAY_DOUBLE
-
-- SQLITE_CARRAY_INT32
-
-- SQLITE_CARRAY_INT64
-
-- SQLITE_CARRAY_TEXT
-
-- SQLITE_CHECKPOINT_FULL
-
-- SQLITE_CHECKPOINT_NOOP
-
-- SQLITE_CHECKPOINT_PASSIVE
-
-- SQLITE_CHECKPOINT_RESTART
-
-- SQLITE_CHECKPOINT_TRUNCATE
-
-- SQLITE_CONFIG_COVERING_INDEX_SCAN
-
-- SQLITE_CONFIG_GETMALLOC
-
-- SQLITE_CONFIG_GETMUTEX
-
-- SQLITE_CONFIG_GETPCACHE
-
-- SQLITE_CONFIG_GETPCACHE2
-
-- SQLITE_CONFIG_HEAP
-
-- SQLITE_CONFIG_LOG
-
-- SQLITE_CONFIG_LOOKASIDE
-
-- SQLITE_CONFIG_MALLOC
-
-- SQLITE_CONFIG_MEMDB_MAXSIZE
-
-- SQLITE_CONFIG_MEMSTATUS
-
-- SQLITE_CONFIG_MMAP_SIZE
-
-- SQLITE_CONFIG_MULTITHREAD
-
-- SQLITE_CONFIG_MUTEX
-
-- SQLITE_CONFIG_PAGECACHE
-
-- SQLITE_CONFIG_PCACHE
-
-- SQLITE_CONFIG_PCACHE2
-
-- SQLITE_CONFIG_PCACHE_HDRSZ
-
-- SQLITE_CONFIG_PMASZ
-
-- SQLITE_CONFIG_ROWID_IN_VIEW
-
-- SQLITE_CONFIG_SCRATCH
-
-- SQLITE_CONFIG_SERIALIZED
-
-- SQLITE_CONFIG_SINGLETHREAD
-
-- SQLITE_CONFIG_SMALL_MALLOC
-
-- SQLITE_CONFIG_SORTERREF_SIZE
-
-- SQLITE_CONFIG_SQLLOG
-
-- SQLITE_CONFIG_STMTJRNL_SPILL
-
-- SQLITE_CONFIG_URI
-
-- SQLITE_CONFIG_WIN32_HEAPSIZE
-
-- SQLITE_CONSTRAINT
-
-- SQLITE_CONSTRAINT_CHECK
-
-- SQLITE_CONSTRAINT_COMMITHOOK
-
-- SQLITE_CONSTRAINT_DATATYPE
-
-- SQLITE_CONSTRAINT_FOREIGNKEY
-
-- SQLITE_CONSTRAINT_FUNCTION
-
-- SQLITE_CONSTRAINT_NOTNULL
-
-- SQLITE_CONSTRAINT_PINNED
-
-- SQLITE_CONSTRAINT_PRIMARYKEY
-
-- SQLITE_CONSTRAINT_ROWID
-
-- SQLITE_CONSTRAINT_TRIGGER
-
-- SQLITE_CONSTRAINT_UNIQUE
-
-- SQLITE_CONSTRAINT_VTAB
-
-- SQLITE_COPY
-
-- SQLITE_CORRUPT
-
-- SQLITE_CORRUPT_INDEX
-
-- SQLITE_CORRUPT_SEQUENCE
-
-- SQLITE_CORRUPT_VTAB
-
-- SQLITE_CREATE_INDEX
-
-- SQLITE_CREATE_TABLE
-
-- SQLITE_CREATE_TEMP_INDEX
-
-- SQLITE_CREATE_TEMP_TABLE
-
-- SQLITE_CREATE_TEMP_TRIGGER
-
-- SQLITE_CREATE_TEMP_VIEW
-
-- SQLITE_CREATE_TRIGGER
-
-- SQLITE_CREATE_VIEW
-
-- SQLITE_CREATE_VTABLE
-
-- SQLITE_DBCONFIG_DEFENSIVE
-
-- SQLITE_DBCONFIG_DQS_DDL
-
-- SQLITE_DBCONFIG_DQS_DML
-
-- SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE
-
-- SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE
-
-- SQLITE_DBCONFIG_ENABLE_COMMENTS
-
-- SQLITE_DBCONFIG_ENABLE_FKEY
-
-- SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER
-
-- SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION
-
-- SQLITE_DBCONFIG_ENABLE_QPSG
-
-- SQLITE_DBCONFIG_ENABLE_TRIGGER
-
-- SQLITE_DBCONFIG_ENABLE_VIEW
-
-- SQLITE_DBCONFIG_FP_DIGITS
-
-- SQLITE_DBCONFIG_LEGACY_ALTER_TABLE
-
-- SQLITE_DBCONFIG_LEGACY_FILE_FORMAT
-
-- SQLITE_DBCONFIG_LOOKASIDE
-
-- SQLITE_DBCONFIG_MAINDBNAME
-
-- SQLITE_DBCONFIG_MAX
-
-- SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE
-
-- SQLITE_DBCONFIG_RESET_DATABASE
-
-- SQLITE_DBCONFIG_REVERSE_SCANORDER
-
-- SQLITE_DBCONFIG_STMT_SCANSTATUS
-
-- SQLITE_DBCONFIG_TRIGGER_EQP
-
-- SQLITE_DBCONFIG_TRUSTED_SCHEMA
-
-- SQLITE_DBCONFIG_WRITABLE_SCHEMA
-
-- SQLITE_DBSTATUS_CACHE_HIT
-
-- SQLITE_DBSTATUS_CACHE_MISS
-
-- SQLITE_DBSTATUS_CACHE_SPILL
-
-- SQLITE_DBSTATUS_CACHE_USED
-
-- SQLITE_DBSTATUS_CACHE_USED_SHARED
-
-- SQLITE_DBSTATUS_CACHE_WRITE
-
-- SQLITE_DBSTATUS_DEFERRED_FKS
-
-- SQLITE_DBSTATUS_LOOKASIDE_HIT
-
-- SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL
-
-- SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE
-
-- SQLITE_DBSTATUS_LOOKASIDE_USED
-
-- SQLITE_DBSTATUS_MAX
-
-- SQLITE_DBSTATUS_SCHEMA_USED
-
-- SQLITE_DBSTATUS_STMT_USED
-
-- SQLITE_DBSTATUS_TEMPBUF_SPILL
-
-- SQLITE_DELETE
-
-- SQLITE_DENY
-
-- SQLITE_DESERIALIZE_FREEONCLOSE
-
-- SQLITE_DESERIALIZE_READONLY
-
-- SQLITE_DESERIALIZE_RESIZEABLE
-
-- SQLITE_DETACH
-
-- SQLITE_DETERMINISTIC
-
-- SQLITE_DIRECTONLY
-
-- SQLITE_DONE
-
-- SQLITE_DROP_INDEX
-
-- SQLITE_DROP_TABLE
-
-- SQLITE_DROP_TEMP_INDEX
-
-- SQLITE_DROP_TEMP_TABLE
-
-- SQLITE_DROP_TEMP_TRIGGER
-
-- SQLITE_DROP_TEMP_VIEW
-
-- SQLITE_DROP_TRIGGER
-
-- SQLITE_DROP_VIEW
-
-- SQLITE_DROP_VTABLE
-
-- SQLITE_EMPTY
-
-- SQLITE_ERROR
-
-- SQLITE_ERROR_KEY
-
-- SQLITE_ERROR_MISSING_COLLSEQ
-
-- SQLITE_ERROR_RESERVESIZE
-
-- SQLITE_ERROR_RETRY
-
-- SQLITE_ERROR_SNAPSHOT
-
-- SQLITE_ERROR_UNABLE
-
-- SQLITE_FAIL
-
-- SQLITE_FCNTL_BEGIN_ATOMIC_WRITE
-
-- SQLITE_FCNTL_BLOCK_ON_CONNECT
-
-- SQLITE_FCNTL_BUSYHANDLER
-
-- SQLITE_FCNTL_CHUNK_SIZE
-
-- SQLITE_FCNTL_CKPT_DONE
-
-- SQLITE_FCNTL_CKPT_START
-
-- SQLITE_FCNTL_CKSM_FILE
-
-- SQLITE_FCNTL_COMMIT_ATOMIC_WRITE
-
-- SQLITE_FCNTL_COMMIT_PHASETWO
-
-- SQLITE_FCNTL_DATA_VERSION
-
-- SQLITE_FCNTL_EXTERNAL_READER
-
-- SQLITE_FCNTL_FILESTAT
-
-- SQLITE_FCNTL_FILE_POINTER
-
-- SQLITE_FCNTL_GET_LOCKPROXYFILE
-
-- SQLITE_FCNTL_HAS_MOVED
-
-- SQLITE_FCNTL_JOURNAL_POINTER
-
-- SQLITE_FCNTL_LAST_ERRNO
-
-- SQLITE_FCNTL_LOCKSTATE
-
-- SQLITE_FCNTL_LOCK_TIMEOUT
-
-- SQLITE_FCNTL_MMAP_SIZE
-
-- SQLITE_FCNTL_NULL_IO
-
-- SQLITE_FCNTL_OVERWRITE
-
-- SQLITE_FCNTL_PDB
-
-- SQLITE_FCNTL_PERSIST_WAL
-
-- SQLITE_FCNTL_POWERSAFE_OVERWRITE
-
-- SQLITE_FCNTL_PRAGMA
-
-- SQLITE_FCNTL_RBU
-
-- SQLITE_FCNTL_RESERVE_BYTES
-
-- SQLITE_FCNTL_RESET_CACHE
-
-- SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE
-
-- SQLITE_FCNTL_SET_LOCKPROXYFILE
-
-- SQLITE_FCNTL_SIZE_HINT
-
-- SQLITE_FCNTL_SIZE_LIMIT
-
-- SQLITE_FCNTL_SYNC
-
-- SQLITE_FCNTL_SYNC_OMITTED
-
-- SQLITE_FCNTL_TEMPFILENAME
-
-- SQLITE_FCNTL_TRACE
-
-- SQLITE_FCNTL_VFSNAME
-
-- SQLITE_FCNTL_VFS_POINTER
-
-- SQLITE_FCNTL_WAL_BLOCK
-
-- SQLITE_FCNTL_WIN32_AV_RETRY
-
-- SQLITE_FCNTL_WIN32_GET_HANDLE
-
-- SQLITE_FCNTL_WIN32_SET_HANDLE
-
-- SQLITE_FCNTL_ZIPVFS
-
-- SQLITE_FLOAT
-
-- SQLITE_FORMAT
-
-- SQLITE_FULL
-
-- SQLITE_FUNCTION
-
-- SQLITE_IGNORE
-
-- SQLITE_INDEX_CONSTRAINT_EQ
-
-- SQLITE_INDEX_CONSTRAINT_FUNCTION
-
-- SQLITE_INDEX_CONSTRAINT_GE
-
-- SQLITE_INDEX_CONSTRAINT_GLOB
-
-- SQLITE_INDEX_CONSTRAINT_GT
-
-- SQLITE_INDEX_CONSTRAINT_IS
-
-- SQLITE_INDEX_CONSTRAINT_ISNOT
-
-- SQLITE_INDEX_CONSTRAINT_ISNOTNULL
-
-- SQLITE_INDEX_CONSTRAINT_ISNULL
-
-- SQLITE_INDEX_CONSTRAINT_LE
-
-- SQLITE_INDEX_CONSTRAINT_LIKE
-
-- SQLITE_INDEX_CONSTRAINT_LIMIT
-
-- SQLITE_INDEX_CONSTRAINT_LT
-
-- SQLITE_INDEX_CONSTRAINT_MATCH
-
-- SQLITE_INDEX_CONSTRAINT_NE
-
-- SQLITE_INDEX_CONSTRAINT_OFFSET
-
-- SQLITE_INDEX_CONSTRAINT_REGEXP
-
-- SQLITE_INDEX_SCAN_HEX
-
-- SQLITE_INDEX_SCAN_UNIQUE
-
-- SQLITE_INNOCUOUS
-
-- SQLITE_INSERT
-
-- SQLITE_INTEGER
-
-- SQLITE_INTERNAL
-
-- SQLITE_INTERRUPT
-
-- SQLITE_IOCAP_ATOMIC
-
-- SQLITE_IOCAP_ATOMIC16K
-
-- SQLITE_IOCAP_ATOMIC1K
-
-- SQLITE_IOCAP_ATOMIC2K
-
-- SQLITE_IOCAP_ATOMIC32K
-
-- SQLITE_IOCAP_ATOMIC4K
-
-- SQLITE_IOCAP_ATOMIC512
-
-- SQLITE_IOCAP_ATOMIC64K
-
-- SQLITE_IOCAP_ATOMIC8K
-
-- SQLITE_IOCAP_BATCH_ATOMIC
-
-- SQLITE_IOCAP_IMMUTABLE
-
-- SQLITE_IOCAP_POWERSAFE_OVERWRITE
-
-- SQLITE_IOCAP_SAFE_APPEND
-
-- SQLITE_IOCAP_SEQUENTIAL
-
-- SQLITE_IOCAP_SUBPAGE_READ
-
-- SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN
-
-- SQLITE_IOERR
-
-- SQLITE_IOERR_ACCESS
-
-- SQLITE_IOERR_AUTH
-
-- SQLITE_IOERR_BADKEY
-
-- SQLITE_IOERR_BEGIN_ATOMIC
-
-- SQLITE_IOERR_BLOCKED
-
-- SQLITE_IOERR_CHECKRESERVEDLOCK
-
-- SQLITE_IOERR_CLOSE
-
-- SQLITE_IOERR_CODEC
-
-- SQLITE_IOERR_COMMIT_ATOMIC
-
-- SQLITE_IOERR_CONVPATH
-
-- SQLITE_IOERR_CORRUPTFS
-
-- SQLITE_IOERR_DATA
-
-- SQLITE_IOERR_DELETE
-
-- SQLITE_IOERR_DELETE_NOENT
-
-- SQLITE_IOERR_DIR_CLOSE
-
-- SQLITE_IOERR_DIR_FSYNC
-
-- SQLITE_IOERR_FSTAT
-
-- SQLITE_IOERR_FSYNC
-
-- SQLITE_IOERR_GETTEMPPATH
-
-- SQLITE_IOERR_IN_PAGE
-
-- SQLITE_IOERR_LOCK
-
-- SQLITE_IOERR_MMAP
-
-- SQLITE_IOERR_NOMEM
-
-- SQLITE_IOERR_RDLOCK
-
-- SQLITE_IOERR_READ
-
-- SQLITE_IOERR_ROLLBACK_ATOMIC
-
-- SQLITE_IOERR_SEEK
-
-- SQLITE_IOERR_SHMLOCK
-
-- SQLITE_IOERR_SHMMAP
-
-- SQLITE_IOERR_SHMOPEN
-
-- SQLITE_IOERR_SHMSIZE
-
-- SQLITE_IOERR_SHORT_READ
-
-- SQLITE_IOERR_TRUNCATE
-
-- SQLITE_IOERR_UNLOCK
-
-- SQLITE_IOERR_VNODE
-
-- SQLITE_IOERR_WRITE
-
-- SQLITE_LIMIT_ATTACHED
-
-- SQLITE_LIMIT_COLUMN
-
-- SQLITE_LIMIT_COMPOUND_SELECT
-
-- SQLITE_LIMIT_EXPR_DEPTH
-
-- SQLITE_LIMIT_FUNCTION_ARG
-
-- SQLITE_LIMIT_LENGTH
-
-- SQLITE_LIMIT_LIKE_PATTERN_LENGTH
-
-- SQLITE_LIMIT_PARSER_DEPTH
-
-- SQLITE_LIMIT_SQL_LENGTH
-
-- SQLITE_LIMIT_TRIGGER_DEPTH
-
-- SQLITE_LIMIT_VARIABLE_NUMBER
-
-- SQLITE_LIMIT_VDBE_OP
-
-- SQLITE_LIMIT_WORKER_THREADS
-
-- SQLITE_LOCKED
-
-- SQLITE_LOCKED_SHAREDCACHE
-
-- SQLITE_LOCKED_VTAB
-
-- SQLITE_LOCK_EXCLUSIVE
-
-- SQLITE_LOCK_NONE
-
-- SQLITE_LOCK_PENDING
-
-- SQLITE_LOCK_RESERVED
-
-- SQLITE_LOCK_SHARED
-
-- SQLITE_MISMATCH
-
-- SQLITE_MISUSE
-
-- SQLITE_MUTEX_FAST
-
-- SQLITE_MUTEX_RECURSIVE
-
-- SQLITE_MUTEX_STATIC_APP1
-
-- SQLITE_MUTEX_STATIC_APP2
-
-- SQLITE_MUTEX_STATIC_APP3
-
-- SQLITE_MUTEX_STATIC_LRU
-
-- SQLITE_MUTEX_STATIC_LRU2
-
-- SQLITE_MUTEX_STATIC_MAIN
-
-- SQLITE_MUTEX_STATIC_MEM
-
-- SQLITE_MUTEX_STATIC_MEM2
-
-- SQLITE_MUTEX_STATIC_OPEN
-
-- SQLITE_MUTEX_STATIC_PMEM
-
-- SQLITE_MUTEX_STATIC_PRNG
-
-- SQLITE_MUTEX_STATIC_VFS1
-
-- SQLITE_MUTEX_STATIC_VFS2
-
-- SQLITE_MUTEX_STATIC_VFS3
-
-- SQLITE_NOLFS
-
-- SQLITE_NOMEM
-
-- SQLITE_NOTADB
-
-- SQLITE_NOTFOUND
-
-- SQLITE_NOTICE
-
-- SQLITE_NOTICE_RBU
-
-- SQLITE_NOTICE_RECOVER_ROLLBACK
-
-- SQLITE_NOTICE_RECOVER_WAL
-
-- SQLITE_NULL
-
-- SQLITE_OK
-
-- SQLITE_OK_LOAD_PERMANENTLY
-
-- SQLITE_OK_SYMLINK
-
-- SQLITE_OPEN_AUTOPROXY
-
-- SQLITE_OPEN_CREATE
-
-- SQLITE_OPEN_DELETEONCLOSE
-
-- SQLITE_OPEN_EXCLUSIVE
-
-- SQLITE_OPEN_EXRESCODE
-
-- SQLITE_OPEN_FULLMUTEX
-
-- SQLITE_OPEN_MAIN_DB
-
-- SQLITE_OPEN_MAIN_JOURNAL
-
-- SQLITE_OPEN_MEMORY
-
-- SQLITE_OPEN_NOFOLLOW
-
-- SQLITE_OPEN_NOMUTEX
-
-- SQLITE_OPEN_PRIVATECACHE
-
-- SQLITE_OPEN_READONLY
-
-- SQLITE_OPEN_READWRITE
-
-- SQLITE_OPEN_SHAREDCACHE
-
-- SQLITE_OPEN_SUBJOURNAL
-
-- SQLITE_OPEN_SUPER_JOURNAL
-
-- SQLITE_OPEN_TEMP_DB
-
-- SQLITE_OPEN_TEMP_JOURNAL
-
-- SQLITE_OPEN_TRANSIENT_DB
-
-- SQLITE_OPEN_URI
-
-- SQLITE_OPEN_WAL
-
-- SQLITE_PERM
-
-- SQLITE_PRAGMA
-
-- SQLITE_PREPARE_DONT_LOG
-
-- SQLITE_PREPARE_FROM_DDL
-
-- SQLITE_PREPARE_NORMALIZE
-
-- SQLITE_PREPARE_NO_VTAB
-
-- SQLITE_PREPARE_PERSISTENT
-
-- SQLITE_PROTOCOL
-
-- SQLITE_RANGE
-
-- SQLITE_READ
-
-- SQLITE_READONLY
-
-- SQLITE_READONLY_CANTINIT
-
-- SQLITE_READONLY_CANTLOCK
-
-- SQLITE_READONLY_DBMOVED
-
-- SQLITE_READONLY_DIRECTORY
-
-- SQLITE_READONLY_RECOVERY
-
-- SQLITE_READONLY_ROLLBACK
-
-- SQLITE_RECURSIVE
-
-- SQLITE_REINDEX
-
-- SQLITE_REPLACE
-
-- SQLITE_RESULT_SUBTYPE
-
-- SQLITE_ROLLBACK
-
-- SQLITE_ROW
-
-- SQLITE_SAVEPOINT
-
-- SQLITE_SCANSTAT_COMPLEX
-
-- SQLITE_SCANSTAT_EST
-
-- SQLITE_SCANSTAT_EXPLAIN
-
-- SQLITE_SCANSTAT_NAME
-
-- SQLITE_SCANSTAT_NCYCLE
-
-- SQLITE_SCANSTAT_NLOOP
-
-- SQLITE_SCANSTAT_NVISIT
-
-- SQLITE_SCANSTAT_PARENTID
-
-- SQLITE_SCANSTAT_SELECTID
-
-- SQLITE_SCHEMA
-
-- SQLITE_SCM_BRANCH
-
-- SQLITE_SCM_DATETIME
-
-- SQLITE_SCM_TAGS
-
-- SQLITE_SELECT
-
-- SQLITE_SELFORDER1
-
-- SQLITE_SERIALIZE_NOCOPY
-
-- SQLITE_SETLK_BLOCK_ON_CONNECT
-
-- SQLITE_SHM_EXCLUSIVE
-
-- SQLITE_SHM_LOCK
-
-- SQLITE_SHM_NLOCK
-
-- SQLITE_SHM_SHARED
-
-- SQLITE_SHM_UNLOCK
-
-- SQLITE_SOURCE_ID
-
-- SQLITE_STATIC
-
-- SQLITE_STATUS_MALLOC_COUNT
-
-- SQLITE_STATUS_MALLOC_SIZE
-
-- SQLITE_STATUS_MEMORY_USED
-
-- SQLITE_STATUS_PAGECACHE_OVERFLOW
-
-- SQLITE_STATUS_PAGECACHE_SIZE
-
-- SQLITE_STATUS_PAGECACHE_USED
-
-- SQLITE_STATUS_PARSER_STACK
-
-- SQLITE_STATUS_SCRATCH_OVERFLOW
-
-- SQLITE_STATUS_SCRATCH_SIZE
-
-- SQLITE_STATUS_SCRATCH_USED
-
-- SQLITE_STMTSTATUS_AUTOINDEX
-
-- SQLITE_STMTSTATUS_FILTER_HIT
-
-- SQLITE_STMTSTATUS_FILTER_MISS
-
-- SQLITE_STMTSTATUS_FULLSCAN_STEP
-
-- SQLITE_STMTSTATUS_MEMUSED
-
-- SQLITE_STMTSTATUS_REPREPARE
-
-- SQLITE_STMTSTATUS_RUN
-
-- SQLITE_STMTSTATUS_SORT
-
-- SQLITE_STMTSTATUS_VM_STEP
-
-- SQLITE_SUBTYPE
-
-- SQLITE_SYNC_DATAONLY
-
-- SQLITE_SYNC_FULL
-
-- SQLITE_SYNC_NORMAL
-
-- SQLITE_TESTCTRL_ALWAYS
-
-- SQLITE_TESTCTRL_ASSERT
-
-- SQLITE_TESTCTRL_ATOF
-
-- SQLITE_TESTCTRL_BENIGN_MALLOC_HOOKS
-
-- SQLITE_TESTCTRL_BITVEC_TEST
-
-- SQLITE_TESTCTRL_BYTEORDER
-
-- SQLITE_TESTCTRL_EXPLAIN_STMT
-
-- SQLITE_TESTCTRL_EXTRA_SCHEMA_CHECKS
-
-- SQLITE_TESTCTRL_FAULT_INSTALL
-
-- SQLITE_TESTCTRL_FIRST
-
-- SQLITE_TESTCTRL_FK_NO_ACTION
-
-- SQLITE_TESTCTRL_GETOPT
-
-- SQLITE_TESTCTRL_IMPOSTER
-
-- SQLITE_TESTCTRL_INTERNAL_FUNCTIONS
-
-- SQLITE_TESTCTRL_ISINIT
-
-- SQLITE_TESTCTRL_ISKEYWORD
-
-- SQLITE_TESTCTRL_JSON_SELFCHECK
-
-- SQLITE_TESTCTRL_LAST
-
-- SQLITE_TESTCTRL_LOCALTIME_FAULT
-
-- SQLITE_TESTCTRL_LOGEST
-
-- SQLITE_TESTCTRL_NEVER_CORRUPT
-
-- SQLITE_TESTCTRL_ONCE_RESET_THRESHOLD
-
-- SQLITE_TESTCTRL_OPTIMIZATIONS
-
-- SQLITE_TESTCTRL_PARSER_COVERAGE
-
-- SQLITE_TESTCTRL_PENDING_BYTE
-
-- SQLITE_TESTCTRL_PRNG_RESET
-
-- SQLITE_TESTCTRL_PRNG_RESTORE
-
-- SQLITE_TESTCTRL_PRNG_SAVE
-
-- SQLITE_TESTCTRL_PRNG_SEED
-
-- SQLITE_TESTCTRL_RESERVE
-
-- SQLITE_TESTCTRL_RESULT_INTREAL
-
-- SQLITE_TESTCTRL_SCRATCHMALLOC
-
-- SQLITE_TESTCTRL_SEEK_COUNT
-
-- SQLITE_TESTCTRL_SORTER_MMAP
-
-- SQLITE_TESTCTRL_TRACEFLAGS
-
-- SQLITE_TESTCTRL_TUNE
-
-- SQLITE_TESTCTRL_USELONGDOUBLE
-
-- SQLITE_TESTCTRL_VDBE_COVERAGE
-
-- SQLITE_TEXT
-
-- SQLITE_TOOBIG
-
-- SQLITE_TRACE
-
-- SQLITE_TRACE_CLOSE
-
-- SQLITE_TRACE_PROFILE
-
-- SQLITE_TRACE_ROW
-
-- SQLITE_TRACE_STMT
-
-- SQLITE_TRANSACTION
-
-- SQLITE_TRANSIENT
-
-- SQLITE_TXN_NONE
-
-- SQLITE_TXN_READ
-
-- SQLITE_TXN_WRITE
-
-- SQLITE_UPDATE
-
-- SQLITE_UTF16
-
-- SQLITE_UTF16BE
-
-- SQLITE_UTF16LE
-
-- SQLITE_UTF16_ALIGNED
-
-- SQLITE_UTF8
-
-- SQLITE_UTF8_ZT
-
-- SQLITE_VERSION
-
-- SQLITE_VERSION_NUMBER
-
-- SQLITE_VTAB_CONSTRAINT_SUPPORT
-
-- SQLITE_VTAB_DIRECTONLY
-
-- SQLITE_VTAB_INNOCUOUS
-
-- SQLITE_VTAB_USES_ALL_SCHEMAS
-
-- SQLITE_WARNING
-
-- SQLITE_WARNING_AUTOINDEX
-
-- SQLITE_WIN32_DATA_DIRECTORY_TYPE
-
-- SQLITE_WIN32_TEMP_DIRECTORY_TYPE
-
----
-
-## List Of Functions:
-
-Note: Functions marked with "(exp)"
-are experimental and functions whose names are
-struck through are deprecated.
-
-- sqlite3_aggregate_context
-
-- sqlite3_aggregate_count
-
-- sqlite3_auto_extension
-
-- sqlite3_autovacuum_pages
-
-- sqlite3_backup_finish
-
-- sqlite3_backup_init
-
-- sqlite3_backup_pagecount
-
-- sqlite3_backup_remaining
-
-- sqlite3_backup_step
-
-- sqlite3_bind_blob
-
-- sqlite3_bind_blob64
-
-- sqlite3_bind_double
-
-- sqlite3_bind_int
-
-- sqlite3_bind_int64
-
-- sqlite3_bind_null
-
-- sqlite3_bind_parameter_count
-
-- sqlite3_bind_parameter_index
-
-- sqlite3_bind_parameter_name
-
-- sqlite3_bind_pointer
-
-- sqlite3_bind_text
-
-- sqlite3_bind_text16
-
-- sqlite3_bind_text64
-
-- sqlite3_bind_value
-
-- sqlite3_bind_zeroblob
-
-- sqlite3_bind_zeroblob64
-
-- sqlite3_blob_bytes
-
-- sqlite3_blob_close
-
-- sqlite3_blob_open
-
-- sqlite3_blob_read
-
-- sqlite3_blob_reopen
-
-- sqlite3_blob_write
-
-- sqlite3_busy_handler
-
-- sqlite3_busy_timeout
-
-- sqlite3_cancel_auto_extension
-
-- sqlite3_carray_bind
-
-- sqlite3_carray_bind_v2
-
-- sqlite3_changes
-
-- sqlite3_changes64
-
-- sqlite3_clear_bindings
-
-- sqlite3_close
-
-- sqlite3_close_v2
-
-- sqlite3_collation_needed
-
-- sqlite3_collation_needed16
-
-- sqlite3_column_blob
-
-- sqlite3_column_bytes
-
-- sqlite3_column_bytes16
-
-- sqlite3_column_count
-
-- sqlite3_column_database_name
-
-- sqlite3_column_database_name16
-
-- sqlite3_column_decltype
-
-- sqlite3_column_decltype16
-
-- sqlite3_column_double
-
-- sqlite3_column_int
-
-- sqlite3_column_int64
-
-- sqlite3_column_name
-
-- sqlite3_column_name16
-
-- sqlite3_column_origin_name
-
-- sqlite3_column_origin_name16
-
-- sqlite3_column_table_name
-
-- sqlite3_column_table_name16
-
-- sqlite3_column_text
-
-- sqlite3_column_text16
-
-- sqlite3_column_type
-
-- sqlite3_column_value
-
-- sqlite3_commit_hook
-
-- sqlite3_compileoption_get
-
-- sqlite3_compileoption_used
-
-- sqlite3_complete
-
-- sqlite3_complete16
-
-- sqlite3_config
-
-- sqlite3_context_db_handle
-
-- sqlite3_create_collation
-
-- sqlite3_create_collation16
-
-- sqlite3_create_collation_v2
-
-- sqlite3_create_filename
-
-- sqlite3_create_function
-
-- sqlite3_create_function16
-
-- sqlite3_create_function_v2
-
-- sqlite3_create_module
-
-- sqlite3_create_module_v2
-
-- sqlite3_create_window_function
-
-- sqlite3_data_count
-
-- sqlite3_database_file_object
-
-- sqlite3_db_cacheflush
-
-- sqlite3_db_config
-
-- sqlite3_db_filename
-
-- sqlite3_db_handle
-
-- sqlite3_db_mutex
-
-- sqlite3_db_name
-
-- sqlite3_db_readonly
-
-- sqlite3_db_release_memory
-
-- sqlite3_db_status
-
-- sqlite3_db_status64
-
-- sqlite3_declare_vtab
-
-- sqlite3_deserialize
-
-- sqlite3_drop_modules
-
-- sqlite3_enable_load_extension
-
-- sqlite3_enable_shared_cache
-
-- sqlite3_errcode
-
-- sqlite3_errmsg
-
-- sqlite3_errmsg16
-
-- sqlite3_error_offset
-
-- sqlite3_errstr
-
-- sqlite3_exec
-
-- sqlite3_expanded_sql
-
-- sqlite3_expired
-
-- sqlite3_extended_errcode
-
-- sqlite3_extended_result_codes
-
-- sqlite3_file_control
-
-- sqlite3_filename_database
-
-- sqlite3_filename_journal
-
-- sqlite3_filename_wal
-
-- sqlite3_finalize
-
-- sqlite3_free
-
-- sqlite3_free_filename
-
-- sqlite3_free_table
-
-- sqlite3_get_autocommit
-
-- sqlite3_get_auxdata
-
-- sqlite3_get_clientdata
-
-- sqlite3_get_table
-
-- sqlite3_global_recover
-
-- sqlite3_hard_heap_limit64
-
-- sqlite3_initialize
-
-- sqlite3_interrupt
-
-- sqlite3_is_interrupted
-
-- sqlite3_keyword_check
-
-- sqlite3_keyword_count
-
-- sqlite3_keyword_name
-
-- sqlite3_last_insert_rowid
-
-- sqlite3_libversion
-
-- sqlite3_libversion_number
-
-- sqlite3_limit
-
-- sqlite3_load_extension
-
-- sqlite3_log
-
-- sqlite3_malloc
-
-- sqlite3_malloc64
-
-- sqlite3_memory_alarm
-
-- sqlite3_memory_highwater
-
-- sqlite3_memory_used
-
-- sqlite3_mprintf
-
-- sqlite3_msize
-
-- sqlite3_mutex_alloc
-
-- sqlite3_mutex_enter
-
-- sqlite3_mutex_free
-
-- sqlite3_mutex_held
-
-- sqlite3_mutex_leave
-
-- sqlite3_mutex_notheld
-
-- sqlite3_mutex_try
-
-- sqlite3_next_stmt
-
-- sqlite3_normalized_sql
-
-- sqlite3_open
-
-- sqlite3_open16
-
-- sqlite3_open_v2
-
-- sqlite3_os_end
-
-- sqlite3_os_init
-
-- sqlite3_overload_function
-
-- sqlite3_prepare
-
-- sqlite3_prepare16
-
-- sqlite3_prepare16_v2
-
-- sqlite3_prepare16_v3
-
-- sqlite3_prepare_v2
-
-- sqlite3_prepare_v3
-
-- sqlite3_preupdate_blobwrite
-
-- sqlite3_preupdate_count
-
-- sqlite3_preupdate_depth
-
-- sqlite3_preupdate_hook
-
-- sqlite3_preupdate_new
-
-- sqlite3_preupdate_old
-
-- sqlite3_profile
-
-- sqlite3_progress_handler
-
-- sqlite3_randomness
-
-- sqlite3_realloc
-
-- sqlite3_realloc64
-
-- sqlite3_release_memory
-
-- sqlite3_reset
-
-- sqlite3_reset_auto_extension
-
-- sqlite3_result_blob
-
-- sqlite3_result_blob64
-
-- sqlite3_result_double
-
-- sqlite3_result_error
-
-- sqlite3_result_error16
-
-- sqlite3_result_error_code
-
-- sqlite3_result_error_nomem
-
-- sqlite3_result_error_toobig
-
-- sqlite3_result_int
-
-- sqlite3_result_int64
-
-- sqlite3_result_null
-
-- sqlite3_result_pointer
-
-- sqlite3_result_subtype
-
-- sqlite3_result_text
-
-- sqlite3_result_text16
-
-- sqlite3_result_text16be
-
-- sqlite3_result_text16le
-
-- sqlite3_result_text64
-
-- sqlite3_result_value
-
-- sqlite3_result_zeroblob
-
-- sqlite3_result_zeroblob64
-
-- sqlite3_rollback_hook
-
-- sqlite3_serialize
-
-- sqlite3_set_authorizer
-
-- sqlite3_set_auxdata
-
-- sqlite3_set_clientdata
-
-- sqlite3_set_errmsg
-
-- sqlite3_set_last_insert_rowid
-
-- sqlite3_setlk_timeout
-
-- sqlite3_shutdown
-
-- sqlite3_sleep
-
-- sqlite3_snapshot_cmp
-
-- sqlite3_snapshot_free
-
-- sqlite3_snapshot_get
-
-- sqlite3_snapshot_open
-
-- sqlite3_snapshot_recover
-
-- sqlite3_snprintf
-
-- sqlite3_soft_heap_limit
-
-- sqlite3_soft_heap_limit64
-
-- sqlite3_sourceid
-
-- sqlite3_sql
-
-- sqlite3_status
-
-- sqlite3_status64
-
-- sqlite3_step
-
-- sqlite3_stmt_busy
-
-- sqlite3_stmt_explain
-
-- sqlite3_stmt_isexplain
-
-- sqlite3_stmt_readonly
-
-- sqlite3_stmt_scanstatus
-
-- sqlite3_stmt_scanstatus_reset
-
-- sqlite3_stmt_scanstatus_v2
-
-- sqlite3_stmt_status
-
-- sqlite3_str_append
-
-- sqlite3_str_appendall
-
-- sqlite3_str_appendchar
-
-- sqlite3_str_appendf
-
-- sqlite3_str_errcode
-
-- sqlite3_str_finish
-
-- sqlite3_str_free
-
-- sqlite3_str_length
-
-- sqlite3_str_new
-
-- sqlite3_str_reset
-
-- sqlite3_str_truncate
-
-- sqlite3_str_value
-
-- sqlite3_str_vappendf
-
-- sqlite3_strglob
-
-- sqlite3_stricmp
-
-- sqlite3_strlike
-
-- sqlite3_strnicmp
-
-- sqlite3_system_errno
-
-- sqlite3_table_column_metadata
-
-- sqlite3_test_control
-
-- sqlite3_thread_cleanup
-
-- sqlite3_threadsafe
-
-- sqlite3_total_changes
-
-- sqlite3_total_changes64
-
-- sqlite3_trace
-
-- sqlite3_trace_v2
-
-- sqlite3_transfer_bindings
-
-- sqlite3_txn_state
-
-- sqlite3_unlock_notify
-
-- sqlite3_update_hook
-
-- sqlite3_uri_boolean
-
-- sqlite3_uri_int64
-
-- sqlite3_uri_key
-
-- sqlite3_uri_parameter
-
-- sqlite3_user_data
-
-- sqlite3_value_blob
-
-- sqlite3_value_bytes
-
-- sqlite3_value_bytes16
-
-- sqlite3_value_double
-
-- sqlite3_value_dup
-
-- sqlite3_value_encoding
-
-- sqlite3_value_free
-
-- sqlite3_value_frombind
-
-- sqlite3_value_int
-
-- sqlite3_value_int64
-
-- sqlite3_value_nochange
-
-- sqlite3_value_numeric_type
-
-- sqlite3_value_pointer
-
-- sqlite3_value_subtype
-
-- sqlite3_value_text
-
-- sqlite3_value_text16
-
-- sqlite3_value_text16be
-
-- sqlite3_value_text16le
-
-- sqlite3_value_type
-
-- sqlite3_version
-
-- sqlite3_vfs_find
-
-- sqlite3_vfs_register
-
-- sqlite3_vfs_unregister
-
-- sqlite3_vmprintf
-
-- sqlite3_vsnprintf
-
-- sqlite3_vtab_collation
-
-- sqlite3_vtab_config
-
-- sqlite3_vtab_distinct
-
-- sqlite3_vtab_in
-
-- sqlite3_vtab_in_first
-
-- sqlite3_vtab_in_next
-
-- sqlite3_vtab_nochange
-
-- sqlite3_vtab_on_conflict
-
-- sqlite3_vtab_rhs_value
-
-- sqlite3_wal_autocheckpoint
-
-- sqlite3_wal_checkpoint
-
-- sqlite3_wal_checkpoint_v2
-
-- sqlite3_wal_hook
-
-- sqlite3_win32_set_directory
-
-- sqlite3_win32_set_directory16
-
-- sqlite3_win32_set_directory8
-
----
-
-## Flags for sqlite3_serialize
+## 翻译对照表（名词库）
+
+
+### 对象（Objects）
+
+| 对象 | 中文对照 |
+|------|----------|
+| `sqlite3` | 数据库连接对象（`sqlite3_open()` 创建、`sqlite3_close()` 销毁） |
+| `sqlite3_api_routines` | 可加载扩展的 API 函数指针表（扩展入口函数的第三参数） |
+| `sqlite3_backup` | 在线备份对象（`sqlite3_backup_init()` 创建、`sqlite3_backup_finish()` 销毁） |
+| `sqlite3_blob` | 增量 BLOB I/O 句柄 |
+| `sqlite3_context` | SQL 函数执行上下文（自定义函数的第一参数） |
+| `sqlite3_data_directory` | 数据库文件目录全局变量（仅 Windows VFS 使用） |
+| `sqlite3_file` | OS 接口层打开的文件句柄 |
+| `sqlite3_filename` | 文件名类型（VFS 的 `xOpen` 方法用） |
+| `sqlite3_index_info` | 虚拟表索引信息结构（`xBestIndex` 用） |
+| `sqlite3_int64` | 64 位整数类型 |
+| `sqlite3_uint64` | 64 位整数类型 |
+| `sqlite_int64` | 64 位整数类型 |
+| `sqlite_uint64` | 64 位整数类型 |
+| `sqlite3_io_methods` | OS 文件虚拟方法表（VFS 用） |
+| `sqlite3_mem_methods` | 内存分配方法表（自定义分配器） |
+| `sqlite3_module` | 虚拟表模块结构（注册虚拟表用） |
+| `sqlite3_mutex` | 互斥锁句柄 |
+| `sqlite3_mutex_methods` | 互斥锁方法表（自定义锁系统） |
+| `sqlite3_pcache` | 自定义页缓存对象 |
+| `sqlite3_pcache_methods2` | 页缓存方法表 v2 |
+| `sqlite3_pcache_page` | 单个缓存页 |
+| `sqlite3_snapshot` | 快照对象（`sqlite3_snapshot_get()` 创建） |
+| `sqlite3_stmt` | 预编译语句对象 |
+| `sqlite3_str` | 动态字符串构造器（`sqlite3_str_*` 用） |
+| `sqlite3_temp_directory` | 临时文件目录全局变量 |
+| `sqlite3_value` | 单个 SQL 值（函数参数/结果用） |
+| `sqlite3_vfs` | 虚拟文件系统（OS 抽象层）对象 |
+| `sqlite3_vtab` | 虚拟表实例对象 |
+| `sqlite3_vtab_cursor` | 虚拟表游标对象 |
+
+### 常量（Constants）
+
+| 常量 | 中文对照 |
+|------|----------|
+| `SQLITE_ABORT` | 结果码：操作被中止（如过期 BLOB 句柄） |
+| `SQLITE_ABORT_ROLLBACK` | `SQLITE_ABORT` 的扩展错误码（ROLLBACK=发生隐式回滚后操作中止） |
+| `SQLITE_ACCESS_EXISTS` | `xAccess` 标志：测试文件是否存在 |
+| `SQLITE_ACCESS_READ` | `xAccess` 标志：测试文件是否至少可读（内置 VFS 未实现） |
+| `SQLITE_ACCESS_READWRITE` | `xAccess` 标志：测试文件是否可读可写 |
+| `SQLITE_ALTER_TABLE` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_ANALYZE` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_ANY` | 文本编码常量（1/2/3/4/5/8/16） |
+| `SQLITE_ATTACH` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_AUTH` | 结果码：授权被拒绝（值为 23） |
+| `SQLITE_AUTH_USER` | `SQLITE_AUTH` 的扩展错误码（USER=授权被拒绝与特定用户名相关） |
+| `SQLITE_BLOB` | 五大基本数据类型（1/2/3/4/5） |
+| `SQLITE_BUSY` | 结果码：数据库被锁定、忙 |
+| `SQLITE_BUSY_RECOVERY` | `SQLITE_BUSY` 的扩展错误码（RECOVERY=恢复回滚进行中、SNAPSHOT=快照已过期、TIMEOUT=忙处理器超时） |
+| `SQLITE_BUSY_SNAPSHOT` | `SQLITE_BUSY` 的扩展错误码（RECOVERY=恢复回滚进行中、SNAPSHOT=快照已过期、TIMEOUT=忙处理器超时） |
+| `SQLITE_BUSY_TIMEOUT` | `SQLITE_BUSY` 的扩展错误码（RECOVERY=恢复回滚进行中、SNAPSHOT=快照已过期、TIMEOUT=忙处理器超时） |
+| `SQLITE_CANTOPEN` | 结果码：无法打开文件 |
+| `SQLITE_CANTOPEN_CONVPATH` | `SQLITE_CANTOPEN` 的扩展错误码（NOTEMPDIR/ISDIR/FULLPATH/CONVPATH/DIRTYWAL/SYMLINK） |
+| `SQLITE_CANTOPEN_DIRTYWAL` | `SQLITE_CANTOPEN` 的扩展错误码（NOTEMPDIR/ISDIR/FULLPATH/CONVPATH/DIRTYWAL/SYMLINK） |
+| `SQLITE_CANTOPEN_FULLPATH` | `SQLITE_CANTOPEN` 的扩展错误码（NOTEMPDIR/ISDIR/FULLPATH/CONVPATH/DIRTYWAL/SYMLINK） |
+| `SQLITE_CANTOPEN_ISDIR` | `SQLITE_CANTOPEN` 的扩展错误码（NOTEMPDIR/ISDIR/FULLPATH/CONVPATH/DIRTYWAL/SYMLINK） |
+| `SQLITE_CANTOPEN_NOTEMPDIR` | `SQLITE_CANTOPEN` 的扩展错误码（NOTEMPDIR/ISDIR/FULLPATH/CONVPATH/DIRTYWAL/SYMLINK） |
+| `SQLITE_CANTOPEN_SYMLINK` | `SQLITE_CANTOPEN` 的扩展错误码（NOTEMPDIR/ISDIR/FULLPATH/CONVPATH/DIRTYWAL/SYMLINK） |
+| `SQLITE_CARRAY_BLOB` | carray 表值函数的数据类型（0~4） |
+| `SQLITE_CARRAY_DOUBLE` | carray 表值函数的数据类型（0~4） |
+| `SQLITE_CARRAY_INT32` | carray 表值函数的数据类型（0~4） |
+| `SQLITE_CARRAY_INT64` | carray 表值函数的数据类型（0~4） |
+| `SQLITE_CARRAY_TEXT` | carray 表值函数的数据类型（0~4） |
+| `SQLITE_CHECKPOINT_FULL` | 检查点模式（sqlite3_wal_checkpoint_v2 的 eMode 参数）：PASSIVE=被动、FULL=完整阻塞、RESTART=重启、TRUNCATE=截断、NOOP=空操作 |
+| `SQLITE_CHECKPOINT_NOOP` | 检查点模式（sqlite3_wal_checkpoint_v2 的 eMode 参数）：PASSIVE=被动、FULL=完整阻塞、RESTART=重启、TRUNCATE=截断、NOOP=空操作 |
+| `SQLITE_CHECKPOINT_PASSIVE` | 检查点模式（sqlite3_wal_checkpoint_v2 的 eMode 参数）：PASSIVE=被动、FULL=完整阻塞、RESTART=重启、TRUNCATE=截断、NOOP=空操作 |
+| `SQLITE_CHECKPOINT_RESTART` | 检查点模式（sqlite3_wal_checkpoint_v2 的 eMode 参数）：PASSIVE=被动、FULL=完整阻塞、RESTART=重启、TRUNCATE=截断、NOOP=空操作 |
+| `SQLITE_CHECKPOINT_TRUNCATE` | 检查点模式（sqlite3_wal_checkpoint_v2 的 eMode 参数）：PASSIVE=被动、FULL=完整阻塞、RESTART=重启、TRUNCATE=截断、NOOP=空操作 |
+| `SQLITE_CONFIG_COVERING_INDEX_SCAN` | 启用/禁用"覆盖索引扫描"查询优化（接受布尔值） |
+| `SQLITE_CONFIG_GETMALLOC` | `sqlite3_config()` 选项：查询当前内存分配器 |
+| `SQLITE_CONFIG_GETMUTEX` | `sqlite3_config()` 选项：查询当前互斥锁实现 |
+| `SQLITE_CONFIG_GETPCACHE` | 已废弃的页缓存选项（新代码应使用 SQLITE_CONFIG_PCACHE2/GETPCACHE2） |
+| `SQLITE_CONFIG_GETPCACHE2` | 查询当前页缓存实现，把 sqlite3_pcache_methods2 对象指针写入给定指针 |
+| `SQLITE_CONFIG_HEAP` | 指定一个静态内存缓冲区，满足 `SQLITE_CONFIG_PAGECACHE` 之外的所有动态内存分配需求（仅当用 SQLITE_ENABLE_MEMSYS3/MEMSYS5 编译时可用） |
+| `SQLITE_CONFIG_LOG` | sqlite3_config() 选项：设置错误日志回调（sqlite3_log() 写入） |
+| `SQLITE_CONFIG_LOOKASIDE` | 设置每个数据库连接上 lookaside 内存的默认大小（两参数：单块大小与块数） |
+| `SQLITE_CONFIG_MALLOC` | `sqlite3_config()` 选项：指定自定义内存分配器 |
+| `SQLITE_CONFIG_MEMDB_MAXSIZE` | 配置选项：sqlite3_deserialize() 创建的内存数据库默认最大大小（默认 1073741824） |
+| `SQLITE_CONFIG_MEMSTATUS` | `sqlite3_config()` 选项：内存状态统计开关 |
+| `SQLITE_CONFIG_MMAP_SIZE` | 设置数据库文件的默认 mmap 大小（两个 sqlite3_int64：软上限与硬上限） |
+| `SQLITE_CONFIG_MULTITHREAD` | 线程模式：多线程（同一连接同一时刻只允许一个线程使用） |
+| `SQLITE_CONFIG_MUTEX` | `sqlite3_config()` 选项：指定自定义互斥锁实现 |
+| `SQLITE_CONFIG_PAGECACHE` | sqlite3_config() 选项：为页缓存提供独立内存池 |
+| `SQLITE_CONFIG_PCACHE` | 已废弃的页缓存选项（新代码应使用 SQLITE_CONFIG_PCACHE2/GETPCACHE2） |
+| `SQLITE_CONFIG_PCACHE2` | sqlite3_config() 选项：指定替代页缓存实现 |
+| `SQLITE_CONFIG_PCACHE_HDRSZ` | 查询 SQLITE_CONFIG_PAGECACHE 页面分配所需的页头大小（把整数写入给定指针） |
+| `SQLITE_CONFIG_PMASZ` | 设置多线程排序器的 "Minimum PMA Size"（接受无符号整数） |
+| `SQLITE_CONFIG_ROWID_IN_VIEW` | 配置选项：是否允许 VIEW 有 ROWID（需要 -DSQLITE_ALLOW_ROWID_IN_VIEW） |
+| `SQLITE_CONFIG_SCRATCH` | 已废弃（不再使用） |
+| `SQLITE_CONFIG_SERIALIZED` | 线程模式：串行化（多线程可安全共享同一连接，有加锁开销） |
+| `SQLITE_CONFIG_SINGLETHREAD` | 线程模式：单线程（不启用任何互斥锁、性能最好，但数据库连接不能跨线程使用） |
+| `SQLITE_CONFIG_SMALL_MALLOC` | 请求 SQLite 使用较小的内存分配器（接受布尔值） |
+| `SQLITE_CONFIG_SORTERREF_SIZE` | 配置选项：排序引用大小阈值（需要 SQLITE_ENABLE_SORTER_REFERENCES） |
+| `SQLITE_CONFIG_SQLLOG` | 设置 SQL 日志回调（仅当用 SQLITE_ENABLE_SQLLOG 编译时可用） |
+| `SQLITE_CONFIG_STMTJRNL_SPILL` | 设置语句日志 spill 到磁盘的阈值（接受单参数） |
+| `SQLITE_CONFIG_URI` | sqlite3_config() 选项：全局启用 URI 文件名解释 |
+| `SQLITE_CONFIG_WIN32_HEAPSIZE` | 指定 Windows 堆的字节大小（仅当为 Windows 编译且定义 SQLITE_WIN32_MALLOC 时可用） |
+| `SQLITE_CONSTRAINT` | 结果码：约束冲突（值为 19） |
+| `SQLITE_CONSTRAINT_CHECK` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_COMMITHOOK` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_DATATYPE` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_FOREIGNKEY` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_FUNCTION` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_NOTNULL` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_PINNED` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_PRIMARYKEY` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_ROWID` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_TRIGGER` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_UNIQUE` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_CONSTRAINT_VTAB` | `SQLITE_CONSTRAINT` 的扩展错误码（CHECK/UNIQUE/PRIMARYKEY/FOREIGNKEY/NOTNULL/TRIGGER/VTAB/FUNCTION/DATATYPE/ROWID/PINNED/COMMITHOOK） |
+| `SQLITE_COPY` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_CORRUPT` | 结果码：数据库文件损坏（值为 11） |
+| `SQLITE_CORRUPT_INDEX` | `SQLITE_CORRUPT` 的扩展错误码（VTAB/SEQUENCE/INDEX） |
+| `SQLITE_CORRUPT_SEQUENCE` | `SQLITE_CORRUPT` 的扩展错误码（VTAB/SEQUENCE/INDEX） |
+| `SQLITE_CORRUPT_VTAB` | `SQLITE_CORRUPT` 的扩展错误码（VTAB/SEQUENCE/INDEX） |
+| `SQLITE_CREATE_INDEX` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_CREATE_TABLE` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_CREATE_TEMP_INDEX` | 授权回调动作码（sqlite3_set_authorizer 用）：创建 temp 数据库中的索引/表/触发器/视图，以及创建触发器/视图 |
+| `SQLITE_CREATE_TEMP_TABLE` | 授权回调动作码（sqlite3_set_authorizer 用）：创建 temp 数据库中的索引/表/触发器/视图，以及创建触发器/视图 |
+| `SQLITE_CREATE_TEMP_TRIGGER` | 授权回调动作码（sqlite3_set_authorizer 用）：创建 temp 数据库中的索引/表/触发器/视图，以及创建触发器/视图 |
+| `SQLITE_CREATE_TEMP_VIEW` | 授权回调动作码（sqlite3_set_authorizer 用）：创建 temp 数据库中的索引/表/触发器/视图，以及创建触发器/视图 |
+| `SQLITE_CREATE_TRIGGER` | 授权回调动作码（sqlite3_set_authorizer 用）：创建 temp 数据库中的索引/表/触发器/视图，以及创建触发器/视图 |
+| `SQLITE_CREATE_VIEW` | 授权回调动作码（sqlite3_set_authorizer 用）：创建 temp 数据库中的索引/表/触发器/视图，以及创建触发器/视图 |
+| `SQLITE_CREATE_VTABLE` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DBCONFIG_DEFENSIVE` | 此选项激活或停用数据库连接的 "defensive"（防御）标志。当�… |
+| `SQLITE_DBCONFIG_DQS_DDL` | 此选项对 DDL 语句（如 CREATE TABLE 和 CREATE INDEX）激活或停用传… |
+| `SQLITE_DBCONFIG_DQS_DML` | 此选项只对 DML 语句——即 DELETE、INSERT、SELECT 和 UPDATE 语句�… |
+| `SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE` | 此选项启用或禁用 ATTACH DATABASE SQL 命令在 ATTACH命令命名的数�… |
+| `SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE` | 此选项启用或禁用 ATTACH DATABASE SQL 命令以写入方式打开数据�… |
+| `SQLITE_DBCONFIG_ENABLE_COMMENTS` | 此选项启用或禁用 SQL 文本中包含注释的能力。注释默认启用… |
+| `SQLITE_DBCONFIG_ENABLE_FKEY` | 此选项用于启用或禁用外键约束的强制。这与 PRAGMA foreign_keys… |
+| `SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER` | 此选项用于启用或禁用把 fts3_tokenizer() 函数——FTS3 全文搜索… |
+| `SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION` | 数据库连接配置：仅启用 C-API 扩展加载（禁用 load_extension() SQL 函数，更安全） |
+| `SQLITE_DBCONFIG_ENABLE_QPSG` | 此选项激活或停用查询规划器稳定性保证（QPSG）。QPSG 激活�… |
+| `SQLITE_DBCONFIG_ENABLE_TRIGGER` | 此选项用于启用或禁用触发器。应有两个额外参数。第一个�… |
+| `SQLITE_DBCONFIG_ENABLE_VIEW` | 此选项用于启用或禁用视图。必须有两个额外参数。第一个�… |
+| `SQLITE_DBCONFIG_FP_DIGITS` | `SQLITE_DBCONFIG_FP_DIGITS` 设置是一个小整数，决定 SQLite 在把浮�… |
+| `SQLITE_DBCONFIG_LEGACY_ALTER_TABLE` | 此选项激活或停用 ALTER TABLE RENAME 命令的传统行为，使其表现… |
+| `SQLITE_DBCONFIG_LEGACY_FILE_FORMAT` | 此选项激活或停用传统文件格式标志。激活时，此标志使所�… |
+| `SQLITE_DBCONFIG_LOOKASIDE` | 此选项用于调整数据库连接内 lookaside 内存分配器的配置。`SQ… |
+| `SQLITE_DBCONFIG_MAINDBNAME` | 此选项用于改变 "main" 数据库 schema 的名字。此选项不遵循通�… |
+| `SQLITE_DBCONFIG_MAX` | SQLITE_DBCONFIG 选项最大值（哨兵） |
+| `SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE` | 通常，当 WAL 模式数据库从数据库句柄关闭或分离时，SQLite检… |
+| `SQLITE_DBCONFIG_RESET_DATABASE` | 设置 `SQLITE_DBCONFIG_RESET_DATABASE` 标志，然后运行 VACUUM，以把数… |
+| `SQLITE_DBCONFIG_REVERSE_SCANORDER` | 此选项改变表和索引被扫描的默认顺序，使扫描从末尾开始�… |
+| `SQLITE_DBCONFIG_STMT_SCANSTATUS` | 此选项仅在 `SQLITE_ENABLE_STMT_SCANSTATUS` 构建中有用。此时，它�… |
+| `SQLITE_DBCONFIG_TRIGGER_EQP` | 默认情况下，EXPLAIN QUERY PLAN 命令的输出不包含触发器程序执�… |
+| `SQLITE_DBCONFIG_TRUSTED_SCHEMA` | 此选项告诉 SQLite 假定数据库 schema 未被恶意内容污染。当`SQL… |
+| `SQLITE_DBCONFIG_WRITABLE_SCHEMA` | 此选项激活或停用 "writable_schema" 标志。这与设置 PRAGMAwritable_… |
+| `SQLITE_DBSTATUS_CACHE_HIT` | 此参数返回已发生的 pager 缓存命中次数。与`SQLITE_DBSTATUS_CACHE… |
+| `SQLITE_DBSTATUS_CACHE_MISS` | 此参数返回已发生的 pager 缓存未命中次数。与`SQLITE_DBSTATUS_CA… |
+| `SQLITE_DBSTATUS_CACHE_SPILL` | 此参数返回因页缓存溢出、在事务中途写入磁盘的脏缓存条�… |
+| `SQLITE_DBSTATUS_CACHE_USED` | 此参数返回与数据库连接关联的所有 pager 缓存使用的堆内存�… |
+| `SQLITE_DBSTATUS_CACHE_USED_SHARED` | 此参数与 DBSTATUS_CACHE_USED 类似，区别是若 pager 缓存在两个或�… |
+| `SQLITE_DBSTATUS_CACHE_WRITE` | 此参数返回已写入磁盘的脏缓存条目数。具体地说，是 wal 模… |
+| `SQLITE_DBSTATUS_DEFERRED_FKS` | 当且仅当所有外键约束（延迟或立即）都已解析时，此参数�… |
+| `SQLITE_DBSTATUS_LOOKASIDE_HIT` | 此参数返回用 lookaside 内存满足的 malloc 尝试数。只有高水位�… |
+| `SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL` | 此参数返回本可用 lookaside 内存满足、但因所有 lookaside内存�… |
+| `SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE` | 此参数返回本可用 lookaside 内存满足、但因请求的内存量大而… |
+| `SQLITE_DBSTATUS_LOOKASIDE_USED` | 此参数返回当前借出的 lookaside 内存槽数。 |
+| `SQLITE_DBSTATUS_MAX` | 数据库连接状态参数（sqlite3_db_status 第二参数）：LOOKASIDE_USED/CACHE_USED/SCHEMA_USED/STMT_USED/LOOKASIDE_HIT/CACHE_HIT/CACHE_MISS/CACHE_WRITE/DEFERRED_FKS/CACHE_USED_SHARED/CACHE_SPILL/TEMPBUF_SPILL |
+| `SQLITE_DBSTATUS_SCHEMA_USED` | 此参数返回用于存储与连接关联的所有数据库（main、temp 以�… |
+| `SQLITE_DBSTATUS_STMT_USED` | 此参数返回与数据库连接关联的所有预编译语句使用的堆和 l… |
+| `SQLITE_DBSTATUS_TEMPBUF_SPILL` | 此参数返回写入磁盘临时文件的字节数，这些字节若有足够�… |
+| `SQLITE_DELETE` | 更新钩子事件：插入/删除/更新 |
+| `SQLITE_DENY` | 授权器返回码：拒绝（报错中止）/忽略（不允许但不报错） |
+| `SQLITE_DESERIALIZE_FREEONCLOSE` | 反序列化标志：连接关闭时用 sqlite3_free() 释放序列化缓冲区 |
+| `SQLITE_DESERIALIZE_READONLY` | 反序列化标志：只读（禁止 SQLite 向内存数据库追加内容） |
+| `SQLITE_DESERIALIZE_RESIZEABLE` | 反序列化标志：允许用 sqlite3_realloc64() 增大缓冲区 |
+| `SQLITE_DETACH` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DETERMINISTIC` | 函数标志：相同输入参数时输出相同（可用于部分索引 WHERE 子句、生成列等） |
+| `SQLITE_DIRECTONLY` | 函数标志：只能从顶层 SQL 调用，不能用于视图/触发器/schema 结构（推荐给有副作用或可能泄露敏感信息的函数） |
+| `SQLITE_DONE` | 结果码：sqlite3_step() 执行完成（值为 101） |
+| `SQLITE_DROP_INDEX` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DROP_TABLE` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DROP_TEMP_INDEX` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DROP_TEMP_TABLE` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DROP_TEMP_TRIGGER` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DROP_TEMP_VIEW` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DROP_TRIGGER` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DROP_VIEW` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_DROP_VTABLE` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_EMPTY` | 结果码：仅供内部使用（值为 16） |
+| `SQLITE_ERROR` | 结果码：一般错误 |
+| `SQLITE_ERROR_KEY` | `SQLITE_ERROR` 的扩展错误码（MISSING_COLLSEQ/RETRY/SNAPSHOT/UNABLE/KEY/RESERVESIZE） |
+| `SQLITE_ERROR_MISSING_COLLSEQ` | `SQLITE_ERROR` 的扩展错误码（MISSING_COLLSEQ/RETRY/SNAPSHOT/UNABLE/KEY/RESERVESIZE） |
+| `SQLITE_ERROR_RESERVESIZE` | `SQLITE_ERROR` 的扩展错误码（MISSING_COLLSEQ/RETRY/SNAPSHOT/UNABLE/KEY/RESERVESIZE） |
+| `SQLITE_ERROR_RETRY` | `SQLITE_ERROR` 的扩展错误码（MISSING_COLLSEQ/RETRY/SNAPSHOT/UNABLE/KEY/RESERVESIZE） |
+| `SQLITE_ERROR_SNAPSHOT` | 扩展错误码：快照已被检查点覆盖，无法打开 |
+| `SQLITE_ERROR_UNABLE` | `SQLITE_ERROR` 的扩展错误码（MISSING_COLLSEQ/RETRY/SNAPSHOT/UNABLE/KEY/RESERVESIZE） |
+| `SQLITE_FAIL` | ON CONFLICT 冲突解决策略 |
+| `SQLITE_FCNTL_BEGIN_ATOMIC_WRITE` | 若此操作码返回 `SQLITE_OK`，则文件描述符被置于 "batch writemode… |
+| `SQLITE_FCNTL_BLOCK_ON_CONNECT` | 此操作码用于配置 VFS：在取 SHARED 锁连接 wal 模式数据库时阻… |
+| `SQLITE_FCNTL_BUSYHANDLER` | 此文件控制可能在数据库文件句柄打开后不久由 SQLite 调用，… |
+| `SQLITE_FCNTL_CHUNK_SIZE` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_CKPT_DONE` | 此操作码在 wal 模式检查点内、客户端完成把页从 wal 文件复�… |
+| `SQLITE_FCNTL_CKPT_START` | 此操作码在 wal 模式检查点内、客户端开始把页从 wal 文件复�… |
+| `SQLITE_FCNTL_CKSM_FILE` | 此操作码仅供校验和 VFS shim 内部使用。 |
+| `SQLITE_FCNTL_COMMIT_ATOMIC_WRITE` | 此操作码使自上一次成功调用`SQLITE_FCNTL_BEGIN_ATOMIC_WRITE` 以来�… |
+| `SQLITE_FCNTL_COMMIT_PHASETWO` | 此操作码由 SQLite 内部生成，在事务提交后、数据库解锁前立… |
+| `SQLITE_FCNTL_DATA_VERSION` | 此操作码用于检测数据库文件的更改。参数是指向 32 位无符�… |
+| `SQLITE_FCNTL_EXTERNAL_READER` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_FILESTAT` | 此操作码返回关于访问给定 schema 的数据库和日志文件所用的… |
+| `SQLITE_FCNTL_FILE_POINTER` | 此操作码用于获得与特定数据库连接关联的 sqlite3_file 对象的… |
+| `SQLITE_FCNTL_GET_LOCKPROXYFILE` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_HAS_MOVED` | 此文件控制把其参数解释为指向整数的指针，并根据文件自�… |
+| `SQLITE_FCNTL_JOURNAL_POINTER` | 此操作码用于获得与特定数据库连接的日志文件（回滚日志�… |
+| `SQLITE_FCNTL_LAST_ERRNO` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_LOCKSTATE` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_LOCK_TIMEOUT` | 此操作码用于配置 VFS：在尝试用 VFS 的 xLock 或 xShmLock 方法取… |
+| `SQLITE_FCNTL_MMAP_SIZE` | 此文件控制用于查询或设置将用于内存映射 I/O 的最大字节数… |
+| `SQLITE_FCNTL_NULL_IO` | 此操作码设置 sqlite3_file 对象的底层文件描述符或文件句柄，… |
+| `SQLITE_FCNTL_OVERWRITE` | 此操作码在打开写事务后由 SQLite 调用，指示：除非事务因某… |
+| `SQLITE_FCNTL_PDB` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_PERSIST_WAL` | 文件控制：连接全部关闭后 WAL 文件是否保留在磁盘 |
+| `SQLITE_FCNTL_POWERSAFE_OVERWRITE` | 此操作码用于设置或查询持久 "powersafe-overwrite"（PSOW）设置。… |
+| `SQLITE_FCNTL_PRAGMA` | 每当解析 PRAGMA 语句时，会把 `SQLITE_FCNTL_PRAGMA` 文件控制发送�… |
+| `SQLITE_FCNTL_RBU` | 此操作码只由 RBU 扩展使用的特殊 VFS 实现。所有其它 VFS 对�… |
+| `SQLITE_FCNTL_RESERVE_BYTES` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_RESET_CACHE` | 若数据库上当前没有打开事务、且数据库不是临时数据库，�… |
+| `SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE` | 此操作码使自上一次成功调用`SQLITE_FCNTL_BEGIN_ATOMIC_WRITE` 以来�… |
+| `SQLITE_FCNTL_SET_LOCKPROXYFILE` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_SIZE_HINT` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_SIZE_LIMIT` | 标准文件控制操作码（xFileControl/sqlite3_file_control 用）：LOCKSTATE/SIZE_HINT/SIZE_LIMIT/CHUNK_SIZE/FILE_POINTER/JOURNAL_POINTER/SYNC/COMMIT_PHASETWO/PERSIST_WAL/POWERSAFE_OVERWRITE/PRAGMA/BUSYHANDLER/TEMPFILENAME/MMAP_SIZE/TRACE/HAS_MOVED/WIN32_*_HANDLE/WAL_BLOCK/ZIPVFS/RBU/VFSNAME/VFS_POINTER/BEGIN_ATOMIC_WRITE/COMMIT_ATOMIC_WRITE/ROLLBACK_ATOMIC_WRITE/LOCK_TIMEOUT/DATA_VERSION/CKPT_START/CKPT_DONE/RESERVE_BYTES/EXTERNAL_READER/CKSM_FILE/RESET_CACHE/NULL_IO/BLOCK_ON_CONNECT/FILESTAT 等 |
+| `SQLITE_FCNTL_SYNC` | 此操作码由 SQLite 内部生成，在对数据库文件描述符调用 xSync… |
+| `SQLITE_FCNTL_SYNC_OMITTED` | 此文件控制不再使用。 |
+| `SQLITE_FCNTL_TEMPFILENAME` | 应用可调用此文件控制，让 SQLite 用与生成 TEMP 表及其它内部… |
+| `SQLITE_FCNTL_TRACE` | 此文件控制向 VFS 提供关于 SQLite 栈更高层在做什么的建议信�… |
+| `SQLITE_FCNTL_VFSNAME` | 此操作码可用于获得 VFS 栈中所有 VFS 的名字。所有 VFS shim 和… |
+| `SQLITE_FCNTL_VFS_POINTER` | 此操作码找到当前使用中的顶层 VFS 的指针。`sqlite3_file_control… |
+| `SQLITE_FCNTL_WAL_BLOCK` | 这是给 VFS 层的信号：若 WAL 锁不是立即可用，阻塞在下一次 … |
+| `SQLITE_FCNTL_WIN32_AV_RETRY` | 此操作码用于配置 windows VFS 某些磁盘 I/O 操作的自动重试次�… |
+| `SQLITE_FCNTL_WIN32_GET_HANDLE` | 此操作码可用于获得与文件句柄关联的底层本机文件句柄。�… |
+| `SQLITE_FCNTL_WIN32_SET_HANDLE` | 此操作码用于调试。此操作码使 xFileControl 方法把文件句柄与… |
+| `SQLITE_FCNTL_ZIPVFS` | 此操作码只由 zipvfs 实现。所有其它 VFS 对此操作码应返回`SQL… |
+| `SQLITE_FLOAT` | 五大基本数据类型（1/2/3/4/5） |
+| `SQLITE_FORMAT` | 结果码：未使用（值为 24） |
+| `SQLITE_FULL` | 结果码：数据库已满（值为 13） |
+| `SQLITE_FUNCTION` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_IGNORE` | ON CONFLICT 冲突解决策略 |
+| `SQLITE_INDEX_CONSTRAINT_EQ` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_FUNCTION` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_GE` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_GLOB` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_GT` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_IS` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_ISNOT` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_ISNOTNULL` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_ISNULL` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_LE` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_LIKE` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_LIMIT` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_LT` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_MATCH` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_NE` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_OFFSET` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_CONSTRAINT_REGEXP` | 虚拟表 WHERE 约束算子（EQ/NE/LT/LE/GT/GE/IS/ISNOT/ISNULL/ISNOTNULL/LIKE/GLOB/REGEXP/MATCH/FUNCTION/LIMIT/OFFSET） |
+| `SQLITE_INDEX_SCAN_HEX` | `SQLITE_INDEX_SCAN_*` 标志：令 `EXPLAIN QUERY PLAN` 以十六进制显示 idxNum |
+| `SQLITE_INDEX_SCAN_UNIQUE` | `SQLITE_INDEX_SCAN_*` 标志：查询计划最多返回一行 |
+| `SQLITE_INNOCUOUS` | 函数标志：无害函数（无副作用、只依赖输入参数） |
+| `SQLITE_INSERT` | 更新钩子事件：插入/删除/更新 |
+| `SQLITE_INTEGER` | 五大基本数据类型（1/2/3/4/5） |
+| `SQLITE_INTERNAL` | 结果码：SQLite 内部逻辑错误（值为 2） |
+| `SQLITE_INTERRUPT` | 结果码：操作被中断（值为 9） |
+| `SQLITE_IOCAP_ATOMIC` | 设备能力标志：任意大小的写操作原子（ATOMIC512~ATOMIC64K 表示 nnn 字节整块原子） |
+| `SQLITE_IOCAP_ATOMIC16K` | 设备能力标志：任意大小的写操作原子（ATOMIC512~ATOMIC64K 表示 nnn 字节整块原子） |
+| `SQLITE_IOCAP_ATOMIC1K` | 设备能力标志：任意大小的写操作原子（ATOMIC512~ATOMIC64K 表示 nnn 字节整块原子） |
+| `SQLITE_IOCAP_ATOMIC2K` | 设备能力标志：任意大小的写操作原子（ATOMIC512~ATOMIC64K 表示 nnn 字节整块原子） |
+| `SQLITE_IOCAP_ATOMIC32K` | 设备能力标志：任意大小的写操作原子（ATOMIC512~ATOMIC64K 表示 nnn 字节整块原子） |
+| `SQLITE_IOCAP_ATOMIC4K` | 设备能力标志：任意大小的写操作原子（ATOMIC512~ATOMIC64K 表示 nnn 字节整块原子） |
+| `SQLITE_IOCAP_ATOMIC512` | 设备能力标志：任意大小的写操作原子（ATOMIC512~ATOMIC64K 表示 nnn 字节整块原子） |
+| `SQLITE_IOCAP_ATOMIC64K` | 设备能力标志：任意大小的写操作原子（ATOMIC512~ATOMIC64K 表示 nnn 字节整块原子） |
+| `SQLITE_IOCAP_ATOMIC8K` | 设备能力标志：任意大小的写操作原子（ATOMIC512~ATOMIC64K 表示 nnn 字节整块原子） |
+| `SQLITE_IOCAP_BATCH_ATOMIC` | 设备能力标志：支持批量原子写 |
+| `SQLITE_IOCAP_IMMUTABLE` | 设备能力标志：文件不可变 |
+| `SQLITE_IOCAP_POWERSAFE_OVERWRITE` | 设备能力标志：断电安全的覆盖写 |
+| `SQLITE_IOCAP_SAFE_APPEND` | 设备能力标志：追加数据先写内容后扩展文件大小 |
+| `SQLITE_IOCAP_SEQUENTIAL` | 设备能力标志：数据按 `xWrite()` 调用顺序写入磁盘 |
+| `SQLITE_IOCAP_SUBPAGE_READ` | 设备能力标志：支持子页读取 |
+| `SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN` | 设备能力标志：文件打开期间不可删除 |
+| `SQLITE_IOERR` | 结果码：I/O 错误（值为 10） |
+| `SQLITE_IOERR_ACCESS` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_AUTH` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_BADKEY` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_BEGIN_ATOMIC` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_BLOCKED` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_CHECKRESERVEDLOCK` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_CLOSE` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_CODEC` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_COMMIT_ATOMIC` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_CONVPATH` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_CORRUPTFS` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_DATA` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_DELETE` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_DELETE_NOENT` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_DIR_CLOSE` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_DIR_FSYNC` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_FSTAT` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_FSYNC` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_GETTEMPPATH` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_IN_PAGE` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_LOCK` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_MMAP` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_NOMEM` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_RDLOCK` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_READ` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_ROLLBACK_ATOMIC` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_SEEK` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_SHMLOCK` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_SHMMAP` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_SHMOPEN` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_SHMSIZE` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_SHORT_READ` | 扩展错误码：读到的字节不足（`xRead` 须把未读部分填零） |
+| `SQLITE_IOERR_TRUNCATE` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_UNLOCK` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_VNODE` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_IOERR_WRITE` | `SQLITE_IOERR` 的扩展错误码（35 种具体 I/O 失败场景：读/写/同步/锁/删除/内存映射/共享内存/原子提交/编码等，见"扩展结果码"章节） |
+| `SQLITE_LIMIT_ATTACHED` | 附加数据库的最大数量。 |
+| `SQLITE_LIMIT_COLUMN` | 表定义、SELECT 结果集中的最大列数，或索引、ORDER BY、GROUP BY… |
+| `SQLITE_LIMIT_COMPOUND_SELECT` | 复合 SELECT 语句中的最大项数。 |
+| `SQLITE_LIMIT_EXPR_DEPTH` | 任何表达式解析树的最大深度，以及子查询和视图的最大嵌�… |
+| `SQLITE_LIMIT_FUNCTION_ARG` | 函数上的最大参数个数。 |
+| `SQLITE_LIMIT_LENGTH` | 运行时限制类别：SQL 字符串最大长度 |
+| `SQLITE_LIMIT_LIKE_PATTERN_LENGTH` | LIKE 或 GLOB 算子的模式参数的最大长度。 |
+| `SQLITE_LIMIT_PARSER_DEPTH` | 用于分析输入 SQL 语句的 LALR(1) 解析器栈的最大深度。 |
+| `SQLITE_LIMIT_SQL_LENGTH` | SQL 语句的最大长度，以字节计。 |
+| `SQLITE_LIMIT_TRIGGER_DEPTH` | 触发器递归的最大深度，以及独立触发器的最大嵌套深度。 |
+| `SQLITE_LIMIT_VARIABLE_NUMBER` | SQL 语句中任何参数的最大索引号。 |
+| `SQLITE_LIMIT_VDBE_OP` | 用于实现 SQL 语句的虚拟机程序中的最大指令数。若 `sqlite3_pr… |
+| `SQLITE_LIMIT_WORKER_THREADS` | 单个预编译语句可以启动的辅助工作线程的最大数量。 |
+| `SQLITE_LOCKED` | 结果码：数据库中的表被锁定（值为 6） |
+| `SQLITE_LOCKED_SHAREDCACHE` | 扩展错误码：共享缓存锁被阻塞（SQLITE_LOCKED 的扩展） |
+| `SQLITE_LOCKED_VTAB` | `SQLITE_LOCKED` 的扩展错误码（SHAREDCACHE=共享缓存锁被阻塞、VTAB=虚拟表锁） |
+| `SQLITE_LOCK_EXCLUSIVE` | `xLock()`/`xUnlock()` 的锁级别（无/共享/保留/待决/排他） |
+| `SQLITE_LOCK_NONE` | `xLock()`/`xUnlock()` 的锁级别（无/共享/保留/待决/排他） |
+| `SQLITE_LOCK_PENDING` | `xLock()`/`xUnlock()` 的锁级别（无/共享/保留/待决/排他） |
+| `SQLITE_LOCK_RESERVED` | `xLock()`/`xUnlock()` 的锁级别（无/共享/保留/待决/排他） |
+| `SQLITE_LOCK_SHARED` | `xLock()`/`xUnlock()` 的锁级别（无/共享/保留/待决/排他） |
+| `SQLITE_MISMATCH` | 结果码：数据类型不匹配（值为 20） |
+| `SQLITE_MISUSE` | 结果码：API 误用 |
+| `SQLITE_MUTEX_FAST` | 互斥锁类型：快速/递归 |
+| `SQLITE_MUTEX_RECURSIVE` | 互斥锁类型：快速/递归 |
+| `SQLITE_MUTEX_STATIC_APP1` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_APP2` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_APP3` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_LRU` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_LRU2` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_MAIN` | 静态互斥锁：主（main）互斥锁 |
+| `SQLITE_MUTEX_STATIC_MEM` | 静态互斥锁：内存分配互斥锁 |
+| `SQLITE_MUTEX_STATIC_MEM2` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_OPEN` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_PMEM` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_PRNG` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_VFS1` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_VFS2` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_MUTEX_STATIC_VFS3` | 静态互斥锁（APP1~3/LRU/MEM/OPEN/PRNG/MAIN/VFS1~3/PEM 等，sqlite3_mutex_alloc 用） |
+| `SQLITE_NOLFS` | 结果码：使用宿主不支持的操作系统特性（值为 22） |
+| `SQLITE_NOMEM` | 结果码：malloc() 失败、内存不足（值为 7） |
+| `SQLITE_NOTADB` | 结果码：打开的文件不是数据库文件（值为 26） |
+| `SQLITE_NOTFOUND` | 结果码：未找到（如 sqlite3_file_control 未知 opcode） |
+| `SQLITE_NOTICE` | 结果码：sqlite3_log() 的通知/警告（27/28） |
+| `SQLITE_NOTICE_RBU` | `SQLITE_NOTICE` 的扩展错误码（RECOVER_WAL/RECOVER_ROLLBACK/RBU） |
+| `SQLITE_NOTICE_RECOVER_ROLLBACK` | `SQLITE_NOTICE` 的扩展错误码（RECOVER_WAL/RECOVER_ROLLBACK/RBU） |
+| `SQLITE_NOTICE_RECOVER_WAL` | `SQLITE_NOTICE` 的扩展错误码（RECOVER_WAL/RECOVER_ROLLBACK/RBU） |
+| `SQLITE_NULL` | 五大基本数据类型（1/2/3/4/5） |
+| `SQLITE_OK` | 结果码：成功（值为 0） |
+| `SQLITE_OK_LOAD_PERMANENTLY` | `SQLITE_OK` 的扩展错误码（SYMLINK=符号链接、仅供内部使用；LOAD_PERMANENTLY=扩展被永久加载） |
+| `SQLITE_OK_SYMLINK` | `SQLITE_OK` 的扩展错误码（SYMLINK=符号链接、仅供内部使用；LOAD_PERMANENTLY=扩展被永久加载） |
+| `SQLITE_OPEN_AUTOPROXY` | 打开标志（仅 VFS 内部用）：启用 autoproxying（0x00000020） |
+| `SQLITE_OPEN_CREATE` | `sqlite3_open_v2()` 标志：不存在则创建 |
+| `SQLITE_OPEN_DELETEONCLOSE` | 打开标志：关闭时删除文件 |
+| `SQLITE_OPEN_EXCLUSIVE` | 打开标志：与 SQLITE_OPEN_CREATE 联用，文件必须新建、已存在则报错（对应 POSIX O_EXCL） |
+| `SQLITE_OPEN_EXRESCODE` | 打开标志：新连接进入扩展结果码模式（相当于立即调用 extended_result_codes(db,1)） |
+| `SQLITE_OPEN_FULLMUTEX` | 打开标志：新连接用 serialized 线程模式（多线程可安全共享同一连接） |
+| `SQLITE_OPEN_MAIN_DB` | 打开标志：主数据库文件 |
+| `SQLITE_OPEN_MAIN_JOURNAL` | 打开标志：主数据库日志文件 |
+| `SQLITE_OPEN_MEMORY` | 打开标志：以内存数据库方式打开 |
+| `SQLITE_OPEN_NOFOLLOW` | 打开标志：数据库文件名不允许包含符号链接 |
+| `SQLITE_OPEN_NOMUTEX` | 打开标志：新连接用 multi-thread 线程模式（各线程用不同连接） |
+| `SQLITE_OPEN_PRIVATECACHE` | 打开标志：禁用共享缓存（覆盖默认设置） |
+| `SQLITE_OPEN_READONLY` | `sqlite3_open_v2()` 标志：只读方式打开 |
+| `SQLITE_OPEN_READWRITE` | `sqlite3_open_v2()` 标志：读写方式打开 |
+| `SQLITE_OPEN_SHAREDCACHE` | 打开标志：为单个连接启用共享缓存模式 |
+| `SQLITE_OPEN_SUBJOURNAL` | 打开标志：子日志文件 |
+| `SQLITE_OPEN_SUPER_JOURNAL` | 打开标志：超级日志文件 |
+| `SQLITE_OPEN_TEMP_DB` | 打开标志：临时数据库文件 |
+| `SQLITE_OPEN_TEMP_JOURNAL` | 打开标志：临时数据库日志文件 |
+| `SQLITE_OPEN_TRANSIENT_DB` | 打开标志：瞬态数据库文件 |
+| `SQLITE_OPEN_URI` | 打开标志：把文件名解释为 URI |
+| `SQLITE_OPEN_WAL` | 打开标志：WAL 文件 |
+| `SQLITE_PERM` | 结果码：访问权限被拒绝（值为 3） |
+| `SQLITE_PRAGMA` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_PREPARE_DONT_LOG` | 预编译标志（sqlite3_prepare_v3/prepare16_v3 的 prepFlags 参数） |
+| `SQLITE_PREPARE_FROM_DDL` | 预编译标志（sqlite3_prepare_v3/prepare16_v3 的 prepFlags 参数） |
+| `SQLITE_PREPARE_NORMALIZE` | 预编译标志（sqlite3_prepare_v3/prepare16_v3 的 prepFlags 参数） |
+| `SQLITE_PREPARE_NO_VTAB` | 预编译标志（sqlite3_prepare_v3/prepare16_v3 的 prepFlags 参数） |
+| `SQLITE_PREPARE_PERSISTENT` | 预编译标志（sqlite3_prepare_v3/prepare16_v3 的 prepFlags 参数） |
+| `SQLITE_PROTOCOL` | 结果码：协议错误 |
+| `SQLITE_RANGE` | 结果码：sqlite3_bind 第 2 参数越界（值为 25） |
+| `SQLITE_READ` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_READONLY` | 结果码：只读（如对只读打开的 BLOB 写入） |
+| `SQLITE_READONLY_CANTINIT` | `SQLITE_READONLY` 的扩展错误码（RECOVERY/CANTLOCK/ROLLBACK/DBMOVED/CANTINIT/DIRECTORY） |
+| `SQLITE_READONLY_CANTLOCK` | `SQLITE_READONLY` 的扩展错误码（RECOVERY/CANTLOCK/ROLLBACK/DBMOVED/CANTINIT/DIRECTORY） |
+| `SQLITE_READONLY_DBMOVED` | `SQLITE_READONLY` 的扩展错误码（RECOVERY/CANTLOCK/ROLLBACK/DBMOVED/CANTINIT/DIRECTORY） |
+| `SQLITE_READONLY_DIRECTORY` | `SQLITE_READONLY` 的扩展错误码（RECOVERY/CANTLOCK/ROLLBACK/DBMOVED/CANTINIT/DIRECTORY） |
+| `SQLITE_READONLY_RECOVERY` | `SQLITE_READONLY` 的扩展错误码（RECOVERY/CANTLOCK/ROLLBACK/DBMOVED/CANTINIT/DIRECTORY） |
+| `SQLITE_READONLY_ROLLBACK` | `SQLITE_READONLY` 的扩展错误码（RECOVERY/CANTLOCK/ROLLBACK/DBMOVED/CANTINIT/DIRECTORY） |
+| `SQLITE_RECURSIVE` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_REINDEX` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_REPLACE` | ON CONFLICT 冲突解决策略 |
+| `SQLITE_RESULT_SUBTYPE` | 函数标志：函数可设置结果子类型（配合 sqlite3_result_subtype()） |
+| `SQLITE_ROLLBACK` | ON CONFLICT 冲突解决策略 |
+| `SQLITE_ROW` | 结果码：sqlite3_step() 返回一行（值为 100） |
+| `SQLITE_SAVEPOINT` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_SCANSTAT_COMPLEX` | sqlite3_stmt_scanstatus_v2 的 flags 标志：查询计划全部元素的状态信息（含 EXPLAIN QUERY PLAN 报告的） |
+| `SQLITE_SCANSTAT_EST` | V 参数指向的 "double" 变量将被设为查询规划器对第 X 个循环�… |
+| `SQLITE_SCANSTAT_EXPLAIN` | V 参数指向的 "const char *" 变量将被设为包含第 X 个循环的 EXPL… |
+| `SQLITE_SCANSTAT_NAME` | V 参数指向的 "const char *" 变量将被设为包含第 X 个循环所用�… |
+| `SQLITE_SCANSTAT_NCYCLE` | sqlite3_int64 输出值被设为处理查询元素期间、根据处理器时间… |
+| `SQLITE_SCANSTAT_NLOOP` | V 参数指向的 sqlite3_int64 变量将被设为第 X 个循环运行的总次… |
+| `SQLITE_SCANSTAT_NVISIT` | V 参数指向的 sqlite3_int64 变量将被设为第 X 个循环所有迭代检… |
+| `SQLITE_SCANSTAT_PARENTID` | V 参数指向的 "int" 变量将被设为当前查询元素的父元素 id（�… |
+| `SQLITE_SCANSTAT_SELECTID` | V 参数指向的 "int" 变量将被设为第 X 个查询计划元素的 id。�… |
+| `SQLITE_SCHEMA` | 结果码：schema 已改变，需重新准备语句 |
+| `SQLITE_SCM_BRANCH` | 源码控制元数据宏：分支名/发布标签/构建日期时间（构成 SQLITE_SOURCE_ID 的内容） |
+| `SQLITE_SCM_DATETIME` | 源码控制元数据宏：分支名/发布标签/构建日期时间（构成 SQLITE_SOURCE_ID 的内容） |
+| `SQLITE_SCM_TAGS` | 源码控制元数据宏：分支名/发布标签/构建日期时间（构成 SQLITE_SOURCE_ID 的内容） |
+| `SQLITE_SELECT` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_SELFORDER1` | 函数标志：自身有序函数（可消除一个排序步骤） |
+| `SQLITE_SERIALIZE_NOCOPY` | `sqlite3_serialize()` 标志：直接返回当前使用的内存连续数据库副本指针、不做拷贝 |
+| `SQLITE_SETLK_BLOCK_ON_CONNECT` | `sqlite3_setlk_timeout()` 标志：设置锁超时时若连接尚未完成则阻塞 |
+| `SQLITE_SHM_EXCLUSIVE` | xShmLock 方法锁操作标志（1/2/4/8） |
+| `SQLITE_SHM_LOCK` | xShmLock 方法锁操作标志（1/2/4/8） |
+| `SQLITE_SHM_NLOCK` | `xShmLock` 方法 "offset" 参数的上限（值为 8） |
+| `SQLITE_SHM_SHARED` | xShmLock 方法锁操作标志（1/2/4/8） |
+| `SQLITE_SHM_UNLOCK` | xShmLock 方法锁操作标志（1/2/4/8） |
+| `SQLITE_SOURCE_ID` | 编译期版本宏：版本字符串/版本整数 (X*1000000+Y*1000+Z)/源码标识 |
+| `SQLITE_STATIC` | 特殊析构函数值：内容指针恒定不销毁/内容将改变需复制 |
+| `SQLITE_STATUS_MALLOC_COUNT` | 此参数记录当前借出的独立内存分配数。 |
+| `SQLITE_STATUS_MALLOC_SIZE` | 此参数记录交给 `sqlite3_malloc()` 或 `sqlite3_realloc()`（或其内部�… |
+| `SQLITE_STATUS_MEMORY_USED` | 此参数是当前用 `sqlite3_malloc()` 直接或间接借出的内存量。该… |
+| `SQLITE_STATUS_PAGECACHE_OVERFLOW` | 此参数返回无法由 `SQLITE_CONFIG_PAGECACHE` 缓冲区满足、被迫溢�… |
+| `SQLITE_STATUS_PAGECACHE_SIZE` | 此参数记录交给页缓存内存分配器的最大内存分配请求。只�… |
+| `SQLITE_STATUS_PAGECACHE_USED` | 此参数返回用 `SQLITE_CONFIG_PAGECACHE` 配置的页缓存内存分配器�… |
+| `SQLITE_STATUS_PARSER_STACK` | *pHighwater 参数记录最深的解析器栈。*pCurrent 值未定义。*pHighw… |
+| `SQLITE_STATUS_SCRATCH_OVERFLOW` | 不再使用。 |
+| `SQLITE_STATUS_SCRATCH_SIZE` | 不再使用。 |
+| `SQLITE_STATUS_SCRATCH_USED` | 不再使用。 |
+| `SQLITE_STMTSTATUS_AUTOINDEX` | 这是插入到自动创建的瞬态索引中的行数，这些索引是为帮�… |
+| `SQLITE_STMTSTATUS_FILTER_HIT` | 预编译语句状态计数器（sqlite3_stmt_status 用）：FULLSCAN_STEP/SORT/AUTOINDEX/VM_STEP/REPREPARE/RUN/FILTER_HIT/FILTER_MISS/MEMUSED |
+| `SQLITE_STMTSTATUS_FILTER_MISS` | 预编译语句状态计数器（sqlite3_stmt_status 用）：FULLSCAN_STEP/SORT/AUTOINDEX/VM_STEP/REPREPARE/RUN/FILTER_HIT/FILTER_MISS/MEMUSED |
+| `SQLITE_STMTSTATUS_FULLSCAN_STEP` | 这是 SQLite 作为全表扫描一部分在表中向前步进的次数。此计… |
+| `SQLITE_STMTSTATUS_MEMUSED` | 这是用于存储预编译语句的堆内存字节数的近似值。此值实�… |
+| `SQLITE_STMTSTATUS_REPREPARE` | 这是预编译语句因 schema 更改、或可能影响查询计划的绑定参… |
+| `SQLITE_STMTSTATUS_RUN` | 这是预编译语句已被运行的次数。就此计数器而言，一次"运�… |
+| `SQLITE_STMTSTATUS_SORT` | 这是已发生的排序操作次数。此计数器非零值可能表明有机�… |
+| `SQLITE_STMTSTATUS_VM_STEP` | 若该数小于或等于 2147483647，这是预编译语句执行的虚拟机操… |
+| `SQLITE_SUBTYPE` | 函数标志：函数参数/结果带子类型（配合 value_subtype/result_subtype） |
+| `SQLITE_SYNC_DATAONLY` | `xSync` 标志：只同步文件数据、不同步 inode |
+| `SQLITE_SYNC_FULL` | `xSync` 标志：Mac OS X 风格 fullsync |
+| `SQLITE_SYNC_NORMAL` | `xSync` 标志：普通 fsync() |
+| `SQLITE_TESTCTRL_ALWAYS` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_ASSERT` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_ATOF` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_BENIGN_MALLOC_HOOKS` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_BITVEC_TEST` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_BYTEORDER` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_EXPLAIN_STMT` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_EXTRA_SCHEMA_CHECKS` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_FAULT_INSTALL` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_FIRST` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_FK_NO_ACTION` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_GETOPT` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_IMPOSTER` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_INTERNAL_FUNCTIONS` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_ISINIT` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_ISKEYWORD` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_JSON_SELFCHECK` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_LAST` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_LOCALTIME_FAULT` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_LOGEST` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_NEVER_CORRUPT` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_ONCE_RESET_THRESHOLD` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_OPTIMIZATIONS` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_PARSER_COVERAGE` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_PENDING_BYTE` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_PRNG_RESET` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_PRNG_RESTORE` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_PRNG_SAVE` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_PRNG_SEED` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_RESERVE` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_RESULT_INTREAL` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_SCRATCHMALLOC` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_SEEK_COUNT` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_SORTER_MMAP` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_TRACEFLAGS` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_TUNE` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_USELONGDOUBLE` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TESTCTRL_VDBE_COVERAGE` | sqlite3_test_control() 操作码（仅供测试 SQLite，应用勿用） |
+| `SQLITE_TEXT` | 五大基本数据类型（1/2/3/4/5） |
+| `SQLITE_TOOBIG` | 结果码：字符串或 BLOB 超过大小限制（值为 18） |
+| `SQLITE_TRACE` | 跟踪事件常量的统称（sqlite3_trace_v2 的 M 掩码由 SQLITE_TRACE_STMT/PROFILE/ROW/CLOSE 按位或组成） |
+| `SQLITE_TRACE_CLOSE` | sqlite3_trace_v2 跟踪事件类（0x01/0x02/0x04/0x08） |
+| `SQLITE_TRACE_PROFILE` | sqlite3_trace_v2 跟踪事件类（0x01/0x02/0x04/0x08） |
+| `SQLITE_TRACE_ROW` | sqlite3_trace_v2 跟踪事件类（0x01/0x02/0x04/0x08） |
+| `SQLITE_TRACE_STMT` | sqlite3_trace_v2 跟踪事件类（0x01/0x02/0x04/0x08） |
+| `SQLITE_TRANSACTION` | 授权回调动作码（sqlite3_set_authorizer 用） |
+| `SQLITE_TRANSIENT` | 特殊析构函数值：内容指针恒定不销毁/内容将改变需复制 |
+| `SQLITE_TXN_NONE` | 事务状态（0/1/2，sqlite3_txn_state 返回值） |
+| `SQLITE_TXN_READ` | 事务状态（0/1/2，sqlite3_txn_state 返回值） |
+| `SQLITE_TXN_WRITE` | 事务状态（0/1/2，sqlite3_txn_state 返回值） |
+| `SQLITE_UPDATE` | 更新钩子事件：插入/删除/更新 |
+| `SQLITE_UTF16` | 文本编码常量（1/2/3/4/5/8/16） |
+| `SQLITE_UTF16BE` | 文本编码常量（1/2/3/4/5/8/16） |
+| `SQLITE_UTF16LE` | 文本编码常量（1/2/3/4/5/8/16） |
+| `SQLITE_UTF16_ALIGNED` | 文本编码常量（1/2/3/4/5/8/16） |
+| `SQLITE_UTF8` | 文本编码常量（1/2/3/4/5/8/16） |
+| `SQLITE_UTF8_ZT` | 文本编码常量（1/2/3/4/5/8/16） |
+| `SQLITE_VERSION` | 编译期版本宏：版本字符串/版本整数 (X*1000000+Y*1000+Z)/源码标识 |
+| `SQLITE_VERSION_NUMBER` | 编译期版本宏：版本字符串/版本整数 (X*1000000+Y*1000+Z)/源码标识 |
+| `SQLITE_VTAB_CONSTRAINT_SUPPORT` | 虚拟表配置选项（sqlite3_vtab_config 用）：声明虚拟表支持对约束的精确处理 |
+| `SQLITE_VTAB_DIRECTONLY` | 虚拟表标志：只能从顶层 SQL 调用 |
+| `SQLITE_VTAB_INNOCUOUS` | 虚拟表标志：无害虚拟表（可在触发器/视图中使用，即使 TRUSTED_SCHEMA 关闭） |
+| `SQLITE_VTAB_USES_ALL_SCHEMAS` | 虚拟表标志：使用所有 schema |
+| `SQLITE_WARNING` | 结果码：sqlite3_log() 的通知/警告（27/28） |
+| `SQLITE_WARNING_AUTOINDEX` | `SQLITE_WARNING` 的扩展错误码（AUTOINDEX=查询规划器自动创建索引的警告） |
+| `SQLITE_WIN32_DATA_DIRECTORY_TYPE` | Win32 目录类型（sqlite3_win32_set_directory 用） |
+| `SQLITE_WIN32_TEMP_DIRECTORY_TYPE` | Win32 目录类型（sqlite3_win32_set_directory 用） |
+
+### 函数（Functions）
+
+| 函数 | 中文对照 |
+|------|----------|
+| `sqlite3_aggregate_context` | 取聚合函数上下文 |
+| `sqlite3_aggregate_count` | 已废弃函数（为向后兼容保留，不解释用途） |
+| `sqlite3_auto_extension` | 注册静态链接扩展，在每次新建连接时自动加载 |
+| `sqlite3_autovacuum_pages` | 注册 autovacuum 压缩量回调（每次 autovacuum 前调用） |
+| `sqlite3_backup_finish` | 结束在线备份并释放对象 |
+| `sqlite3_backup_init` | 初始化在线备份对象 |
+| `sqlite3_backup_pagecount` | 返回源数据库的总页数 |
+| `sqlite3_backup_remaining` | 返回最近一次 backup_step 后剩余待备份页数 |
+| `sqlite3_backup_step` | 在源和目标数据库之间复制最多 N 页 |
+| `sqlite3_bind_blob` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_blob64` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_double` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_int` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_int64` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_null` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_parameter_count` | 预编译语句中 SQL 参数的个数（最大参数索引） |
+| `sqlite3_bind_parameter_index` | 按参数名查参数索引 |
+| `sqlite3_bind_parameter_name` | 按参数索引查参数名（UTF-8） |
+| `sqlite3_bind_pointer` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_text` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_text16` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_text64` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_value` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_zeroblob` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_bind_zeroblob64` | 把值绑定到预编译语句的宿主参数（blob/double/int/int64/null/text/value/pointer/zeroblob） |
+| `sqlite3_blob_bytes` | 返回打开的 BLOB 句柄对应 BLOB 的字节数 |
+| `sqlite3_blob_close` | 关闭 BLOB 句柄（无条件关闭） |
+| `sqlite3_blob_open` | 打开 BLOB 句柄做增量 I/O |
+| `sqlite3_blob_read` | 从打开的 BLOB 增量读取数据 |
+| `sqlite3_blob_reopen` | 把 BLOB 句柄移到同一表的另一行 |
+| `sqlite3_blob_write` | 向打开的 BLOB 增量写入数据 |
+| `sqlite3_busy_handler` | 设置自定义忙处理器（busy_timeout 会清除先前设置的处理器） |
+| `sqlite3_busy_timeout` | 设置忙超时（表锁定时睡眠，累积 ms 毫秒后返回 SQLITE_BUSY） |
+| `sqlite3_cancel_auto_extension` | 取消自动加载的静态链接扩展（成功取消注册返回 1，不在列表返回 0） |
+| `sqlite3_carray_bind` | 把数组绑定到 carray 表值函数的参数 |
+| `sqlite3_carray_bind_v2` | 把数组绑定到 carray 表值函数的参数 |
+| `sqlite3_changes` | 返回最近一次语句影响的行数 |
+| `sqlite3_changes64` | 返回最近一次语句影响的行数 |
+| `sqlite3_clear_bindings` | 把所有宿主参数重置为 NULL |
+| `sqlite3_close` | 关闭数据库连接（close_v2 为新版接口） |
+| `sqlite3_close_v2` | 新版关闭连接（延迟析构） |
+| `sqlite3_collation_needed` | 注册排序规则请求回调 |
+| `sqlite3_collation_needed16` | 注册排序规则请求回调 |
+| `sqlite3_column_blob` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_column_bytes` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_column_bytes16` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_column_count` | 返回预编译语句结果集的列数 |
+| `sqlite3_column_database_name` | 返回结果列来源的数据库名 |
+| `sqlite3_column_database_name16` | 返回结果列来源的数据库名 |
+| `sqlite3_column_decltype` | 返回结果列的声明数据类型 |
+| `sqlite3_column_decltype16` | 返回结果列的声明数据类型 |
+| `sqlite3_column_double` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_column_int` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_column_int64` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_column_name` | 取结果列的名字（UTF-8） |
+| `sqlite3_column_name16` | 返回结果列的名字（UTF-16 编码） |
+| `sqlite3_column_origin_name` | 返回结果列来源的列名（需 SQLITE_ENABLE_COLUMN_METADATA） |
+| `sqlite3_column_origin_name16` | 返回结果列来源的列名（需 SQLITE_ENABLE_COLUMN_METADATA） |
+| `sqlite3_column_table_name` | 返回结果列来源的表名 |
+| `sqlite3_column_table_name16` | 返回结果列来源的表名 |
+| `sqlite3_column_text` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_column_text16` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_column_type` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_column_value` | 取结果列的值/大小/类型（blob/double/int/int64/text/text16/value/bytes/bytes16/type） |
+| `sqlite3_commit_hook` | 提交/回滚/预更新回调 |
+| `sqlite3_compileoption_get` | 编译期选项诊断：是否使用某选项/遍历选项列表 |
+| `sqlite3_compileoption_used` | 编译期选项诊断：是否使用某选项/遍历选项列表 |
+| `sqlite3_complete` | 判断输入文本是否构成完整的 SQL 语句 |
+| `sqlite3_complete16` | 判断输入文本是否构成完整的 SQL 语句 |
+| `sqlite3_config` | 全局配置（内存/锁/页缓存等） |
+| `sqlite3_context_db_handle` | 取函数执行所在的数据库连接 |
+| `sqlite3_create_collation` | 注册自定义排序规则 |
+| `sqlite3_create_collation16` | 注册自定义排序规则 |
+| `sqlite3_create_collation_v2` | 注册自定义排序规则 |
+| `sqlite3_create_filename` | 分配/释放 VFS 规范文件名（VFS 垫片实现用） |
+| `sqlite3_create_function` | 注册自定义 SQL 函数 |
+| `sqlite3_create_function16` | 注册自定义 SQL 函数 |
+| `sqlite3_create_function_v2` | 注册自定义 SQL 函数（带 pApp 析构回调） |
+| `sqlite3_create_module` | 注册虚拟表模块 |
+| `sqlite3_create_module_v2` | 注册虚拟表模块（带析构回调） |
+| `sqlite3_create_window_function` | 注册聚合窗口函数 |
+| `sqlite3_data_count` | 返回结果集当前行的列数 |
+| `sqlite3_database_file_object` | 由日志/WAL 文件名返回主数据库文件的 sqlite3_file 对象 |
+| `sqlite3_db_cacheflush` | 事务中把脏页刷写到磁盘（所有 schema） |
+| `sqlite3_db_config` | 配置单个数据库连接 |
+| `sqlite3_db_filename` | 返回连接上某数据库的文件名（绝对路径） |
+| `sqlite3_db_handle` | 返回预编译语句所属的数据库连接 |
+| `sqlite3_db_mutex` | 返回串行化数据库连接访问的互斥锁（Serialized 模式） |
+| `sqlite3_db_name` | 返回连接上第 N 个数据库的 schema 名 |
+| `sqlite3_db_readonly` | 判断数据库是否只读（1=只读 0=读写 -1=不存在） |
+| `sqlite3_db_release_memory` | 尽量释放数据库连接 D 的堆内存（无需 SQLITE_ENABLE_MEMORY_MANAGEMENT） |
+| `sqlite3_db_status` | 取数据库连接的状态参数（SQLITE_DBSTATUS_*） |
+| `sqlite3_db_status64` | 取数据库连接的状态参数（SQLITE_DBSTATUS_*） |
+| `sqlite3_declare_vtab` | 声明虚拟表的 schema（CREATE TABLE 语句） |
+| `sqlite3_deserialize` | 用内存字节串初始化内存连续的数据库副本 |
+| `sqlite3_drop_modules` | 移除数据库连接上除名单外所有虚拟表模块 |
+| `sqlite3_enable_load_extension` | 启用/禁用扩展加载（同时作用于 C-API 和 load_extension() SQL 函数） |
+| `sqlite3_enable_shared_cache` | 启用/禁用进程级共享页缓存（不推荐使用） |
+| `sqlite3_errcode` | 取最近一次错误的错误码/错误消息 |
+| `sqlite3_errmsg` | 取最近一次错误的错误码/错误消息 |
+| `sqlite3_errmsg16` | 返回最近一次错误的错误消息（UTF-16 编码） |
+| `sqlite3_error_offset` | 返回最近一次语法错误的字节偏移 |
+| `sqlite3_errstr` | 返回错误码对应的静态错误消息字符串 |
+| `sqlite3_exec` | 一步执行多条 SQL 的便捷包装（内部用 prepare_v2/step/finalize） |
+| `sqlite3_expanded_sql` | 返回展开所有绑定参数后的 SQL 文本 |
+| `sqlite3_expired` | 已废弃函数（为向后兼容保留，不解释用途） |
+| `sqlite3_extended_errcode` | 返回最近一次错误的扩展错误码 |
+| `sqlite3_extended_result_codes` | 启用/禁用扩展结果码（默认禁用） |
+| `sqlite3_file_control` | 对打开的文件执行文件控制操作 |
+| `sqlite3_filename_database` | 取规范文件名中的数据库部分 |
+| `sqlite3_filename_journal` | 取规范文件名中的日志部分 |
+| `sqlite3_filename_wal` | 取规范文件名中的 WAL 部分 |
+| `sqlite3_finalize` | 销毁预编译语句（必须对每条语句调用以避免泄漏） |
+| `sqlite3_free` | 释放 sqlite3_malloc()/mprintf 等分配的内存 |
+| `sqlite3_free_filename` | 分配/释放 VFS 规范文件名（VFS 垫片实现用） |
+| `sqlite3_free_table` | 释放 sqlite3_get_table() 分配的内存 |
+| `sqlite3_get_autocommit` | 判断连接是否处于自动提交模式 |
+| `sqlite3_get_auxdata` | 取/存函数辅助数据 |
+| `sqlite3_get_clientdata` | 取/设连接的客户端数据 |
+| `sqlite3_get_table` | 便捷查询接口：执行 SQL 并返回完整结果表（旧接口，不推荐） |
+| `sqlite3_global_recover` | 已废弃函数（为向后兼容保留，不解释用途） |
+| `sqlite3_hard_heap_limit64` | 设置硬堆内存上限 |
+| `sqlite3_initialize` | 初始化 SQLite 子系统 |
+| `sqlite3_interrupt` | 中断连接上的挂起数据库操作 |
+| `sqlite3_is_interrupted` | 判断连接上的操作是否已被中断 |
+| `sqlite3_keyword_check` | SQL 关键字检查：计数/取第 N 个关键字/判断标识符是否关键字 |
+| `sqlite3_keyword_count` | SQL 关键字检查：计数/取第 N 个关键字/判断标识符是否关键字 |
+| `sqlite3_keyword_name` | SQL 关键字检查：计数/取第 N 个关键字/判断标识符是否关键字 |
+| `sqlite3_last_insert_rowid` | 返回连接上最近一次成功 INSERT 的 rowid |
+| `sqlite3_libversion` | 返回 SQLite 版本字符串 |
+| `sqlite3_libversion_number` | 返回 SQLite 版本号（整数，如 3008002） |
+| `sqlite3_limit` | 设置/查询各类构造的大小限制（按连接） |
+| `sqlite3_load_extension` | 从共享库文件加载扩展 |
+| `sqlite3_log` | 向错误日志写入消息（配合 SQLITE_CONFIG_LOG） |
+| `sqlite3_malloc` | SQLite 内存分配/重分配 |
+| `sqlite3_malloc64` | 64 位内存分配 |
+| `sqlite3_memory_alarm` | 已废弃函数（为向后兼容保留，不解释用途） |
+| `sqlite3_memory_highwater` | 返回当前已用/历史最高内存分配字节数 |
+| `sqlite3_memory_used` | 返回当前已用/历史最高内存分配字节数 |
+| `sqlite3_mprintf` | SQLite 的格式化字符串分配函数 |
+| `sqlite3_msize` | 返回内存分配的字节大小 |
+| `sqlite3_mutex_alloc` | 分配互斥锁 |
+| `sqlite3_mutex_enter` | 进入（加锁）互斥锁 |
+| `sqlite3_mutex_free` | 释放互斥锁 |
+| `sqlite3_mutex_held` | 判断当前线程是否持有互斥锁 |
+| `sqlite3_mutex_leave` | 离开（解锁）互斥锁 |
+| `sqlite3_mutex_notheld` | 判断当前线程是否未持有互斥锁 |
+| `sqlite3_mutex_try` | 尝试进入互斥锁（不阻塞） |
+| `sqlite3_next_stmt` | 返回连接上下一个预编译语句（遍历语句列表） |
+| `sqlite3_normalized_sql` | 返回预编译语句的规范化 SQL 文本 |
+| `sqlite3_open` | 打开数据库连接 |
+| `sqlite3_open16` | 打开数据库连接 |
+| `sqlite3_open_v2` | 打开数据库连接 |
+| `sqlite3_os_end` | 自定义 OS 层结束例程 |
+| `sqlite3_os_init` | 自定义 OS 层初始化例程 |
+| `sqlite3_overload_function` | 为虚拟表创建可被重载的函数占位符 |
+| `sqlite3_prepare` | 旧版编译 SQL 接口（向后兼容保留，不推荐使用） |
+| `sqlite3_prepare16` | 旧版编译 SQL 接口（向后兼容保留，不推荐使用） |
+| `sqlite3_prepare16_v2` | 编译 SQL 为预编译语句 |
+| `sqlite3_prepare16_v3` | 编译 SQL（带 prepFlags 标志的 v3 变体） |
+| `sqlite3_prepare_v2` | 编译 SQL 为预编译语句 |
+| `sqlite3_prepare_v3` | 编译 SQL（带 prepFlags 标志的 v3 变体） |
+| `sqlite3_preupdate_blobwrite` | 预更新回调附加信息：行内列数/触发器嵌套深度/被 blob 写入的列索引 |
+| `sqlite3_preupdate_count` | 预更新回调附加信息：行内列数/触发器嵌套深度/被 blob 写入的列索引 |
+| `sqlite3_preupdate_depth` | 预更新回调附加信息：行内列数/触发器嵌套深度/被 blob 写入的列索引 |
+| `sqlite3_preupdate_hook` | 提交/回滚/预更新回调 |
+| `sqlite3_preupdate_new` | 取预更新钩子中被改行的旧/新值 |
+| `sqlite3_preupdate_old` | 取预更新钩子中被改行的旧/新值 |
+| `sqlite3_profile` | 设置 SQL 跟踪/性能分析回调（trace/profile 已废弃） |
+| `sqlite3_progress_handler` | 设置进度回调（长查询时定期调用，可实现取消按钮） |
+| `sqlite3_randomness` | 获取 SQLite 内置 PRNG 的随机字节 |
+| `sqlite3_realloc` | SQLite 内存分配/重分配 |
+| `sqlite3_realloc64` | 64 位内存重分配 |
+| `sqlite3_release_memory` | 释放 N 字节堆内存（需要 SQLITE_ENABLE_MEMORY_MANAGEMENT，返回实际释放字节数） |
+| `sqlite3_reset` | 把预编译语句重置回初始状态（不重置绑定） |
+| `sqlite3_reset_auto_extension` | 清空自动扩展列表 |
+| `sqlite3_result_blob` | 设置 SQL 函数的结果 |
+| `sqlite3_result_blob64` | 设置 SQL 函数结果的其它变体（64 位长度/编码/指针/错误种类/错误码） |
+| `sqlite3_result_double` | 设置 SQL 函数的结果 |
+| `sqlite3_result_error` | 设置 SQL 函数的结果 |
+| `sqlite3_result_error16` | 设置 SQL 函数的结果 |
+| `sqlite3_result_error_code` | 设置 SQL 函数结果的其它变体（64 位长度/编码/指针/错误种类/错误码） |
+| `sqlite3_result_error_nomem` | 设置 SQL 函数结果的其它变体（64 位长度/编码/指针/错误种类/错误码） |
+| `sqlite3_result_error_toobig` | 设置 SQL 函数结果的其它变体（64 位长度/编码/指针/错误种类/错误码） |
+| `sqlite3_result_int` | 设置 SQL 函数的结果 |
+| `sqlite3_result_int64` | 设置 SQL 函数的结果 |
+| `sqlite3_result_null` | 设置 SQL 函数的结果 |
+| `sqlite3_result_pointer` | 设置 SQL 函数结果的其它变体（64 位长度/编码/指针/错误种类/错误码） |
+| `sqlite3_result_subtype` | 设置 SQL 函数结果的子类型（保留低 8 位） |
+| `sqlite3_result_text` | 设置 SQL 函数的结果 |
+| `sqlite3_result_text16` | 设置 SQL 函数的结果 |
+| `sqlite3_result_text16be` | 设置 SQL 函数结果的其它变体（64 位长度/编码/指针/错误种类/错误码） |
+| `sqlite3_result_text16le` | 设置 SQL 函数结果的其它变体（64 位长度/编码/指针/错误种类/错误码） |
+| `sqlite3_result_text64` | 设置 SQL 函数结果的其它变体（64 位长度/编码/指针/错误种类/错误码） |
+| `sqlite3_result_value` | 设置 SQL 函数的结果 |
+| `sqlite3_result_zeroblob` | 把函数结果设为零填充 BLOB |
+| `sqlite3_result_zeroblob64` | 设置 SQL 函数结果的其它变体（64 位长度/编码/指针/错误种类/错误码） |
+| `sqlite3_rollback_hook` | 提交/回滚/预更新回调 |
+| `sqlite3_serialize` | 把数据库序列化为内存字节串 |
+| `sqlite3_set_authorizer` | 注册授权回调（SQL 编译时逐动作授权） |
+| `sqlite3_set_auxdata` | 取/存函数辅助数据 |
+| `sqlite3_set_clientdata` | 取/设连接的客户端数据 |
+| `sqlite3_set_errmsg` | 显式设置数据库句柄的错误码和错误消息 |
+| `sqlite3_set_last_insert_rowid` | 显式设置 last_insert_rowid 值 |
+| `sqlite3_setlk_timeout` | 设置阻塞锁超时（毫秒） |
+| `sqlite3_shutdown` | 关闭 SQLite 子系统 |
+| `sqlite3_sleep` | 挂起当前线程至少指定毫秒数 |
+| `sqlite3_snapshot_cmp` | 比较两个快照句柄的先后（需要 SQLITE_ENABLE_SNAPSHOT） |
+| `sqlite3_snapshot_free` | 销毁快照对象（避免内存泄漏） |
+| `sqlite3_snapshot_get` | 获取数据库的 WAL 快照 |
+| `sqlite3_snapshot_open` | 在历史快照 P 上开始（或升级）读事务 |
+| `sqlite3_snapshot_recover` | 扫描 WAL 文件，让所有有效快照可用（连接全部关闭后 WAL 残留时） |
+| `sqlite3_snprintf` | SQLite 的格式化字符串函数（snprintf 变体） |
+| `sqlite3_soft_heap_limit` | 设置软堆内存上限（soft_heap_limit 已废弃） |
+| `sqlite3_soft_heap_limit64` | 设置软堆内存上限（soft_heap_limit 已废弃） |
+| `sqlite3_sourceid` | 返回 SQLite 源码标识字符串 |
+| `sqlite3_sql` | 返回预编译语句的原始 SQL 文本 |
+| `sqlite3_status` | 取 SQLite 全局运行时状态（SQLITE_STATUS_*，可选重置高水位） |
+| `sqlite3_status64` | 取 SQLite 全局运行时状态（SQLITE_STATUS_*，可选重置高水位） |
+| `sqlite3_step` | 执行预编译语句到下一行或完成 |
+| `sqlite3_stmt_busy` | 判断预编译语句是否已调用过 sqlite3_step() 但未完成也未 reset |
+| `sqlite3_stmt_explain` | 改变预编译语句的 EXPLAIN 设置（0=普通 1=EXPLAIN 2=EXPLAIN QUERY PLAN） |
+| `sqlite3_stmt_isexplain` | 查询预编译语句的 EXPLAIN 设置（返回 0/1/2） |
+| `sqlite3_stmt_readonly` | 判断预编译语句是否不会直接修改数据库文件 |
+| `sqlite3_stmt_scanstatus` | 取预编译语句某查询元素的扫描状态度量（需要 SQLITE_ENABLE_STMT_SCANSTATUS） |
+| `sqlite3_stmt_scanstatus_reset` | 清零 sqlite3_stmt_scanstatus() 事件计数器（需要 SQLITE_ENABLE_STMT_SCANSTATUS） |
+| `sqlite3_stmt_scanstatus_v2` | 取预编译语句的扫描状态统计（需要 SQLITE_ENABLE_STMT_SCANSTATUS） |
+| `sqlite3_stmt_status` | 取/重置预编译语句的 SQLITE_STMTSTATUS 计数器 |
+| `sqlite3_str_append` | 向 sqlite3_str 对象追加文本 |
+| `sqlite3_str_appendall` | 向 sqlite3_str 对象追加文本 |
+| `sqlite3_str_appendchar` | 向 sqlite3_str 对象追加文本 |
+| `sqlite3_str_appendf` | 向 sqlite3_str 对象追加文本 |
+| `sqlite3_str_errcode` | 取 sqlite3_str 对象的错误码 |
+| `sqlite3_str_finish` | 结束 sqlite3_str 对象、取回字符串（并释放对象） |
+| `sqlite3_str_free` | 重置/截断/释放 sqlite3_str 对象 |
+| `sqlite3_str_length` | 取 sqlite3_str 对象的当前长度 |
+| `sqlite3_str_new` | 创建新的 sqlite3_str 动态字符串对象 |
+| `sqlite3_str_reset` | 重置/截断/释放 sqlite3_str 对象 |
+| `sqlite3_str_truncate` | 重置/截断/释放 sqlite3_str 对象 |
+| `sqlite3_str_value` | 取 sqlite3_str 对象当前字符串内容 |
+| `sqlite3_str_vappendf` | 向 sqlite3_str 对象追加文本 |
+| `sqlite3_strglob` | 判断字符串是否匹配 GLOB 模式（匹配返回 0，区分大小写） |
+| `sqlite3_stricmp` | 不区分大小写字符串比较（8 位） |
+| `sqlite3_strlike` | 判断字符串是否匹配 LIKE 模式（带转义字符，不区分大小写） |
+| `sqlite3_strnicmp` | 不区分大小写字符串比较（8 位） |
+| `sqlite3_system_errno` | 返回最近一次 I/O 错误/打开文件失败对应的操作系统错误码 |
+| `sqlite3_table_column_metadata` | 取表列的元数据（声明类型/排序规则/非空/主键/自增） |
+| `sqlite3_test_control` | 测试接口：读取内部状态、注入故障（仅用于测试 SQLite） |
+| `sqlite3_thread_cleanup` | 已废弃函数（为向后兼容保留，不解释用途） |
+| `sqlite3_threadsafe` | 返回 SQLite 的编译期线程安全设置（0=未编互斥锁） |
+| `sqlite3_total_changes` | 返回连接上所有语句（含触发器/内部）影响的总行数 |
+| `sqlite3_total_changes64` | 返回连接上所有语句（含触发器/内部）影响的总行数 |
+| `sqlite3_trace` | 设置 SQL 跟踪/性能分析回调（trace/profile 已废弃） |
+| `sqlite3_trace_v2` | 设置 SQL 跟踪/性能分析回调（trace/profile 已废弃） |
+| `sqlite3_transfer_bindings` | 已废弃函数（为向后兼容保留，不解释用途） |
+| `sqlite3_txn_state` | 返回数据库的当前事务状态（SQLITE_TXN_*） |
+| `sqlite3_unlock_notify` | 注册解锁通知回调（共享缓存锁被解除时调用，需 SQLITE_ENABLE_UNLOCK_NOTIFY） |
+| `sqlite3_update_hook` | 注册数据更新回调（rowid 表行被增删改时调用） |
+| `sqlite3_uri_boolean` | 取 URI 参数并解析为布尔值 |
+| `sqlite3_uri_int64` | 取 URI 参数并解析为 64 位整数 |
+| `sqlite3_uri_key` | 遍历 URI 参数名 |
+| `sqlite3_uri_parameter` | 取 URI 文件名中的查询参数 |
+| `sqlite3_user_data` | 取自定义函数注册时的 pApp 指针 |
+| `sqlite3_value_blob` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_bytes` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_bytes16` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_double` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_dup` | 复制/释放 sqlite3_value 对象 |
+| `sqlite3_value_encoding` | 报告 sqlite3_value 对象的内部文本编码（SQLITE_UTF8/UTF16BE/UTF16LE） |
+| `sqlite3_value_free` | 复制/释放 sqlite3_value 对象 |
+| `sqlite3_value_frombind` | 判断值是否来自绑定参数 |
+| `sqlite3_value_int` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_int64` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_nochange` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_numeric_type` | 若可能把值转换为数值类型并返回其类型 |
+| `sqlite3_value_pointer` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_subtype` | 取 SQL 函数参数的子类型（配合 SQLITE_SUBTYPE） |
+| `sqlite3_value_text` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_text16` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_text16be` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_text16le` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_value_type` | 提取受保护 sqlite3_value 的类型/大小/内容（blob/double/int/int64/pointer/text/text16/bytes/type/nochange） |
+| `sqlite3_version` | 版本字符串常量数组（值同 SQLITE_VERSION 宏，供 DLL 用户间接访问） |
+| `sqlite3_vfs_find` | 按名字查找 VFS 模块 |
+| `sqlite3_vfs_register` | 注册 VFS 模块 |
+| `sqlite3_vfs_unregister` | 取消注册 VFS 模块 |
+| `sqlite3_vmprintf` | printf 家族格式化函数的 va_list 变体 |
+| `sqlite3_vsnprintf` | printf 家族格式化函数的 va_list 变体 |
+| `sqlite3_vtab_collation` | 返回虚拟表约束所用的排序规则 |
+| `sqlite3_vtab_config` | 配置虚拟表接口的各个方面（须在 xConnect/xCreate 内调用） |
+| `sqlite3_vtab_distinct` | 返回虚拟表查询的 DISTINCT 处理方式 |
+| `sqlite3_vtab_in` | 让 xBestIndex 一次性处理 IN 约束的所有值（代替逐个值调用 xFilter） |
+| `sqlite3_vtab_in_first` | 遍历 IN 约束右侧的所有值 |
+| `sqlite3_vtab_in_next` | 遍历 IN 约束右侧的所有值 |
+| `sqlite3_vtab_nochange` | 判断虚拟表列访问是否属于不会改变列值的 UPDATE |
+| `sqlite3_vtab_on_conflict` | 返回触发虚拟表 xUpdate 的语句的 ON CONFLICT 策略 |
+| `sqlite3_vtab_rhs_value` | 返回虚拟表约束的右值 |
+| `sqlite3_wal_autocheckpoint` | 设置自动检查点阈值（WAL 日志帧数达到 N 时提交后自动检查点） |
+| `sqlite3_wal_checkpoint` | 执行被动检查点（等价于 checkpoint_v2 的 PASSIVE 模式） |
+| `sqlite3_wal_checkpoint_v2` | 以指定模式执行检查点（PASSIVE/FULL/RESTART/TRUNCATE/NOOP） |
+| `sqlite3_wal_hook` | 注册 WAL 提交回调（每次 wal 模式提交时调用） |
+| `sqlite3_win32_set_directory` | 设置 sqlite3_temp_directory / sqlite3_data_directory 变量（仅 Windows，字符串为 UTF-8/UTF-16） |
+| `sqlite3_win32_set_directory16` | 设置 sqlite3_temp_directory / sqlite3_data_directory 变量（仅 Windows，字符串为 UTF-8/UTF-16） |
+| `sqlite3_win32_set_directory8` | 设置 sqlite3_temp_directory / sqlite3_data_directory 变量（仅 Windows，字符串为 UTF-8/UTF-16） |
+
+## sqlite3_serialize 的标志（Flags for sqlite3_serialize）
 
 ```
-
-#define SQLITE_SERIALIZE_NOCOPY 0x001   /* Do no memory allocations */
-
+#define SQLITE_SERIALIZE_NOCOPY 0x001   /* 不做内存分配 */
 ```
 
-Zero or more of the following constants can be OR-ed together for
-the F argument to sqlite3_serialize(D,S,P,F).
+以下常量可零个或多个 OR 起来，作为 `sqlite3_serialize(D,S,P,F)` 的 F 参数。
 
-SQLITE_SERIALIZE_NOCOPY means that sqlite3_serialize() will return
-a pointer to contiguous in-memory database that it is currently using,
-without making a copy of the database.  If SQLite is not currently using
-a contiguous in-memory database, then this option causes
-sqlite3_serialize() to return a NULL pointer.  SQLite will only be
-using a contiguous in-memory database if it has been initialized by a
-prior call to sqlite3_deserialize().
+`SQLITE_SERIALIZE_NOCOPY` 表示 `sqlite3_serialize()` 将直接返回它当前正在使用的
+内存连续数据库副本的指针，而不拷贝该数据库。如果 SQLite 当前没有使用内存连续的
+数据库，则此选项会导致 `sqlite3_serialize()` 返回 NULL 指针。只有当数据库先前经
+`sqlite3_deserialize()` 初始化后，SQLite 才会使用内存连续的数据库。
 
 ---
 
-## Flags for sqlite3_setlk_timeout()
+## sqlite3_setlk_timeout() 的标志（Flags for sqlite3_setlk_timeout()）
 
 ```
-
 #define SQLITE_SETLK_BLOCK_ON_CONNECT 0x01
-
 ```
 
 ---
 
-## Maximum xShmLock index
+## xShmLock 索引上限（Maximum xShmLock index）
 
 ```
-
 #define SQLITE_SHM_NLOCK        8
-
 ```
 
-The xShmLock method on sqlite3_io_methods may use values
-between 0 and this upper bound as its "offset" argument.
-The SQLite core will never attempt to acquire or release a
-lock outside of this range
+`sqlite3_io_methods` 上的 xShmLock 方法可使用 0 到此上限之间的值作为其 "offset" 参数。
+SQLite 核心绝不会尝试在此范围之外获取或释放锁。
 
 ---
 
-## Loadable Extension Thunk
+## 可加载扩展 Thunk（Loadable Extension Thunk）
 
 ```
-
 typedef struct sqlite3_api_routines sqlite3_api_routines;
-
 ```
 
-A pointer to the opaque sqlite3_api_routines structure is passed as
-the third parameter to entry points of loadable extensions.  This
-structure must be typedefed in order to work around compiler warnings
-on some platforms.
+指向不透明 `sqlite3_api_routines` 结构的指针，作为第三个参数传给可加载扩展的入口点。
+为了规避某些平台上的编译器警告，此结构必须被 typedef。
 
 ---
 
-## Online Backup Object
+## 在线备份对象（Online Backup Object）
 
 ```
-
 typedef struct sqlite3_backup sqlite3_backup;
-
 ```
 
-The sqlite3_backup object records state information about an ongoing
-online backup operation.  The sqlite3_backup object is created by
-a call to sqlite3_backup_init() and is destroyed by a call to
-sqlite3_backup_finish().
+`sqlite3_backup` 对象记录一次进行中的在线备份操作的状态信息。该对象由对
+`sqlite3_backup_init()` 的调用创建，由对 `sqlite3_backup_finish()` 的调用销毁。
 
-See Also: Using the SQLite Online Backup API
+另见：使用 SQLite 在线备份 API
 
 ---
 
-## SQL Function Context Object
+## SQL 函数上下文对象（SQL Function Context Object）
 
 ```
-
 typedef struct sqlite3_context sqlite3_context;
-
 ```
 
-The context in which an SQL function executes is stored in an
-sqlite3_context object.  A pointer to an sqlite3_context object
-is always the first parameter to application-defined SQL functions.
-The application-defined SQL function implementation will pass this
-pointer through into calls to sqlite3_result(),
-sqlite3_aggregate_context(), sqlite3_user_data(),
-sqlite3_context_db_handle(), sqlite3_get_auxdata(),
-and/or sqlite3_set_auxdata().
+SQL 函数执行时的上下文存储在一个 `sqlite3_context` 对象中。指向 `sqlite3_context`
+对象的指针总是应用自定义 SQL 函数的第一个参数。应用自定义 SQL 函数的实现会把这个
+指针传给 `sqlite3_result()`、`sqlite3_aggregate_context()`、`sqlite3_user_data()`、
+`sqlite3_context_db_handle()`、`sqlite3_get_auxdata()` 和/或 `sqlite3_set_auxdata()`
+调用。
 
-26 Methods using this object:
+使用此对象的 26 个方法：
 
 - sqlite3_aggregate_context
-
 - sqlite3_context_db_handle
-
 - sqlite3_get_auxdata
-
 - sqlite3_result_blob
-
 - sqlite3_result_blob64
-
 - sqlite3_result_double
-
 - sqlite3_result_error
-
 - sqlite3_result_error16
-
 - sqlite3_result_error_code
-
 - sqlite3_result_error_nomem
-
 - sqlite3_result_error_toobig
-
 - sqlite3_result_int
-
 - sqlite3_result_int64
-
 - sqlite3_result_null
-
 - sqlite3_result_pointer
-
 - sqlite3_result_subtype
-
 - sqlite3_result_text
-
 - sqlite3_result_text16
-
 - sqlite3_result_text16be
-
 - sqlite3_result_text16le
-
 - sqlite3_result_text64
-
 - sqlite3_result_value
-
 - sqlite3_result_zeroblob
-
 - sqlite3_result_zeroblob64
-
 - sqlite3_set_auxdata
-
 - sqlite3_user_data
 
 ---
 
-## Name Of The Folder Holding Database Files
+## 存放数据库文件的文件夹名（Name Of The Folder Holding Database Files）
 
 ```
-
 SQLITE_EXTERN char *sqlite3_data_directory;
-
 ```
 
-If this global variable is made to point to a string which is
-the name of a folder (a.k.a. directory), then all database files
-specified with a relative pathname and created or accessed by
-SQLite when using a built-in windows VFS will be assumed
-to be relative to that directory. If this variable is a NULL
-pointer, then SQLite assumes that all database files specified
-with a relative pathname are relative to the current directory
-for the process.  Only the windows VFS makes use of this global
-variable; it is ignored by the unix VFS.
+如果把这个全局变量指向一个字符串，该字符串是某个文件夹（即目录）的名字，那么当
+SQLite 使用内建的 windows VFS 时，所有用相对路径名指定并被创建或访问的数据库文件，
+都将被认为相对于那个目录。如果此变量是 NULL 指针，则 SQLite 认为所有用相对路径名
+指定的数据库文件都相对于进程的当前目录。只有 windows VFS 使用这个全局变量；unix
+VFS 会忽略它。
 
-Changing the value of this variable while a database connection is
-open can result in a corrupt database.
+在某个数据库连接处于打开状态时改变此变量的值，可能导致数据库损坏。
 
-It is not safe to read or modify this variable in more than one
-thread at a time.  It is not safe to read or modify this variable
-if a database connection is being used at the same time in a separate
-thread.
-It is intended that this variable be set once
-as part of process initialization and before any SQLite interface
-routines have been called and that this variable remain unchanged
-thereafter.
+在多个线程中同时读取或修改此变量是不安全的；如果另一个线程同时在使用某个数据库连接，
+那么读取或修改此变量也是不安全的。此变量的本意是：在进程初始化阶段、任何 SQLite 接口
+例程被调用之前设置一次，此后保持不变。
 
-The data_store_directory pragma may modify this variable and cause
-it to point to memory obtained from sqlite3_malloc.  Furthermore,
-the data_store_directory pragma always assumes that any string
-that this variable points to is held in memory obtained from
-sqlite3_malloc and the pragma may attempt to free that memory
-using sqlite3_free.
-Hence, if this variable is modified directly, either it should be
-made NULL or made to point to memory obtained from sqlite3_malloc
-or else the use of the data_store_directory pragma should be avoided.
+data_store_directory pragma 可能修改此变量，使其指向由 `sqlite3_malloc` 获得的内存。
+此外，data_store_directory pragma 总是假定此变量指向的字符串存放在由 `sqlite3_malloc`
+获得的内存里，并且该 pragma 可能尝试用 `sqlite3_free` 释放那块内存。因此，如果直接
+修改此变量，要么把它置为 NULL，要么让它指向由 `sqlite3_malloc` 获得的内存，否则应
+避免使用 data_store_directory pragma。
 
 ---
 
-## OS Interface Open File Handle
+## OS 接口打开文件句柄（OS Interface Open File Handle）
 
 ```
-
 typedef struct sqlite3_file sqlite3_file;
 struct sqlite3_file {
-  const struct sqlite3_io_methods *pMethods;  /* Methods for an open file */
+  const struct sqlite3_io_methods *pMethods;  /* 打开文件的方法 */
 };
-
 ```
 
-An sqlite3_file object represents an open file in the
-OS interface layer.  Individual OS interface
-implementations will
-want to subclass this object by appending additional fields
-for their own use.  The pMethods entry is a pointer to an
-sqlite3_io_methods object that defines methods for performing
-I/O operations on the open file.
+`sqlite3_file` 对象代表 OS 接口层中的一个打开的文件。各个 OS 接口实现通常想通过
+追加供自己使用的额外字段来继承（subclass）此对象。pMethods 条目是指向一个
+`sqlite3_io_methods` 对象的指针，该对象定义了在打开的文件上执行 I/O 操作的方法。
 
 ---
 
-## File Name
+## 文件名（File Name）
 
 ```
-
 typedef const char *sqlite3_filename;
-
 ```
 
-Type sqlite3_filename is used by SQLite to pass filenames to the
-xOpen method of a VFS. It may be cast to (const char*) and treated
-as a normal, nul-terminated, UTF-8 buffer containing the filename, but
-may also be passed to special APIs such as:
+SQLite 用 `sqlite3_filename` 类型把文件名传给 VFS 的 xOpen 方法。它可以被转换为
+`(const char*)` 并当作一个普通的、以 NUL 结尾的、包含文件名的 UTF-8 缓冲区来处理，
+但也可以传给诸如以下的特殊 API：
 
--   sqlite3_filename_database()
-
--   sqlite3_filename_journal()
-
--   sqlite3_filename_wal()
-
--   sqlite3_uri_parameter()
-
--   sqlite3_uri_boolean()
-
--   sqlite3_uri_int64()
-
--   sqlite3_uri_key()
+- sqlite3_filename_database()
+- sqlite3_filename_journal()
+- sqlite3_filename_wal()
+- sqlite3_uri_parameter()
+- sqlite3_uri_boolean()
+- sqlite3_uri_int64()
+- sqlite3_uri_key()
 
 ---
 
-## Virtual Table Indexing Information
+## 虚拟表索引信息（Virtual Table Indexing Information）
 
 ```
-
 struct sqlite3_index_info {
-  /* Inputs */
-  int nConstraint;           /* Number of entries in aConstraint */
+  /* 输入（Inputs） */
+  int nConstraint;           /* aConstraint 中的条目数 */
   struct sqlite3_index_constraint {
-     int iColumn;              /* Column constrained.  -1 for ROWID */
-     unsigned char op;         /* Constraint operator */
-     unsigned char usable;     /* True if this constraint is usable */
-     int iTermOffset;          /* Used internally - xBestIndex should ignore */
-  } *aConstraint;            /* Table of WHERE clause constraints */
-  int nOrderBy;              /* Number of terms in the ORDER BY clause */
+     int iColumn;              /* 被约束的列。ROWID 为 -1 */
+     unsigned char op;         /* 约束算子 */
+     unsigned char usable;     /* 此约束是否可用（True） */
+     int iTermOffset;          /* 内部使用——xBestIndex 应忽略 */
+  } *aConstraint;            /* WHERE 子句约束表 */
+  int nOrderBy;              /* ORDER BY 子句中的项数 */
   struct sqlite3_index_orderby {
-     int iColumn;              /* Column number */
-     unsigned char desc;       /* True for DESC.  False for ASC. */
-  } *aOrderBy;               /* The ORDER BY clause */
-  /* Outputs */
+     int iColumn;              /* 列号 */
+     unsigned char desc;       /* DESC 为 True，ASC 为 False */
+  } *aOrderBy;               /* ORDER BY 子句 */
+  /* 输出（Outputs） */
   struct sqlite3_index_constraint_usage {
-    int argvIndex;           /* if >0, constraint is part of argv to xFilter */
-    unsigned char omit;      /* Do not code a test for this constraint */
+    int argvIndex;           /* 若 >0，该约束作为 argv 的一部分传给 xFilter */
+    unsigned char omit;      /* 不为该约束生成测试代码 */
   } *aConstraintUsage;
-  int idxNum;                /* Number used to identify the index */
-  char *idxStr;              /* String, possibly obtained from sqlite3_malloc */
-  int needToFreeIdxStr;      /* Free idxStr using sqlite3_free() if true */
-  int orderByConsumed;       /* True if output is already ordered */
-  double estimatedCost;           /* Estimated cost of using this index */
-  /* Fields below are only available in SQLite 3.8.2 and later */
-  sqlite3_int64 estimatedRows;    /* Estimated number of rows returned */
-  /* Fields below are only available in SQLite 3.9.0 and later */
-  int idxFlags;              /* Mask of SQLITE_INDEX_SCAN_* flags */
-  /* Fields below are only available in SQLite 3.10.0 and later */
-  sqlite3_uint64 colUsed;    /* Input: Mask of columns used by statement */
+  int idxNum;                /* 用于标识索引的编号 */
+  char *idxStr;              /* 字符串，可能从 sqlite3_malloc 获得 */
+  int needToFreeIdxStr;      /* 为真时用 sqlite3_free() 释放 idxStr */
+  int orderByConsumed;       /* 若输出已按要求排序则为 True */
+  double estimatedCost;           /* 使用此索引的估计代价 */
+  /* 以下字段仅在 SQLite 3.8.2 及以后可用 */
+  sqlite3_int64 estimatedRows;    /* 预计返回的行数 */
+  /* 以下字段仅在 SQLite 3.9.0 及以后可用 */
+  int idxFlags;              /* SQLITE_INDEX_SCAN_* 标志的掩码 */
+  /* 以下字段仅在 SQLite 3.10.0 及以后可用 */
+  sqlite3_uint64 colUsed;    /* 输入：语句用到的列的掩码 */
 };
-
 ```
 
-The sqlite3_index_info structure and its substructures is used as part
-of the virtual table interface to
-pass information into and receive the reply from the xBestIndex
-method of a virtual table module.  The fields under **Inputs** are the
-inputs to xBestIndex and are read-only.  xBestIndex inserts its
-results into the **Outputs** fields.
+`sqlite3_index_info` 结构及其子结构是虚拟表接口的一部分，用于把信息传入虚拟表模块的
+xBestIndex 方法，并接收其返回结果。**输入（Inputs）** 下的字段是传给 xBestIndex 的
+输入，只读；xBestIndex 把结果填入**输出（Outputs）**字段。
 
-The aConstraint[] array records WHERE clause constraints of the form:
+aConstraint[] 数组记录如下形式的 WHERE 子句约束：
 
 column OP expr
 
-where OP is =, <, <=, >, or >=.  The particular operator is
-stored in aConstraint[].op using one of the
-SQLITE_INDEX_CONSTRAINT_ values.
-The index of the column is stored in
-aConstraint[].iColumn.  aConstraint[].usable is TRUE if the
-expr on the right-hand side can be evaluated (and thus the constraint
-is usable) and false if it cannot.
+其中 OP 是 =、<、<=、> 或 >=。具体的算子用某个 `SQLITE_INDEX_CONSTRAINT_` 值存放在
+aConstraint[].op 中；列的索引存放在 aConstraint[].iColumn 中；当右侧的 expr 可以被
+求值（因而该约束可用）时 aConstraint[].usable 为 TRUE，否则为 false。
 
-The optimizer automatically inverts terms of the form "expr OP column"
-and makes other simplifications to the WHERE clause in an attempt to
-get as many WHERE clause terms into the form shown above as possible.
-The aConstraint[] array only reports WHERE clause terms that are
-relevant to the particular virtual table being queried.
+## 虚拟表索引信息
 
-Information about the ORDER BY clause is stored in aOrderBy[].
-Each term of aOrderBy records a column of the ORDER BY clause.
+优化器会自动反转 "expr OP column" 形式的项，并对 WHERE 子句做其它简化，尽量让尽可能
+多的 WHERE 子句项变成上面所示的形式。aConstraint[] 数组只报告与正在查询的那个特定虚拟
+表相关的 WHERE 子句项。
 
-The colUsed field indicates which columns of the virtual table may be
-required by the current scan. Virtual table columns are numbered from
-zero in the order in which they appear within the CREATE TABLE statement
-passed to sqlite3_declare_vtab(). For the first 63 columns (columns 0-62),
-the corresponding bit is set within the colUsed mask if the column may be
-required by SQLite. If the table has at least 64 columns and any column
-to the right of the first 63 is required, then bit 63 of colUsed is also
-set. In other words, column iCol may be required if the expression
-(colUsed & ((sqlite3_uint64)1 << (iCol>=63 ? 63 : iCol))) evaluates to
-non-zero.
+关于 ORDER BY 子句的信息存放在 aOrderBy[] 中。aOrderBy 的每一项记录 ORDER BY 子句的一列。
 
-The xBestIndex method must fill aConstraintUsage[] with information
-about what parameters to pass to xFilter.  If argvIndex>0 then
-the right-hand side of the corresponding aConstraint[] is evaluated
-and becomes the argvIndex-th entry in argv.  If aConstraintUsage[].omit
-is true, then the constraint is assumed to be fully handled by the
-virtual table and might not be checked again by the byte code. The
-aConstraintUsage[].omit flag is an optimization hint. When the omit flag
-is left in its default setting of false, the constraint will always be
-checked separately in byte code.  If the omit flag is changed to true, then
-the constraint may or may not be checked in byte code.  In other words,
-when the omit flag is true there is no guarantee that the constraint will
-not be checked again using byte code.
+colUsed 字段指示当前扫描可能需要虚拟表的哪些列。虚拟表列从零开始、按传给
+`sqlite3_declare_vtab()` 的 CREATE TABLE 语句中出现的顺序编号。对于前 63 列（列 0~62），
+如果该列可能被 SQLite 需要，则在 colUsed 掩码中置相应位；如果表至少有 64 列、且第 63 列
+右边任一列被需要，则 colUsed 的位 63 也被置位。换句话说，当表达式
+`(colUsed & ((sqlite3_uint64)1 << (iCol>=63 ? 63 : iCol)))` 求值为非零时，列 iCol 可能
+被需要。
 
-The idxNum and idxStr values are recorded and passed into the
-xFilter method.
-sqlite3_free() is used to free idxStr if and only if
-needToFreeIdxStr is true.
+xBestIndex 方法必须用要传给 xFilter 的参数信息填充 aConstraintUsage[]。如果 argvIndex>0，
+则对应 aConstraint[] 的右侧被求值，并成为 argv 的第 argvIndex 项。如果 aConstraintUsage[].omit
+为真，则假定该约束已完全由虚拟表处理，字节码可能不再检查它。aConstraintUsage[].omit 标志
+是一个优化提示：当 omit 标志保持默认的 false 时，字节码中总会单独检查该约束；当 omit 改为
+true 时，字节码中可能检查、也可能不检查该约束。换句话说，omit 为真时并不保证该约束不会再
+被字节码检查。
 
-The orderByConsumed means that output from xFilter/xNext will occur in
-the correct order to satisfy the ORDER BY clause so that no separate
-sorting step is required.
+idxNum 和 idxStr 值会被记录并传入 xFilter 方法。当且仅当 needToFreeIdxStr 为真时，用
+`sqlite3_free()` 释放 idxStr。
 
-The estimatedCost value is an estimate of the cost of a particular
-strategy. A cost of N indicates that the cost of the strategy is similar
-to a linear scan of an SQLite table with N rows. A cost of log(N)
-indicates that the expense of the operation is similar to that of a
-binary search on a unique indexed field of an SQLite table with N rows.
+orderByConsumed 表示 xFilter/xNext 的输出将以满足 ORDER BY 子句的正确顺序产生，因此不再
+需要单独的排序步骤。
 
-The estimatedRows value is an estimate of the number of rows that
-will be returned by the strategy.
+estimatedCost 值是对某个特定策略代价的估计。代价为 N 表示该策略的开销类似于对含 N 行的
+SQLite 表做线性扫描；代价为 log(N) 表示该操作的开销类似于对含 N 行的 SQLite 表的某个唯一
+索引字段做二分查找。
 
-The xBestIndex method may optionally populate the idxFlags field with a
-mask of SQLITE_INDEX_SCAN_* flags. One such flag is
-SQLITE_INDEX_SCAN_HEX, which if set causes the EXPLAIN QUERY PLAN
-output to show the idxNum as hex instead of as decimal.  Another flag is
-SQLITE_INDEX_SCAN_UNIQUE, which if set indicates that the query plan will
-return at most one row.
+estimatedRows 值是对该策略将返回的行数的估计。
 
-Additionally, if xBestIndex sets the SQLITE_INDEX_SCAN_UNIQUE flag, then
-SQLite also assumes that if a call to the xUpdate() method is made as
-part of the same statement to delete or update a virtual table row and the
-implementation returns SQLITE_CONSTRAINT, then there is no need to rollback
-any database changes. In other words, if the xUpdate() returns
-SQLITE_CONSTRAINT, the database contents must be exactly as they were
-before xUpdate was called. By contrast, if SQLITE_INDEX_SCAN_UNIQUE is not
-set and xUpdate returns SQLITE_CONSTRAINT, any database changes made by
-the xUpdate method are automatically rolled back by SQLite.
+xBestIndex 方法可以可选地用 `SQLITE_INDEX_SCAN_*` 标志的掩码填充 idxFlags 字段。其中一个
+标志是 `SQLITE_INDEX_SCAN_HEX`，设置后会让 EXPLAIN QUERY PLAN 的输出以十六进制而非十进制
+显示 idxNum。另一个标志是 `SQLITE_INDEX_SCAN_UNIQUE`，设置后表示该查询计划至多返回一行。
 
-IMPORTANT: The estimatedRows field was added to the sqlite3_index_info
-structure for SQLite version 3.8.2 (2013-12-06).
-If a virtual table extension is
-used with an SQLite version earlier than 3.8.2, the results of attempting
-to read or write the estimatedRows field are undefined (but are likely
-to include crashing the application). The estimatedRows field should
-therefore only be used if sqlite3_libversion_number() returns a
-value greater than or equal to 3008002. Similarly, the idxFlags field
-was added for version 3.9.0 (2015-10-14).
-It may therefore only be used if
-sqlite3_libversion_number() returns a value greater than or equal to
-3009000.
+此外，如果 xBestIndex 设置了 `SQLITE_INDEX_SCAN_UNIQUE` 标志，SQLite 还假定：如果在同一条
+语句里为删除或更新虚拟表行而调用了 xUpdate() 方法，且实现返回 `SQLITE_CONSTRAINT`，则无需
+回滚任何数据库改动。换句话说，若 xUpdate() 返回 `SQLITE_CONSTRAINT`，数据库内容必须与调用
+xUpdate 之前完全一致。相反，如果未设置 `SQLITE_INDEX_SCAN_UNIQUE` 且 xUpdate 返回
+`SQLITE_CONSTRAINT`，则 xUpdate 方法所做的任何数据库改动都会由 SQLite 自动回滚。
 
-3 Methods using this object:
- sqlite3_vtab_collation(),
-sqlite3_vtab_distinct(),
-sqlite3_vtab_rhs_value()
+> 重要：estimatedRows 字段是在 SQLite 版本 3.8.2（2013-12-06）时加入 `sqlite3_index_info`
+> 结构的。如果虚拟表扩展配合早于 3.8.2 的 SQLite 版本使用，读取或写入 estimatedRows 字段的
+> 结果未定义（很可能包括使应用崩溃）。因此只有当 `sqlite3_libversion_number()` 返回值大于
+> 或等于 3008002 时才应使用 estimatedRows 字段。类似地，idxFlags 字段是版本 3.9.0
+> （2015-10-14）加入的，因此只有 `sqlite3_libversion_number()` 返回值大于或等于 3009000
+> 时才可使用。
+
+使用此对象的 3 个方法：
+
+- sqlite3_vtab_collation()
+- sqlite3_vtab_distinct()
+- sqlite3_vtab_rhs_value()
 
 ---
 
-## OS Interface File Virtual Methods Object
+## OS 接口文件虚拟方法对象（OS Interface File Virtual Methods Object）
 
 ```
-
 typedef struct sqlite3_io_methods sqlite3_io_methods;
 struct sqlite3_io_methods {
   int iVersion;
@@ -2131,239 +1143,159 @@ struct sqlite3_io_methods {
   int (*xFileControl)(sqlite3_file*, int op, void *pArg);
   int (*xSectorSize)(sqlite3_file*);
   int (*xDeviceCharacteristics)(sqlite3_file*);
-  /* Methods above are valid for version 1 */
+  /* 以上方法对版本 1 有效 */
   int (*xShmMap)(sqlite3_file*, int iPg, int pgsz, int, void volatile**);
   int (*xShmLock)(sqlite3_file*, int offset, int n, int flags);
   void (*xShmBarrier)(sqlite3_file*);
   int (*xShmUnmap)(sqlite3_file*, int deleteFlag);
-  /* Methods above are valid for version 2 */
+  /* 以上方法对版本 2 有效 */
   int (*xFetch)(sqlite3_file*, sqlite3_int64 iOfst, int iAmt, void **pp);
   int (*xUnfetch)(sqlite3_file*, sqlite3_int64 iOfst, void *p);
-  /* Methods above are valid for version 3 */
-  /* Additional methods may be added in future releases */
+  /* 以上方法对版本 3 有效 */
+  /* 未来版本可能增加更多方法 */
 };
-
 ```
 
-Every file opened by the sqlite3_vfs.xOpen method populates an
-sqlite3_file object (or, more commonly, a subclass of the
-sqlite3_file object) with a pointer to an instance of this object.
-This object defines the methods used to perform various operations
-against the open file represented by the sqlite3_file object.
+由 `sqlite3_vfs.xOpen` 方法打开的每个文件，都会用一个指向本对象实例的指针填充
+`sqlite3_file` 对象（更常见的是其子类对象）。本对象定义了用于对 `sqlite3_file` 对象所代表
+的打开文件执行各种操作的方法。
 
-If the sqlite3_vfs.xOpen method sets the sqlite3_file.pMethods element
-to a non-NULL pointer, then the sqlite3_io_methods.xClose method
-may be invoked even if the sqlite3_vfs.xOpen reported that it failed.  The
-only way to prevent a call to xClose following a failed sqlite3_vfs.xOpen
-is for the sqlite3_vfs.xOpen to set the sqlite3_file.pMethods element
-to NULL.
+如果 `sqlite3_vfs.xOpen` 方法把 `sqlite3_file.pMethods` 元素设为非 NULL 指针，那么即使
+`sqlite3_vfs.xOpen` 报告失败，`sqlite3_io_methods.xClose` 方法也可能被调用。防止 xOpen 失败
+后调用 xClose 的唯一办法，是让 `sqlite3_vfs.xOpen` 把 `sqlite3_file.pMethods` 元素设为 NULL。
 
-The flags argument to xSync may be one of SQLITE_SYNC_NORMAL or
-SQLITE_SYNC_FULL.  The first choice is the normal fsync().
-The second choice is a Mac OS X style fullsync.  The SQLITE_SYNC_DATAONLY
-flag may be ORed in to indicate that only the data of the file
-and not its inode needs to be synced.
+xSync 的 flags 参数可以是 `SQLITE_SYNC_NORMAL` 或 `SQLITE_SYNC_FULL` 之一。前者是普通的
+fsync()；后者是 Mac OS X 风格的 fullsync。`SQLITE_SYNC_DATAONLY` 标志可以 OR 进去，表示只需
+同步文件的数据而不必同步其 inode。
 
-The integer values to xLock() and xUnlock() are one of
+传给 xLock() 和 xUnlock() 的整数值是以下之一：
 
--  SQLITE_LOCK_NONE,
+- `SQLITE_LOCK_NONE`
+- `SQLITE_LOCK_SHARED`
+- `SQLITE_LOCK_RESERVED`
+- `SQLITE_LOCK_PENDING`
+- `SQLITE_LOCK_EXCLUSIVE`
 
--  SQLITE_LOCK_SHARED,
+xLock() 提升数据库文件锁，即把锁从 NONE 向 EXCLUSIVE 方向移动。传给 xLock() 的参数总是
+SHARED、RESERVED、PENDING 或 EXCLUSIVE 之一，绝不含 `SQLITE_LOCK_NONE`。如果数据库文件锁
+已经处于等于或高于请求锁的状态，则 xLock() 调用为空操作。xUnlock() 把数据库文件锁降级为
+SHARED 或 NONE 之一；如果锁已经处于等于或低于请求锁的状态，则 xUnlock() 调用为空操作。
 
--  SQLITE_LOCK_RESERVED,
+xCheckReservedLock() 方法检查是否有某个数据库连接（无论在本进程还是其它进程）对文件持有
+RESERVED、PENDING 或 EXCLUSIVE 锁。它通过其输出指针参数返回：若存在这样的锁则返回真，
+否则返回假。
 
--  SQLITE_LOCK_PENDING, or
+xFileControl() 方法是一个通用接口，允许自定义 VFS 实现通过 `sqlite3_file_control()` 接口
+直接控制打开的文件。第二个 "op" 参数是一个整数操作码；第三个参数是一个通用指针，用于指向
+一个可能容纳参数、或容纳写返回值空间的结构。xFileControl() 的潜在用途包括：启用带超时的
+阻塞锁、改变锁定策略（例如改用 dot-file 锁）、查询锁的状态、或解除过期的锁。SQLite 核心
+保留所有小于 100 的操作码供自己使用，小于 100 的操作码清单可查阅。定义自定义 xFileControl
+方法的应用应使用大于 100 的操作码以避免冲突。VFS 实现对于不认识的文件控制操作码应返回
+`SQLITE_NOTFOUND`。
 
--  SQLITE_LOCK_EXCLUSIVE.
+xSectorSize() 方法返回文件底层设备的扇区大小。扇区大小是能够写入而不会干扰文件中其它字节
+的最小写入单位。xDeviceCharacteristics() 方法返回描述底层设备行为的位向量：
 
-xLock() upgrades the database file lock.  In other words, xLock() moves the
-database file lock in the direction NONE toward EXCLUSIVE. The argument to
-xLock() is always one of SHARED, RESERVED, PENDING, or EXCLUSIVE, never
-SQLITE_LOCK_NONE.  If the database file lock is already at or above the
-requested lock, then the call to xLock() is a no-op.
-xUnlock() downgrades the database file lock to either SHARED or NONE.
-If the lock is already at or below the requested lock state, then the call
-to xUnlock() is a no-op.
-The xCheckReservedLock() method checks whether any database connection,
-either in this process or in some other process, is holding a RESERVED,
-PENDING, or EXCLUSIVE lock on the file.  It returns, via its output
-pointer parameter, true if such a lock exists and false otherwise.
+- `SQLITE_IOCAP_ATOMIC`
+- `SQLITE_IOCAP_ATOMIC512`
+- `SQLITE_IOCAP_ATOMIC1K`
+- `SQLITE_IOCAP_ATOMIC2K`
+- `SQLITE_IOCAP_ATOMIC4K`
+- `SQLITE_IOCAP_ATOMIC8K`
+- `SQLITE_IOCAP_ATOMIC16K`
+- `SQLITE_IOCAP_ATOMIC32K`
+- `SQLITE_IOCAP_ATOMIC64K`
+- `SQLITE_IOCAP_SAFE_APPEND`
+- `SQLITE_IOCAP_SEQUENTIAL`
+- `SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN`
+- `SQLITE_IOCAP_POWERSAFE_OVERWRITE`
+- `SQLITE_IOCAP_IMMUTABLE`
+- `SQLITE_IOCAP_BATCH_ATOMIC`
+- `SQLITE_IOCAP_SUBPAGE_READ`
 
-The xFileControl() method is a generic interface that allows custom
-VFS implementations to directly control an open file using the
-sqlite3_file_control() interface.  The second "op" argument is an
-integer opcode.  The third argument is a generic pointer intended to
-point to a structure that may contain arguments or space in which to
-write return values.  Potential uses for xFileControl() might be
-functions to enable blocking locks with timeouts, to change the
-locking strategy (for example to use dot-file locks), to inquire
-about the status of a lock, or to break stale locks.  The SQLite
-core reserves all opcodes less than 100 for its own use.
-A list of opcodes less than 100 is available.
-Applications that define a custom xFileControl method should use opcodes
-greater than 100 to avoid conflicts.  VFS implementations should
-return SQLITE_NOTFOUND for file control opcodes that they do not
-recognize.
+`SQLITE_IOCAP_ATOMIC` 特性表示任意大小的写操作都是原子的。`SQLITE_IOCAP_ATOMICnnn` 值表示：
+大小为 nnn 字节、且对齐到 nnn 整数倍地址的整块写操作是原子的。`SQLITE_IOCAP_SAFE_APPEND` 值
+表示：向文件追加数据时，先追加数据、再扩展文件大小，绝不会反过来。`SQLITE_IOCAP_SEQUENTIAL`
+特性表示信息按 xWrite() 调用的顺序写入磁盘。
 
-The xSectorSize() method returns the sector size of the
-device that underlies the file.  The sector size is the
-minimum write that can be performed without disturbing
-other bytes in the file.  The xDeviceCharacteristics()
-method returns a bit vector describing behaviors of the
-underlying device:
-
--  SQLITE_IOCAP_ATOMIC
-
--  SQLITE_IOCAP_ATOMIC512
-
--  SQLITE_IOCAP_ATOMIC1K
-
--  SQLITE_IOCAP_ATOMIC2K
-
--  SQLITE_IOCAP_ATOMIC4K
-
--  SQLITE_IOCAP_ATOMIC8K
-
--  SQLITE_IOCAP_ATOMIC16K
-
--  SQLITE_IOCAP_ATOMIC32K
-
--  SQLITE_IOCAP_ATOMIC64K
-
--  SQLITE_IOCAP_SAFE_APPEND
-
--  SQLITE_IOCAP_SEQUENTIAL
-
--  SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN
-
--  SQLITE_IOCAP_POWERSAFE_OVERWRITE
-
--  SQLITE_IOCAP_IMMUTABLE
-
--  SQLITE_IOCAP_BATCH_ATOMIC
-
--  SQLITE_IOCAP_SUBPAGE_READ
-
-The SQLITE_IOCAP_ATOMIC property means that all writes of
-any size are atomic.  The SQLITE_IOCAP_ATOMICnnn values
-mean that writes of blocks that are nnn bytes in size and
-are aligned to an address which is an integer multiple of
-nnn are atomic.  The SQLITE_IOCAP_SAFE_APPEND value means
-that when data is appended to a file, the data is appended
-first then the size of the file is extended, never the other
-way around.  The SQLITE_IOCAP_SEQUENTIAL property means that
-information is written to disk in the same order as calls
-to xWrite().
-
-If xRead() returns SQLITE_IOERR_SHORT_READ it must also fill
-in the unread portions of the buffer with zeros.  A VFS that
-fails to zero-fill short reads might seem to work.  However,
-failure to zero-fill short reads will eventually lead to
-database corruption.
+如果 xRead() 返回 `SQLITE_IOERR_SHORT_READ`，它还必须把缓冲区未读到的部分填零。未对短读做
+零填充的 VFS 可能看起来工作正常，但最终会导致数据库损坏。
 
 ---
 
-## Memory Allocation Routines
+## 内存分配例程（Memory Allocation Routines）
 
 ```
-
 typedef struct sqlite3_mem_methods sqlite3_mem_methods;
 struct sqlite3_mem_methods {
-  void *(*xMalloc)(int);         /* Memory allocation function */
-  void (*xFree)(void*);          /* Free a prior allocation */
-  void *(*xRealloc)(void*,int);  /* Resize an allocation */
-  int (*xSize)(void*);           /* Return the size of an allocation */
-  int (*xRoundup)(int);          /* Round up request size to allocation size */
-  int (*xInit)(void*);           /* Initialize the memory allocator */
-  void (*xShutdown)(void*);      /* Deinitialize the memory allocator */
-  void *pAppData;                /* Argument to xInit() and xShutdown() */
+  void *(*xMalloc)(int);         /* 内存分配函数 */
+  void (*xFree)(void*);          /* 释放先前分配的内存 */
+  void *(*xRealloc)(void*,int);  /* 调整内存分配大小 */
+  int (*xSize)(void*);           /* 返回一次分配的大小 */
+  int (*xRoundup)(int);          /* 把请求大小向上取整到分配大小 */
+  int (*xInit)(void*);           /* 初始化内存分配器 */
+  void (*xShutdown)(void*);      /* 反初始化内存分配器 */
+  void *pAppData;                /* 传给 xInit() 和 xShutdown() 的参数 */
 };
-
 ```
 
-An instance of this object defines the interface between SQLite
-and low-level memory allocation routines.
+本对象的一个实例定义 SQLite 与底层内存分配例程之间的接口。
 
-This object is used in only one place in the SQLite interface.
-A pointer to an instance of this object is the argument to
-sqlite3_config() when the configuration option is
-SQLITE_CONFIG_MALLOC or SQLITE_CONFIG_GETMALLOC.
-By creating an instance of this object
-and passing it to sqlite3_config(SQLITE_CONFIG_MALLOC)
-during configuration, an application can specify an alternative
-memory allocation subsystem for SQLite to use for all of its
-dynamic memory needs.
+本对象在 SQLite 接口中只在一处使用。当配置选项为 `SQLITE_CONFIG_MALLOC` 或
+`SQLITE_CONFIG_GETMALLOC` 时，指向本对象实例的指针是 `sqlite3_config()` 的参数。通过创建
+本对象的一个实例、并在配置期间把它传给 `sqlite3_config(SQLITE_CONFIG_MALLOC)`，应用可以为
+SQLite 指定一个替代的内存分配子系统，供其全部动态内存需求使用。
 
-Note that SQLite comes with several built-in memory allocators
-that are perfectly adequate for the overwhelming majority of applications
-and that this object is only useful to a tiny minority of applications
-with specialized memory allocation requirements.  This object is
-also used during testing of SQLite in order to specify an alternative
-memory allocator that simulates memory out-of-memory conditions in
-order to verify that SQLite recovers gracefully from such
-conditions.
+> 注：SQLite 自带多个内建内存分配器，对绝大多数应用来说完全够用；本对象只对少数有特殊内存
+> 分配需求的应用有用。本对象也用于 SQLite 测试：指定一个模拟内存耗尽条件的替代分配器，以
+> 验证 SQLite 能否从这类条件中优雅恢复。
 
-The xMalloc, xRealloc, and xFree methods must work like the
-malloc(), realloc() and free() functions from the standard C library.
-SQLite guarantees that the second argument to
-xRealloc is always a value returned by a prior call to xRoundup.
+xMalloc、xRealloc 和 xFree 方法必须像 C 标准库的 malloc()、realloc() 和 free() 函数那样
+工作。SQLite 保证传给 xRealloc 的第二个参数，总是先前某次 xRoundup 调用返回的值。
 
-xSize should return the allocated size of a memory allocation
-previously obtained from xMalloc or xRealloc.  The allocated size
-is always at least as big as the requested size but may be larger.
+xSize 应返回先前从 xMalloc 或 xRealloc 获得的一次内存分配的已分配大小。已分配大小总是至少
+与请求大小一样大，但可能更大。
 
-The xRoundup method returns what would be the allocated size of
-a memory allocation given a particular requested size.  Most memory
-allocators round up memory allocations at least to the next multiple
-of 8.  Some allocators round up to a larger multiple or to a power of 2.
-Every memory allocation request coming in through sqlite3_malloc()
-or sqlite3_realloc() first calls xRoundup.  If xRoundup returns 0,
-that causes the corresponding memory allocation to fail.
+xRoundup 方法返回给定请求大小所对应的已分配大小。大多数内存分配器至少把分配向上取整到 8 的
+倍数；有些取整到更大的倍数或 2 的幂。所有经 `sqlite3_malloc()` 或 `sqlite3_realloc()` 进来的
+内存分配请求都会先调用 xRoundup。如果 xRoundup 返回 0，将导致对应的内存分配失败。
 
-The xInit method initializes the memory allocator.  For example,
-it might allocate any required mutexes or initialize internal data
-structures.  The xShutdown method is invoked (indirectly) by
-sqlite3_shutdown() and should deallocate any resources acquired
-by xInit.  The pAppData pointer is used as the only parameter to
-xInit and xShutdown.
+xInit 方法初始化内存分配器，例如可能分配所需的互斥锁或初始化内部数据结构。xShutdown 方法由
+`sqlite3_shutdown()`（间接地）调用，应释放 xInit 获得的全部资源。pAppData 指针用作传给 xInit
+和 xShutdown 的唯一参数。
 
-SQLite holds the SQLITE_MUTEX_STATIC_MAIN mutex when it invokes
-the xInit method, so the xInit method need not be threadsafe.  The
-xShutdown method is only called from sqlite3_shutdown() so it does
-not need to be threadsafe either.  For all other methods, SQLite
-holds the SQLITE_MUTEX_STATIC_MEM mutex as long as the
-SQLITE_CONFIG_MEMSTATUS configuration option is turned on (which
-it is by default) and so the methods are automatically serialized.
-However, if SQLITE_CONFIG_MEMSTATUS is disabled, then the other
-methods must be threadsafe or else make their own arrangements for
-serialization.
+## 内存分配例程
 
-SQLite will never invoke xInit() more than once without an intervening
-call to xShutdown().
+xInit 方法初始化内存分配器，例如可能分配所需的互斥锁或初始化内部数据结构。xShutdown 方法由
+`sqlite3_shutdown()`（间接地）调用，应释放 xInit 获得的全部资源。pAppData 指针用作传给 xInit
+和 xShutdown 的唯一参数。
+
+SQLite 在调用 xInit 方法时持有 `SQLITE_MUTEX_STATIC_MAIN` 互斥锁，因此 xInit 方法无需是线程
+安全的。xShutdown 方法只从 `sqlite3_shutdown()` 调用，因此也无需是线程安全的。对于其余所有
+方法，只要 `SQLITE_CONFIG_MEMSTATUS` 配置选项处于开启状态（默认即如此），SQLite 就持有
+`SQLITE_MUTEX_STATIC_MEM` 互斥锁，这些方法因此被自动串行化。但如果禁用了
+`SQLITE_CONFIG_MEMSTATUS`，则其余方法必须是线程安全的，或者自行安排串行化。
+
+SQLite 绝不会在没有间隔的 xShutdown() 调用的情况下多次调用 xInit()。
 
 ---
 
-## Mutex Handle
+## 互斥锁句柄（Mutex Handle）
 
 ```
-
 typedef struct sqlite3_mutex sqlite3_mutex;
-
 ```
 
-The mutex module within SQLite defines sqlite3_mutex to be an
-abstract type for a mutex object.  The SQLite core never looks
-at the internal representation of an sqlite3_mutex.  It only
-deals with pointers to the sqlite3_mutex object.
+SQLite 内部的互斥锁模块把 `sqlite3_mutex` 定义为互斥锁对象的抽象类型。SQLite 核心从不查看
+`sqlite3_mutex` 的内部表示，只处理指向该对象的指针。
 
-Mutexes are created using sqlite3_mutex_alloc().
+互斥锁用 `sqlite3_mutex_alloc()` 创建。
 
 ---
 
-## Mutex Methods Object
+## 互斥锁方法对象（Mutex Methods Object）
 
 ```
-
 typedef struct sqlite3_mutex_methods sqlite3_mutex_methods;
 struct sqlite3_mutex_methods {
   int (*xMutexInit)(void);
@@ -2376,194 +1308,130 @@ struct sqlite3_mutex_methods {
   int (*xMutexHeld)(sqlite3_mutex *);
   int (*xMutexNotheld)(sqlite3_mutex *);
 };
-
 ```
 
-An instance of this structure defines the low-level routines
-used to allocate and use mutexes.
+本结构的一个实例定义用于分配和使用互斥锁的底层例程。
 
-Usually, the default mutex implementations provided by SQLite are
-sufficient, however the application has the option of substituting a custom
-implementation for specialized deployments or systems for which SQLite
-does not provide a suitable implementation. In this case, the application
-creates and populates an instance of this structure to pass
-to sqlite3_config() along with the SQLITE_CONFIG_MUTEX option.
-Additionally, an instance of this structure can be used as an
-output variable when querying the system for the current mutex
-implementation, using the SQLITE_CONFIG_GETMUTEX option.
+通常，SQLite 提供的默认互斥锁实现已经足够；但对某些 SQLite 未提供合适实现的专用部署或系统，
+应用可以选择替换为自定义实现。此时，应用创建并填充本结构的一个实例，连同 `SQLITE_CONFIG_MUTEX`
+选项一起传给 `sqlite3_config()`。此外，在使用 `SQLITE_CONFIG_GETMUTEX` 选项查询系统当前的
+互斥锁实现时，本结构的一个实例可用作输出变量。
 
-The xMutexInit method defined by this structure is invoked as
-part of system initialization by the sqlite3_initialize() function.
-The xMutexInit routine is called by SQLite exactly once for each
-effective call to sqlite3_initialize().
+本结构定义的 xMutexInit 方法，由 `sqlite3_initialize()` 函数在系统初始化时调用。每次有效的
+`sqlite3_initialize()` 调用，SQLite 恰好调用一次 xMutexInit 例程。
 
-The xMutexEnd method defined by this structure is invoked as
-part of system shutdown by the sqlite3_shutdown() function. The
-implementation of this method is expected to release all outstanding
-resources obtained by the mutex methods implementation, especially
-those obtained by the xMutexInit method.  The xMutexEnd()
-interface is invoked exactly once for each call to sqlite3_shutdown().
+本结构定义的 xMutexEnd 方法，由 `sqlite3_shutdown()` 函数在系统关闭时调用。该方法的实现应释放
+互斥锁方法实现获得的全部未释放资源，尤其是 xMutexInit 方法获得的资源。每次 `sqlite3_shutdown()`
+调用，xMutexEnd() 接口恰好被调用一次。
 
-The remaining seven methods defined by this structure (xMutexAlloc,
-xMutexFree, xMutexEnter, xMutexTry, xMutexLeave, xMutexHeld and
-xMutexNotheld) implement the following interfaces (respectively):
+本结构定义的其余七个方法（xMutexAlloc、xMutexFree、xMutexEnter、xMutexTry、xMutexLeave、
+xMutexHeld 和 xMutexNotheld）分别实现以下接口：
 
--   sqlite3_mutex_alloc()
+- sqlite3_mutex_alloc()
+- sqlite3_mutex_free()
+- sqlite3_mutex_enter()
+- sqlite3_mutex_try()
+- sqlite3_mutex_leave()
+- sqlite3_mutex_held()
+- sqlite3_mutex_notheld()
 
--   sqlite3_mutex_free()
+唯一的区别是：上述公开的 sqlite3_XXX 函数会静默忽略传 NULL 指针（而非有效互斥锁句柄）的调用；
+而本结构定义的方法实现并不要求处理这种情况。传 NULL 指针而非有效互斥锁句柄的结果未定义（即
+允许实现为：被传入 NULL 指针时发生段错误）。
 
--   sqlite3_mutex_enter()
+xMutexInit() 方法必须是线程安全的；在同一个进程内、且没有间隔的 xMutexEnd() 调用的情况下多次
+调用 xMutexInit() 必须是无害的。对 xMutexInit() 的第二次及后续调用必须为空操作。
 
--   sqlite3_mutex_try()
+xMutexInit() 不得使用 SQLite 内存分配（`sqlite3_malloc()` 及其相关函数）。类似地，
+xMutexAlloc() 为静态互斥锁不得使用 SQLite 内存分配；但 xMutexAlloc() 可以为快速互斥锁或递归
+互斥锁使用 SQLite 内存分配。
 
--   sqlite3_mutex_leave()
-
--   sqlite3_mutex_held()
-
--   sqlite3_mutex_notheld()
-
-The only difference is that the public sqlite3_XXX functions enumerated
-above silently ignore any invocations that pass a NULL pointer instead
-of a valid mutex handle. The implementations of the methods defined
-by this structure are not required to handle this case. The results
-of passing a NULL pointer instead of a valid mutex handle are undefined
-(i.e. it is acceptable to provide an implementation that segfaults if
-it is passed a NULL pointer).
-
-The xMutexInit() method must be threadsafe.  It must be harmless to
-invoke xMutexInit() multiple times within the same process and without
-intervening calls to xMutexEnd().  Second and subsequent calls to
-xMutexInit() must be no-ops.
-
-xMutexInit() must not use SQLite memory allocation (sqlite3_malloc()
-and its associates).  Similarly, xMutexAlloc() must not use SQLite memory
-allocation for a static mutex.  However xMutexAlloc() may use SQLite
-memory allocation for a fast or recursive mutex.
-
-SQLite will invoke the xMutexEnd() method when sqlite3_shutdown() is
-called, but only if the prior call to xMutexInit returned SQLITE_OK.
-If xMutexInit fails in any way, it is expected to clean up after itself
-prior to returning.
+SQLite 会在调用 `sqlite3_shutdown()` 时调用 xMutexEnd() 方法，但前提是先前对 xMutexInit 的
+调用返回了 `SQLITE_OK`。如果 xMutexInit 以任何方式失败，应在返回之前自行清理。
 
 ---
 
-## Custom Page Cache Object
+## 自定义页缓存对象（Custom Page Cache Object）
 
 ```
-
 typedef struct sqlite3_pcache sqlite3_pcache;
-
 ```
 
-The sqlite3_pcache type is opaque.  It is implemented by
-the pluggable module.  The SQLite core has no knowledge of
-its size or internal structure and never deals with the
-sqlite3_pcache object except by holding and passing pointers
-to the object.
+`sqlite3_pcache` 类型是不透明的。它由可插拔模块实现。SQLite 核心不关心其大小或内部结构，
+除持有并传递指向该对象的指针外，从不与 `sqlite3_pcache` 对象打交道。
 
-See sqlite3_pcache_methods2 for additional information.
+更多信息见 sqlite3_pcache_methods2。
 
 ---
 
-## Custom Page Cache Object
+## 自定义页缓存页对象（Custom Page Cache Object）
 
 ```
-
 typedef struct sqlite3_pcache_page sqlite3_pcache_page;
 struct sqlite3_pcache_page {
-  void *pBuf;        /* The content of the page */
-  void *pExtra;      /* Extra information associated with the page */
+  void *pBuf;        /* 页的内容 */
+  void *pExtra;      /* 与页相关的额外信息 */
 };
-
 ```
 
-The sqlite3_pcache_page object represents a single page in the
-page cache.  The page cache will allocate instances of this
-object.  Various methods of the page cache use pointers to instances
-of this object as parameters or as their return value.
+`sqlite3_pcache_page` 对象代表页缓存中的单个页。页缓存会分配本对象的实例。页缓存的各方法把
+指向本对象实例的指针用作参数或返回值。
 
-See sqlite3_pcache_methods2 for additional information.
+更多信息见 sqlite3_pcache_methods2。
 
 ---
 
-## Name Of The Folder Holding Temporary Files
+## 存放临时文件的文件夹名（Name Of The Folder Holding Temporary Files）
 
 ```
-
 SQLITE_EXTERN char *sqlite3_temp_directory;
-
 ```
 
-If this global variable is made to point to a string which is
-the name of a folder (a.k.a. directory), then all temporary files
-created by SQLite when using a built-in VFS
-will be placed in that directory.  If this variable
-is a NULL pointer, then SQLite performs a search for an appropriate
-temporary file directory.
+如果把这个全局变量指向某个文件夹（即目录）名字的字符串，则使用内建 VFS 时 SQLite 创建的
+所有临时文件都将放在该目录中。如果此变量是 NULL 指针，则 SQLite 会搜索合适的临时文件目录。
 
-Applications are strongly discouraged from using this global variable.
-It is required to set a temporary folder on Windows Runtime (WinRT).
-But for all other platforms, it is highly recommended that applications
-neither read nor write this variable.  This global variable is a relic
-that exists for backwards compatibility of legacy applications and should
-be avoided in new projects.
+强烈不建议应用使用这个全局变量。在 Windows Runtime（WinRT）上必须设置临时文件夹；但对其它
+所有平台，强烈建议应用既不要读也不要写此变量。这个全局变量是为旧应用的向后兼容而存在的遗留物，
+新项目应避免使用。
 
-It is not safe to read or modify this variable in more than one
-thread at a time.  It is not safe to read or modify this variable
-if a database connection is being used at the same time in a separate
-thread.
-It is intended that this variable be set once
-as part of process initialization and before any SQLite interface
-routines have been called and that this variable remain unchanged
-thereafter.
+在多个线程中同时读取或修改此变量是不安全的；如果另一个线程同时在使用某个数据库连接，那么
+读取或修改此变量也是不安全的。此变量的本意是：在进程初始化阶段、任何 SQLite 接口例程被调用
+之前设置一次，此后保持不变。
 
-The temp_store_directory pragma may modify this variable and cause
-it to point to memory obtained from sqlite3_malloc.  Furthermore,
-the temp_store_directory pragma always assumes that any string
-that this variable points to is held in memory obtained from
-sqlite3_malloc and the pragma may attempt to free that memory
-using sqlite3_free.
-Hence, if this variable is modified directly, either it should be
-made NULL or made to point to memory obtained from sqlite3_malloc
-or else the use of the temp_store_directory pragma should be avoided.
-Except when requested by the temp_store_directory pragma, SQLite
-does not free the memory that sqlite3_temp_directory points to.  If
-the application wants that memory to be freed, it must do
-so itself, taking care to only do so after all database connection
-objects have been destroyed.
+temp_store_directory pragma 可能修改此变量，使其指向由 `sqlite3_malloc` 获得的内存。此外，
+temp_store_directory pragma 总是假定此变量指向的字符串存放在由 `sqlite3_malloc` 获得的内存里，
+并且该 pragma 可能尝试用 `sqlite3_free` 释放那块内存。因此，如果直接修改此变量，要么把它置为
+NULL，要么让它指向由 `sqlite3_malloc` 获得的内存，否则应避免使用 temp_store_directory pragma。
+除非 temp_store_directory pragma 要求，否则 SQLite 不会释放 `sqlite3_temp_directory` 指向的内存。
+如果应用想释放那块内存，必须自行释放，并注意只在所有数据库连接对象都被销毁之后进行。
 
-Note to Windows Runtime users:  The temporary directory must be set
-prior to calling sqlite3_open or sqlite3_open_v2.  Otherwise, various
-features that require the use of temporary files may fail.  Here is an
-example of how to do this using C++ with the Windows Runtime:
+> 注：Windows Runtime 用户：必须在调用 `sqlite3_open` 或 `sqlite3_open_v2` 之前设置临时目录，
+> 否则需要临时文件的各项功能可能失败。以下是用 C++ 配合 Windows Runtime 设置的示例：
 
 ```
-
 LPCWSTR zPath = Windows::Storage::ApplicationData::Current->
-      TemporaryFolder->Path->Data();
+      TemporaryFolder->Path->Data();
 char zPathBuf[MAX_PATH + 1];
 memset(zPathBuf, 0, sizeof(zPathBuf));
 WideCharToMultiByte(CP_UTF8, 0, zPath, -1, zPathBuf, sizeof(zPathBuf),
-      NULL, NULL);
+      NULL, NULL);
 sqlite3_temp_directory = sqlite3_mprintf("%s", zPathBuf);
-
 ```
 
 ---
 
-## OS Interface Object
+## OS 接口对象（OS Interface Object）
 
 ```
-
 typedef struct sqlite3_vfs sqlite3_vfs;
 typedef void (*sqlite3_syscall_ptr)(void);
 struct sqlite3_vfs {
-  int iVersion;            /* Structure version number (currently 3) */
-  int szOsFile;            /* Size of subclassed sqlite3_file */
-  int mxPathname;          /* Maximum file pathname length */
-  sqlite3_vfs *pNext;      /* Next registered VFS */
-  const char *zName;       /* Name of this virtual file system */
-  void *pAppData;          /* Pointer to application-specific data */
+  int iVersion;            /* 结构版本号（当前为 3） */
+  int szOsFile;            /* 子类化 sqlite3_file 的大小 */
+  int mxPathname;          /* 最大文件路径名长度 */
+  sqlite3_vfs *pNext;      /* 下一个已注册的 VFS */
+  const char *zName;       /* 本虚拟文件系统的名字 */
+  void *pAppData;          /* 指向应用特定数据的指针 */
   int (*xOpen)(sqlite3_vfs*, sqlite3_filename zName, sqlite3_file*,
                int flags, int *pOutFlags);
   int (*xDelete)(sqlite3_vfs*, const char *zName, int syncDir);
@@ -2578,520 +1446,341 @@ struct sqlite3_vfs {
   int (*xCurrentTime)(sqlite3_vfs*, double*);
   int (*xGetLastError)(sqlite3_vfs*, int, char *);
   /*
-  ** The methods above are in version 1 of the sqlite_vfs object
-  ** definition.  Those that follow are added in version 2 or later
+  ** 以上方法在 sqlite_vfs 对象定义的第 1 版中。
+  ** 其后的方法在第 2 版或更晚版本中新增。
   */
   int (*xCurrentTimeInt64)(sqlite3_vfs*, sqlite3_int64*);
   /*
-  ** The methods above are in versions 1 and 2 of the sqlite_vfs object.
-  ** Those below are for version 3 and greater.
+  ** 以上方法在第 1 版和第 2 版 sqlite_vfs 对象中。
+  ** 以下方法针对第 3 版及更高版本。
   */
   int (*xSetSystemCall)(sqlite3_vfs*, const char *zName, sqlite3_syscall_ptr);
   sqlite3_syscall_ptr (*xGetSystemCall)(sqlite3_vfs*, const char *zName);
   const char *(*xNextSystemCall)(sqlite3_vfs*, const char *zName);
   /*
-  ** The methods above are in versions 1 through 3 of the sqlite_vfs object.
-  ** New fields may be appended in future versions.  The iVersion
-  ** value will increment whenever this happens.
+  ** 以上方法在第 1 版到第 3 版 sqlite_vfs 对象中。
+  ** 未来版本可能追加新字段；每当此时 iVersion 值会递增。
   */
 };
-
 ```
 
-An instance of the sqlite3_vfs object defines the interface between
-the SQLite core and the underlying operating system.  The "vfs"
-in the name of the object stands for "virtual file system".  See
-the VFS documentation for further information.
+`sqlite3_vfs` 对象的一个实例定义 SQLite 核心与底层操作系统之间的接口。对象名字里的 "vfs"
+代表 "virtual file system"（虚拟文件系统）。更多信息参见 VFS 文档。
 
-The VFS interface is sometimes extended by adding new methods onto
-the end.  Each time such an extension occurs, the iVersion field
-is incremented.  The iVersion value started out as 1 in
-SQLite version 3.5.0 on 2007-09-04, then increased to 2
-with SQLite version 3.7.0 on 2010-07-21, and then increased
-to 3 with SQLite version 3.7.6 on 2011-04-12.  Additional fields
-may be appended to the sqlite3_vfs object and the iVersion value
-may increase again in future versions of SQLite.
-Note that due to an oversight, the structure
-of the sqlite3_vfs object changed in the transition from
-SQLite version 3.5.9 to version 3.6.0 on 2008-07-16
-and yet the iVersion field was not increased.
+VFS 接口有时通过在末尾追加新方法来扩展。每次发生这样的扩展，iVersion 字段就会递增。iVersion
+值最初在 SQLite 版本 3.5.0（2007-09-04）时为 1，在 SQLite 版本 3.7.0（2010-07-21）时增为 2，
+在 SQLite 版本 3.7.6（2011-04-12）时增为 3。未来版本的 SQLite 可能继续追加字段、并再次递增
+iVersion 值。注意：由于疏忽，在 SQLite 版本 3.5.9 过渡到 3.6.0（2008-07-16）时 `sqlite3_vfs`
+对象的结构发生了改变，但 iVersion 字段并未递增。
 
-The szOsFile field is the size of the subclassed sqlite3_file
-structure used by this VFS.  mxPathname is the maximum length of
-a pathname in this VFS.
+szOsFile 字段是本 VFS 使用的子类化 `sqlite3_file` 结构的大小。mxPathname 是本 VFS 中路径名的
+最大长度。
 
-Registered sqlite3_vfs objects are kept on a linked list formed by
-the pNext pointer.  The sqlite3_vfs_register()
-and sqlite3_vfs_unregister() interfaces manage this list
-in a thread-safe way.  The sqlite3_vfs_find() interface
-searches the list.  Neither the application code nor the VFS
-implementation should use the pNext pointer.
+已注册的 `sqlite3_vfs` 对象保存在由 pNext 指针构成的链表中。
 
-The pNext field is the only field in the sqlite3_vfs
-structure that SQLite will ever modify.  SQLite will only access
-or modify this field while holding a particular static mutex.
-The application should never modify anything within the sqlite3_vfs
-object once the object has been registered.
+## OS 接口对象
 
-The zName field holds the name of the VFS module.  The name must
-be unique across all VFS modules.
+已注册的 `sqlite3_vfs` 对象保存在由 pNext 指针构成的链表中。`sqlite3_vfs_register()`
+和 `sqlite3_vfs_unregister()` 接口以线程安全的方式管理此链表。`sqlite3_vfs_find()` 接口
+在链表中查找。应用代码和 VFS 实现都不应使用 pNext 指针。
 
-SQLite guarantees that the zFilename parameter to xOpen
-is either a NULL pointer or string obtained
-from xFullPathname() with an optional suffix added.
-If a suffix is added to the zFilename parameter, it will
-consist of a single "-" character followed by no more than
-11 alphanumeric and/or "-" characters.
-SQLite further guarantees that
-the string will be valid and unchanged until xClose() is
-called. Because of the previous sentence,
-the sqlite3_file can safely store a pointer to the
-filename if it needs to remember the filename for some reason.
-If the zFilename parameter to xOpen is a NULL pointer then xOpen
-must invent its own temporary name for the file.  Whenever the
-xFilename parameter is NULL it will also be the case that the
-flags parameter will include SQLITE_OPEN_DELETEONCLOSE.
+pNext 字段是 `sqlite3_vfs` 结构中 SQLite 会修改的唯一字段。SQLite 只在持有某个特定静态
+互斥锁时访问或修改此字段。对象一经注册，应用绝不应修改 `sqlite3_vfs` 对象内的任何内容。
 
-The flags argument to xOpen() includes all bits set in
-the flags argument to sqlite3_open_v2().  Or if sqlite3_open()
-or sqlite3_open16() is used, then flags includes at least
-SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE.
-If xOpen() opens a file read-only then it sets *pOutFlags to
-include SQLITE_OPEN_READONLY.  Other bits in *pOutFlags may be set.
+zName 字段保存 VFS 模块的名字，该名字在所有 VFS 模块中必须唯一。
 
-SQLite will also add one of the following flags to the xOpen()
-call, depending on the object being opened:
+SQLite 保证传给 xOpen 的 zFilename 参数要么是 NULL 指针，要么是由 xFullPathname() 获得、
+并带可选后缀的字符串。若 zFilename 参数加了后缀，该后缀由一个 "-" 字符后跟不超过 11 个
+字母数字和/或 "-" 字符组成。SQLite 还保证该字符串在 xClose() 被调用前一直有效且不变。
+由于这一点，`sqlite3_file` 可以在需要记住文件名时安全地存放指向该文件名的指针。如果传给
+xOpen 的 zFilename 参数是 NULL 指针，则 xOpen 必须为该文件自创一个临时名字。每当 xFilename
+参数为 NULL 时，flags 参数也必然包含 `SQLITE_OPEN_DELETEONCLOSE`。
 
--   SQLITE_OPEN_MAIN_DB
+传给 xOpen() 的 flags 参数包含传给 `sqlite3_open_v2()` 的 flags 参数中设置的所有位。或者，
+若使用 `sqlite3_open()` 或 `sqlite3_open16()`，则 flags 至少包含
+`SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE`。若 xOpen() 以只读方式打开文件，则它把
+*pOutFlags 置为包含 `SQLITE_OPEN_READONLY`；*pOutFlags 中可能还设置其它位。
 
--   SQLITE_OPEN_MAIN_JOURNAL
+SQLite 还会根据被打开的对象，在 xOpen() 调用中追加以下标志之一：
 
--   SQLITE_OPEN_TEMP_DB
+- `SQLITE_OPEN_MAIN_DB`
+- `SQLITE_OPEN_MAIN_JOURNAL`
+- `SQLITE_OPEN_TEMP_DB`
+- `SQLITE_OPEN_TEMP_JOURNAL`
+- `SQLITE_OPEN_TRANSIENT_DB`
+- `SQLITE_OPEN_SUBJOURNAL`
+- `SQLITE_OPEN_SUPER_JOURNAL`
+- `SQLITE_OPEN_WAL`
 
--   SQLITE_OPEN_TEMP_JOURNAL
+文件 I/O 实现可以利用对象类型标志来改变它处理文件的方式。例如，不关心崩溃恢复或回滚的
+应用可能让日志文件的打开成为空操作；对该日志的写入也成为空操作，而任何读取日志的尝试都
+返回 `SQLITE_IOERR`。或者，实现可能识别出数据库文件将做按页对齐的、随机顺序的扇区读写，
+并据此设置其 I/O 子系统。
 
--   SQLITE_OPEN_TRANSIENT_DB
+SQLite 还可能把以下标志之一追加到 xOpen 方法：
 
--   SQLITE_OPEN_SUBJOURNAL
+- `SQLITE_OPEN_DELETEONCLOSE`
+- `SQLITE_OPEN_EXCLUSIVE`
 
--   SQLITE_OPEN_SUPER_JOURNAL
+`SQLITE_OPEN_DELETEONCLOSE` 标志表示文件关闭时应被删除。该标志会为 TEMP 数据库及其日志、
+瞬态数据库和子日志设置。
 
--   SQLITE_OPEN_WAL
+`SQLITE_OPEN_EXCLUSIVE` 标志总是与 `SQLITE_OPEN_CREATE` 标志联用，两者分别直接对应 POSIX
+open() API 的 O_EXCL 和 O_CREAT 标志。`SQLITE_OPEN_EXCLUSIVE` 与 `SQLITE_OPEN_CREATE` 配对
+时，表示文件应总是被创建，且若文件已存在则是错误。它并不表示文件应以独占访问方式打开。
 
-The file I/O implementation can use the object type flags to
-change the way it deals with files.  For example, an application
-that does not care about crash recovery or rollback might make
-the open of a journal file a no-op.  Writes to this journal would
-also be no-ops, and any attempt to read the journal would return
-SQLITE_IOERR.  Or the implementation might recognize that a database
-file will be doing page-aligned sector reads and writes in a random
-order and set up its I/O subsystem accordingly.
+SQLite 至少分配 szOsFile 字节的内存来容纳作为 xOpen 第三参数传入的 `sqlite3_file` 结构。
+xOpen 方法不必分配该结构，只需填充它。注意：xOpen 方法必须把 `sqlite3_file.pMethods` 设为
+有效的 `sqlite3_io_methods` 对象或 NULL；即使打开失败也必须如此。SQLite 期望在 xOpen 返回后，
+无论调用成功与否，`sqlite3_file.pMethods` 元素都有效。
 
-SQLite might also add one of the following flags to the xOpen method:
+xAccess() 的 flags 参数可以是 `SQLITE_ACCESS_EXISTS`（测试文件是否存在）、
+`SQLITE_ACCESS_READWRITE`（测试文件是否可读可写）、或 `SQLITE_ACCESS_READ`（测试文件是否
+至少可读）。`SQLITE_ACCESS_READ` 标志实际上从未被使用，SQLite 的内建 VFS 也未实现它。文件
+名由第二个参数指定，且可以是目录。xAccess 方法成功时返回 `SQLITE_OK`；若有 I/O 错误、或
+第二个参数给定的文件名非法，则返回某个非零错误码。若返回 `SQLITE_OK`，则向 *pResOut 写入
+非零或零，指示文件是否可访问。
 
--  SQLITE_OPEN_DELETEONCLOSE
+SQLite 总是为 xFullPathname 的输出缓冲区分配至少 mxPathname+1 字节。输出缓冲区的确切大小
+也作为参数传给两个方法。若输出缓冲区不够大，应返回 `SQLITE_CANTOPEN`。由于 SQLite 会把
+这视为致命错误，VFS 实现应努力通过把 mxPathname 设得足够大来避免这种情况。
 
--  SQLITE_OPEN_EXCLUSIVE
+xRandomness()、xSleep()、xCurrentTime() 和 xCurrentTimeInt64() 接口并非严格属于文件系统，
+但为了完整性而包含在 VFS 结构中。xRandomness() 函数尝试把 nBytes 字节的高质量随机数写入
+zOut，返回值是实际获得的随机数字节数。xSleep() 方法使调用线程至少睡眠给定的微秒数。
+xCurrentTime() 方法以浮点值返回当前日期时间的儒略日编号。xCurrentTimeInt64() 方法以整数
+返回儒略日编号乘以 86400000（24 小时的毫秒数）。若 xCurrentTimeInt64() 方法可用（iVersion
+为 2 或更高、且函数指针非 NULL），SQLite 将用它获取当前日期时间；若不可用，则回退到
+xCurrentTime()。
 
-The SQLITE_OPEN_DELETEONCLOSE flag means the file should be
-deleted when it is closed.  The SQLITE_OPEN_DELETEONCLOSE
-will be set for TEMP databases and their journals, transient
-databases, and subjournals.
-
-The SQLITE_OPEN_EXCLUSIVE flag is always used in conjunction
-with the SQLITE_OPEN_CREATE flag, which are both directly
-analogous to the O_EXCL and O_CREAT flags of the POSIX open()
-API.  The SQLITE_OPEN_EXCLUSIVE flag, when paired with the
-SQLITE_OPEN_CREATE, is used to indicate that file should always
-be created, and that it is an error if it already exists.
-It is not used to indicate the file should be opened
-for exclusive access.
-
-At least szOsFile bytes of memory are allocated by SQLite
-to hold the sqlite3_file structure passed as the third
-argument to xOpen.  The xOpen method does not have to
-allocate the structure; it should just fill it in.  Note that
-the xOpen method must set the sqlite3_file.pMethods to either
-a valid sqlite3_io_methods object or to NULL.  xOpen must do
-this even if the open fails.  SQLite expects that the sqlite3_file.pMethods
-element will be valid after xOpen returns regardless of the success
-or failure of the xOpen call.
-
-The flags argument to xAccess() may be SQLITE_ACCESS_EXISTS
-to test for the existence of a file, or SQLITE_ACCESS_READWRITE to
-test whether a file is readable and writable, or SQLITE_ACCESS_READ
-to test whether a file is at least readable.  The SQLITE_ACCESS_READ
-flag is never actually used and is not implemented in the built-in
-VFSes of SQLite.  The file is named by the second argument and can be a
-directory. The xAccess method returns SQLITE_OK on success or some
-non-zero error code if there is an I/O error or if the name of
-the file given in the second argument is illegal.  If SQLITE_OK
-is returned, then non-zero or zero is written into *pResOut to indicate
-whether or not the file is accessible.
-
-SQLite will always allocate at least mxPathname+1 bytes for the
-output buffer xFullPathname.  The exact size of the output buffer
-is also passed as a parameter to both  methods. If the output buffer
-is not large enough, SQLITE_CANTOPEN should be returned. Since this is
-handled as a fatal error by SQLite, vfs implementations should endeavor
-to prevent this by setting mxPathname to a sufficiently large value.
-
-The xRandomness(), xSleep(), xCurrentTime(), and xCurrentTimeInt64()
-interfaces are not strictly a part of the filesystem, but they are
-included in the VFS structure for completeness.
-The xRandomness() function attempts to return nBytes bytes
-of good-quality randomness into zOut.  The return value is
-the actual number of bytes of randomness obtained.
-The xSleep() method causes the calling thread to sleep for at
-least the number of microseconds given.  The xCurrentTime()
-method returns a Julian Day Number for the current date and time as
-a floating point value.
-The xCurrentTimeInt64() method returns, as an integer, the Julian
-Day Number multiplied by 86400000 (the number of milliseconds in
-a 24-hour day).
-SQLite will use the xCurrentTimeInt64() method to get the current
-date and time if that method is available (if iVersion is 2 or
-greater and the function pointer is not NULL) and will fall back
-to xCurrentTime() if xCurrentTimeInt64() is unavailable.
-
-The xSetSystemCall(), xGetSystemCall(), and xNextSystemCall() interfaces
-are not used by the SQLite core.  These optional interfaces are provided
-by some VFSes to facilitate testing of the VFS code. By overriding
-system calls with functions under its control, a test program can
-simulate faults and error conditions that would otherwise be difficult
-or impossible to induce.  The set of system calls that can be overridden
-varies from one VFS to another, and from one version of the same VFS to the
-next.  Applications that use these interfaces must be prepared for any
-or all of these interfaces to be NULL or for their behavior to change
-from one release to the next.  Applications must not attempt to access
-any of these methods if the iVersion of the VFS is less than 3.
+xSetSystemCall()、xGetSystemCall() 和 xNextSystemCall() 接口不被 SQLite 核心使用。这些可选
+接口由某些 VFS 提供，用于方便测试 VFS 代码。通过用自己控制的函数覆盖系统调用，测试程序
+可以模拟其它方式难以或无法引发的故障和错误条件。可被覆盖的系统调用集合因 VFS 而异，也随
+同一 VFS 的版本而变化。使用这些接口的应用必须准备好其中任一或全部接口为 NULL，或其行为
+随版本变化。若 VFS 的 iVersion 小于 3，应用不得尝试访问这些方法中的任何一个。
 
 ---
 
-## Virtual Table Instance Object
+## 虚拟表实例对象（Virtual Table Instance Object）
 
 ```
-
 struct sqlite3_vtab {
-  const sqlite3_module *pModule;  /* The module for this virtual table */
-  int nRef;                       /* Number of open cursors */
-  char *zErrMsg;                  /* Error message from sqlite3_mprintf() */
-  /* Virtual table implementations will typically add additional fields */
+  const sqlite3_module *pModule;  /* 本虚拟表的模块 */
+  int nRef;                       /* 打开的游标数 */
+  char *zErrMsg;                  /* 来自 sqlite3_mprintf() 的错误消息 */
+  /* 虚拟表实现通常会追加额外字段 */
 };
-
 ```
 
-Every virtual table module implementation uses a subclass
-of this object to describe a particular instance
-of the virtual table.  Each subclass will
-be tailored to the specific needs of the module implementation.
-The purpose of this superclass is to define certain fields that are
-common to all module implementations.
+每个虚拟表模块实现都使用本对象的一个子类来描述虚拟表的特定实例。每个子类都会针对模块实现
+的特定需求定制。这个超类的目的是定义所有模块实现共有的字段。
 
-Virtual tables methods can set an error message by assigning a
-string obtained from sqlite3_mprintf() to zErrMsg.  The method should
-take care that any prior string is freed by a call to sqlite3_free()
-prior to assigning a new string to zErrMsg.  After the error message
-is delivered up to the client application, the string will be automatically
-freed by sqlite3_free() and the zErrMsg field will be zeroed.
+虚拟表方法可以通过把来自 `sqlite3_mprintf()` 的字符串赋给 zErrMsg 来设置错误消息。方法应
+注意：在向 zErrMsg 赋新字符串前，先用 `sqlite3_free()` 释放先前的字符串。错误消息被提交给
+客户端应用后，字符串会由 `sqlite3_free()` 自动释放，zErrMsg 字段被清零。
 
 ---
 
-## Obtain Aggregate Function Context
+## 获取聚合函数上下文（Obtain Aggregate Function Context）
 
 ```
-
 void *sqlite3_aggregate_context(sqlite3_context*, int nBytes);
-
 ```
 
-Implementations of aggregate SQL functions use this
-routine to allocate memory for storing their state.
+聚合 SQL 函数的实现使用此例程分配内存来存储其状态。
 
-The first time the sqlite3_aggregate_context(C,N) routine is called
-for a particular aggregate function, SQLite allocates
-N bytes of memory, zeroes out that memory, and returns a pointer
-to the new memory. On second and subsequent calls to
-sqlite3_aggregate_context() for the same aggregate function instance,
-the same buffer is returned.  Sqlite3_aggregate_context() is normally
-called once for each invocation of the xStep callback and then one
-last time when the xFinal callback is invoked.  When no rows match
-an aggregate query, the xStep() callback of the aggregate function
-implementation is never called and xFinal() is called exactly once.
-In those cases, sqlite3_aggregate_context() might be called for the
-first time from within xFinal().
+对某个特定的聚合函数，第一次调用 `sqlite3_aggregate_context(C,N)` 例程时，SQLite 分配
+N 字节内存、把该内存清零，并返回指向新内存的指针。对同一聚合函数实例，第二次及后续调用
+`sqlite3_aggregate_context()` 时返回同一缓冲区。`sqlite3_aggregate_context()` 通常在每次
+调用 xStep 回调时调用一次，并在调用 xFinal 回调时最后一次调用。当聚合查询没有匹配的行时，
+聚合函数实现的 xStep() 回调从不被调用，而 xFinal() 恰好被调用一次。在这些情况下，
+`sqlite3_aggregate_context()` 可能首次从 xFinal() 内部被调用。
 
-The sqlite3_aggregate_context(C,N) routine returns a NULL pointer
-when first called if N is less than or equal to zero or if a memory
-allocation error occurs.
+当第一次调用时，若 N 小于或等于零、或发生内存分配错误，`sqlite3_aggregate_context(C,N)`
+例程返回 NULL 指针。
 
-The amount of space allocated by sqlite3_aggregate_context(C,N) is
-determined by the N parameter on the first successful call.  Changing the
-value of N in any subsequent call to sqlite3_aggregate_context() within
-the same aggregate function instance will not resize the memory
-allocation.  Within the xFinal callback, it is customary to set
-N=0 in calls to sqlite3_aggregate_context(C,N) so that no
-pointless memory allocations occur.
+`sqlite3_aggregate_context(C,N)` 分配的空间大小由第一次成功调用时的 N 参数决定。在同一聚合
+函数实例内后续调用中改变 N 的值不会调整内存分配的大小。在 xFinal 回调内，习惯上在调用
+`sqlite3_aggregate_context(C,N)` 时设 N=0，以免发生无意义的内存分配。
 
-SQLite automatically frees the memory allocated by
-sqlite3_aggregate_context() when the aggregate query concludes.
+聚合查询结束时，SQLite 自动释放 `sqlite3_aggregate_context()` 分配的内存。
 
-The first parameter must be a copy of the
-SQL function context that is the first parameter
-to the xStep or xFinal callback routine that implements the aggregate
-function.
+第一个参数必须是实现聚合函数的 xStep 或 xFinal 回调例程的第一参数的副本，即 SQL 函数上下文。
 
-This routine must be called from the same thread in which
-the aggregate SQL function is running.
+此例程必须在运行该聚合 SQL 函数的同一线程中调用。
 
 ---
 
-## Automatically Load Statically Linked Extensions
+## 自动加载静态链接扩展（Automatically Load Statically Linked Extensions）
 
 ```
-
 int sqlite3_auto_extension(void(*xEntryPoint)(void));
-
 ```
 
-This interface causes the xEntryPoint() function to be invoked for
-each new database connection that is created.  The idea here is that
-xEntryPoint() is the entry point for a statically linked SQLite extension
-that is to be automatically loaded into all new database connections.
+此接口导致 xEntryPoint() 函数在每次创建新数据库连接时被调用。其思想是：xEntryPoint() 是
+一个静态链接 SQLite 扩展的入口点，将被自动加载到所有新的数据库连接中。
 
-Even though the function prototype shows that xEntryPoint() takes
-no arguments and returns void, SQLite invokes xEntryPoint() with three
-arguments and expects an integer result as if the signature of the
-entry point were as follows:
+尽管函数原型显示 xEntryPoint() 不带参数且返回 void，SQLite 实际以三个参数调用 xEntryPoint()，
+并期望整数结果，仿佛入口点的签名如下：
 
 ```
-
-   int xEntryPoint(
-     sqlite3 *db,
-     char **pzErrMsg,
-     const struct sqlite3_api_routines *pThunk
-   );
-
+   int xEntryPoint(
+     sqlite3 *db,
+     char **pzErrMsg,
+     const struct sqlite3_api_routines *pThunk
+   );
 ```
 
-If the xEntryPoint routine encounters an error, it should make *pzErrMsg
-point to an appropriate error message (obtained from sqlite3_mprintf())
-and return an appropriate error code.  SQLite ensures that *pzErrMsg
-is NULL before calling the xEntryPoint().  SQLite will invoke
-sqlite3_free() on *pzErrMsg after xEntryPoint() returns.  If any
-xEntryPoint() returns an error, the sqlite3_open(), sqlite3_open16(),
-or sqlite3_open_v2() call that provoked the xEntryPoint() will fail.
+若 xEntryPoint 例程遇到错误，它应让 *pzErrMsg 指向适当的错误消息（从 `sqlite3_mprintf()` 获得）
+并返回适当的错误码。SQLite 保证在调用 xEntryPoint() 前 *pzErrMsg 为 NULL。xEntryPoint() 返回
+后，SQLite 会对 *pzErrMsg 调用 `sqlite3_free()`。若任一 xEntryPoint() 返回错误，则诱发该
+xEntryPoint() 的 `sqlite3_open()`、`sqlite3_open16()` 或 `sqlite3_open_v2()` 调用将失败。
 
-Calling sqlite3_auto_extension(X) with an entry point X that is already
-on the list of automatic extensions is a harmless no-op. No entry point
-will be called more than once for each database connection that is opened.
+用已在自动扩展列表上的入口点 X 调用 `sqlite3_auto_extension(X)` 是无害的空操作。对每个打开的
+数据库连接，任何入口点都不会被调用超过一次。
 
-See also: sqlite3_reset_auto_extension()
-and sqlite3_cancel_auto_extension()
+另见：sqlite3_reset_auto_extension() 和 sqlite3_cancel_auto_extension()
 
 ---
 
-## Autovacuum Compaction Amount Callback
+## Autovacuum 压缩量回调（Autovacuum Compaction Amount Callback）
 
 ```
-
 int sqlite3_autovacuum_pages(
   sqlite3 *db,
   unsigned int(*)(void*,const char*,unsigned int,unsigned int,unsigned int),
   void*,
   void(*)(void*)
 );
-
 ```
 
-The sqlite3_autovacuum_pages(D,C,P,X) interface registers a callback
-function C that is invoked prior to each autovacuum of the database
-file.  The callback is passed a copy of the generic data pointer (P),
-the schema-name of the attached database that is being autovacuumed,
-the size of the database file in pages, the number of free pages,
-and the number of bytes per page, respectively.  The callback should
-return the number of free pages that should be removed by the
-autovacuum.  If the callback returns zero, then no autovacuum happens.
-If the value returned is greater than or equal to the number of
-free pages, then a complete autovacuum happens.
+`sqlite3_autovacuum_pages(D,C,P,X)` 接口注册一个回调函数 C，在每次对数据库文件进行
+autovacuum 前调用。回调依次收到：通用数据指针 (P) 的副本、正在被 autovacuum 的附加数据库的
+schema 名、数据库文件以页计的大小、空闲页数、以及每页字节数。回调应返回 autovacuum 应移除
+的空闲页数。若回调返回零，则不进行 autovacuum。若返回值大于或等于空闲页数，则进行完整的
+autovacuum。
 
-If there are multiple ATTACH-ed database files that are being
-modified as part of a transaction commit, then the autovacuum pages
-callback is invoked separately for each file.
+若事务提交过程中有多个 ATTACH 的数据库文件被修改，则 autovacuum pages 回调会对每个文件
+分别调用。
 
-The callback is not reentrant. The callback function should
-not attempt to invoke any other SQLite interface.  If it does, bad
-things may happen, including segmentation faults and corrupt database
-files.  The callback function should be a simple function that
-does some arithmetic on its input parameters and returns a result.
+该回调不可重入。
 
-The X parameter to sqlite3_autovacuum_pages(D,C,P,X) is an optional
-destructor for the P parameter.  If X is not NULL, then X(P) is
-invoked whenever the database connection closes or when the callback
-is overwritten by another invocation of sqlite3_autovacuum_pages().
+## Autovacuum 压缩量回调
 
-There is only one autovacuum pages callback per database connection.
-Each call to the sqlite3_autovacuum_pages() interface overrides all
-previous invocations for that database connection.  If the callback
-argument (C) to sqlite3_autovacuum_pages(D,C,P,X) is a NULL pointer,
-then the autovacuum steps callback is canceled.  The return value
-from sqlite3_autovacuum_pages() is normally SQLITE_OK, but might
-be some other error code if something goes wrong.  The current
-implementation will only return SQLITE_OK or SQLITE_MISUSE, but other
-return codes might be added in future releases.
+（该回调不可重入）不应尝试调用任何其它 SQLite 接口；否则可能发生严重问题，包括段错误和
+数据库文件损坏。回调函数应是一个简单的、对输入参数做算术并返回结果的函数。
 
-If no autovacuum pages callback is specified (the usual case) or
-a NULL pointer is provided for the callback,
-then the default behavior is to vacuum all free pages.  So, in other
-words, the default behavior is the same as if the callback function
-were something like this:
+`sqlite3_autovacuum_pages(D,C,P,X)` 的 X 参数是 P 参数的可选析构函数。若 X 非 NULL，则在
+数据库连接关闭、或回调被另一次 `sqlite3_autovacuum_pages()` 调用覆盖时调用 X(P)。
+
+每个数据库连接只有一个 autovacuum pages 回调。每次调用 `sqlite3_autovacuum_pages()` 接口
+都会覆盖该数据库连接先前所有调用。若传给 `sqlite3_autovacuum_pages(D,C,P,X)` 的回调参数
+(C) 是 NULL 指针，则取消 autovacuum steps 回调。`sqlite3_autovacuum_pages()` 的返回值通常
+是 `SQLITE_OK`，但也可能是其它错误码。当前实现只返回 `SQLITE_OK` 或 `SQLITE_MISUSE`，但
+未来版本可能增加其它返回码。
+
+若未指定 autovacuum pages 回调（通常如此）、或为回调提供 NULL 指针，则默认行为是压缩所有
+空闲页。换句话说，默认行为与回调函数形如以下代码相同：
 
 ```
-
-    unsigned int demonstration_autovac_pages_callback(
-      void *pClientData,
-      const char *zSchema,
-      unsigned int nDbPage,
-      unsigned int nFreePage,
-      unsigned int nBytePerPage
-    ){
-      return nFreePage;
-    }
-
+    unsigned int demonstration_autovac_pages_callback(
+      void *pClientData,
+      const char *zSchema,
+      unsigned int nDbPage,
+      unsigned int nFreePage,
+      unsigned int nBytePerPage
+    ){
+      return nFreePage;
+    }
 ```
 
 ---
 
-## Number Of SQL Parameters
+## SQL 参数数量（Number Of SQL Parameters）
 
 ```
-
 int sqlite3_bind_parameter_count(sqlite3_stmt*);
-
 ```
 
-This routine can be used to find the number of SQL parameters
-in a prepared statement.  SQL parameters are tokens of the
-form "?", "?NNN", ":AAA", "$AAA", or "@AAA" that serve as
-placeholders for values that are bound
-to the parameters at a later time.
+此例程可用于找出预编译语句中的 SQL 参数个数。SQL 参数是形如 "?"、" ?NNN"、":AAA"、"$AAA"
+或 "@AAA" 的记号，作为稍后绑定到参数上的值的占位符。
 
-This routine actually returns the index of the largest (rightmost)
-parameter. For all forms except ?NNN, this will correspond to the
-number of unique parameters.  If parameters of the ?NNN form are used,
-there may be gaps in the list.
+此例程实际返回最大（最右侧）参数的索引。对于除 ?NNN 外的所有形式，这对应于唯一参数的个数。
+若使用了 ?NNN 形式的参数，列表中可能有空隙。
 
-See also: sqlite3_bind(),
-sqlite3_bind_parameter_name(), and
-sqlite3_bind_parameter_index().
+另见：sqlite3_bind()、sqlite3_bind_parameter_name() 和 sqlite3_bind_parameter_index()。
 
 ---
 
-## Index Of A Parameter With A Given Name
+## 按名字查参数索引（Index Of A Parameter With A Given Name）
 
 ```
-
 int sqlite3_bind_parameter_index(sqlite3_stmt*, const char *zName);
-
 ```
 
-Return the index of an SQL parameter given its name.  The
-index value returned is suitable for use as the second
-parameter to sqlite3_bind().  A zero
-is returned if no matching parameter is found.  The parameter
-name must be given in UTF-8 even if the original statement
-was prepared from UTF-16 text using sqlite3_prepare16_v2() or
-sqlite3_prepare16_v3().
+按名字返回 SQL 参数的索引。返回的索引值适合用作 `sqlite3_bind()` 的第二个参数。若未找到
+匹配的参数则返回零。即使原语句是用 `sqlite3_prepare16_v2()` 或 `sqlite3_prepare16_v3()`
+从 UTF-16 文本准备的，参数名也必须以 UTF-8 给出。
 
-See also: sqlite3_bind(),
-sqlite3_bind_parameter_count(), and
-sqlite3_bind_parameter_name().
+另见：sqlite3_bind()、sqlite3_bind_parameter_count() 和 sqlite3_bind_parameter_name()。
 
 ---
 
-## Name Of A Host Parameter
+## 宿主参数名（Name Of A Host Parameter）
 
 ```
-
 const char *sqlite3_bind_parameter_name(sqlite3_stmt*, int);
-
 ```
 
-The sqlite3_bind_parameter_name(P,N) interface returns
-the name of the N-th SQL parameter in the prepared statement P.
-SQL parameters of the form "?NNN" or ":AAA" or "@AAA" or "$AAA"
-have a name which is the string "?NNN" or ":AAA" or "@AAA" or "$AAA"
-respectively.
-In other words, the initial ":" or "$" or "@" or "?"
-is included as part of the name.
-Parameters of the form "?" without a following integer have no name
-and are referred to as "nameless" or "anonymous parameters".
+`sqlite3_bind_parameter_name(P,N)` 接口返回预编译语句 P 中第 N 个 SQL 参数的名字。形如
+"?NNN"、":AAA"、"@AAA" 或 "$AAA" 的 SQL 参数，其名字即为该符号本身所构成的字符串（含前缀
+"?"、":"、"@" 或 "$"）。形如 "?"（后面没有整数）的参数没有名字，被称为"无名"或"匿名参数"。
 
-The first host parameter has an index of 1, not 0.
+第一个宿主参数的索引是 1，而不是 0。
 
-If the value N is out of range or if the N-th parameter is
-nameless, then NULL is returned.  The returned string is
-always in UTF-8 encoding even if the named parameter was
-originally specified as UTF-16 in sqlite3_prepare16(),
-sqlite3_prepare16_v2(), or sqlite3_prepare16_v3().
+若 N 值越界、或第 N 个参数无名，则返回 NULL。返回的字符串总是 UTF-8 编码，即使命名参数最初
+是在 `sqlite3_prepare16()`、`sqlite3_prepare16_v2()` 或 `sqlite3_prepare16_v3()` 中以 UTF-16
+指定的。
 
-See also: sqlite3_bind(),
-sqlite3_bind_parameter_count(), and
-sqlite3_bind_parameter_index().
+另见：sqlite3_bind()、sqlite3_bind_parameter_count() 和 sqlite3_bind_parameter_index()。
 
 ---
 
-## Return The Size Of An Open BLOB
+## 返回打开的 BLOB 的大小（Return The Size Of An Open BLOB）
 
 ```
-
 int sqlite3_blob_bytes(sqlite3_blob *);
-
 ```
 
-Returns the size in bytes of the BLOB accessible via the
-successfully opened BLOB handle in its only argument.  The
-incremental blob I/O routines can only read or overwrite existing
-blob content; they cannot change the size of a blob.
+返回其唯一参数中、成功打开的 BLOB 句柄所能访问的 BLOB 的字节大小。增量 BLOB I/O 例程只能
+读取或覆盖现有 blob 内容，不能改变 blob 的大小。
 
-This routine only works on a BLOB handle which has been created
-by a prior successful call to sqlite3_blob_open() and which has not
-been closed by sqlite3_blob_close().  Passing any other pointer in
-to this routine results in undefined and probably undesirable behavior.
+此例程只作用于：先前由成功的 `sqlite3_blob_open()` 调用创建、且尚未被 `sqlite3_blob_close()`
+关闭的 BLOB 句柄。向此例程传入任何其它指针，结果未定义、且多半是糟糕的行为。
 
 ---
 
-## Close A BLOB Handle
+## 关闭 BLOB 句柄（Close A BLOB Handle）
 
 ```
-
 int sqlite3_blob_close(sqlite3_blob *);
-
 ```
 
-This function closes an open BLOB handle. The BLOB handle is closed
-unconditionally.  Even if this routine returns an error code, the
-handle is still closed.
+此函数关闭一个打开的 BLOB 句柄。BLOB 句柄被无条件关闭，即使此例程返回错误码，句柄仍会被
+关闭。
 
-If the blob handle being closed was opened for read-write access, and if
-the database is in auto-commit mode and there are no other open read-write
-blob handles or active write statements, the current transaction is
-committed. If an error occurs while committing the transaction, an error
-code is returned and the transaction rolled back.
+若被关闭的 blob 句柄是以读写方式打开的，且数据库处于自动提交模式、没有其它打开的读写 blob
+句柄或活动的写语句，则当前事务被提交。若提交事务时出错，则返回错误码并把事务回滚。
 
-Calling this function with an argument that is not a NULL pointer or an
-open blob handle results in undefined behavior. Calling this routine
-with a null pointer (such as would be returned by a failed call to
-sqlite3_blob_open()) is a harmless no-op. Otherwise, if this function
-is passed a valid open blob handle, the values returned by the
-sqlite3_errcode() and sqlite3_errmsg() functions are set before returning.
+向此函数传入既非 NULL 指针、又非打开的 blob 句柄的参数，结果未定义。向此例程传入 NULL 指针
+（例如失败的 `sqlite3_blob_open()` 调用返回的）是无害的空操作。否则，若向此函数传入有效的
+打开 blob 句柄，则在返回前会设置 `sqlite3_errcode()` 和 `sqlite3_errmsg()` 函数返回的值。
 
 ---
 
-## Open A BLOB For Incremental I/O
+## 打开 BLOB 做增量 I/O（Open A BLOB For Incremental I/O）
 
 ```
-
 int sqlite3_blob_open(
   sqlite3*,
   const char *zDb,
@@ -3101,3141 +1790,2111 @@ int sqlite3_blob_open(
   int flags,
   sqlite3_blob **ppBlob
 );
-
 ```
 
-This interfaces opens a handle to the BLOB located
-in row iRow, column zColumn, table zTable in database zDb;
-in other words, the same BLOB that would be selected by:
+此接口打开一个句柄，指向数据库 zDb 中、表 zTable、列 zColumn、行 iRow 处的 BLOB；换句话说，
+就是下面 SELECT 会选择到的同一个 BLOB：
 
 ```
-
 SELECT zColumn FROM zDb.zTable WHERE rowid = iRow;
-
 ```
 
-Parameter zDb is not the filename that contains the database, but
-rather the symbolic name of the database. For attached databases, this is
-the name that appears after the AS keyword in the ATTACH statement.
-For the main database file, the database name is "main". For TEMP
-tables, the database name is "temp".
+参数 zDb 不是包含数据库的文件名，而是数据库的符号名。对附加数据库，这是 ATTACH 语句中 AS
+关键字后面的名字；对主数据库文件，数据库名是 "main"；对 TEMP 表，数据库名是 "temp"。
 
-If the flags parameter is non-zero, then the BLOB is opened for read
-and write access. If the flags parameter is zero, the BLOB is opened for
-read-only access.
+若 flags 参数非零，则 BLOB 以读写方式打开；若 flags 参数为零，则 BLOB 以只读方式打开。
 
-On success, SQLITE_OK is returned and the new BLOB handle is stored
-in *ppBlob. Otherwise an error code is returned and, unless the error
-code is SQLITE_MISUSE, *ppBlob is set to NULL. This means that, provided
-the API is not misused, it is always safe to call sqlite3_blob_close()
-on *ppBlob after this function returns.
+成功时返回 `SQLITE_OK`，新 BLOB 句柄存入 *ppBlob。否则返回错误码；除非错误码是
+`SQLITE_MISUSE`，否则 *ppBlob 被置为 NULL。这意味着，只要 API 未被误用，在此函数返回后对
+*ppBlob 调用 `sqlite3_blob_close()` 总是安全的。
 
-This function fails with SQLITE_ERROR if any of the following are true:
+若以下任一情况为真，此函数以 `SQLITE_ERROR` 失败：
 
--  Database zDb does not exist,
+- 数据库 zDb 不存在
+- 表 zTable 在数据库 zDb 中不存在
+- 表 zTable 是 WITHOUT ROWID 表
+- 列 zColumn 不存在
+- 行 iRow 不在表中
+- 行 iRow 的指定列包含的值不是 TEXT 或 BLOB 值
+- 列 zColumn 是索引、PRIMARY KEY 或 UNIQUE 约束的一部分，且 blob 正以读写方式打开
+- 已启用外键约束，且列 zColumn 是子键定义的一部分、blob 正以读写方式打开
 
--  Table zTable does not exist within database zDb,
+除非返回 `SQLITE_MISUSE`，此函数都会设置可通过 `sqlite3_errcode()`、`sqlite3_errmsg()` 及
+相关函数访问的数据库连接错误码和消息。
 
--  Table zTable is a WITHOUT ROWID table,
+`sqlite3_blob_open()` 引用的 BLOB 可用 `sqlite3_blob_read()` 接口读取、用
+`sqlite3_blob_write()` 修改。BLOB 句柄可以用 `sqlite3_blob_reopen()` 接口移到同一表的另一行。
+但 BLOB 句柄打开后，其列、表或数据库都不能改变。
 
--  Column zColumn does not exist,
+若 BLOB 句柄指向的行被 UPDATE、DELETE 或 ON CONFLICT 副作用修改，则 BLOB 句柄被标记为
+"过期"。只要该行的任一列被改变（即使不是 BLOB 句柄打开的那一列），也是如此。对过期 BLOB
+句柄调用 `sqlite3_blob_read()` 和 `sqlite3_blob_write()` 会以 `SQLITE_ABORT` 返回码失败。
+BLOB 过期前写入 BLOB 的更改不会被 BLOB 过期回滚；若事务继续完成，这些更改最终会提交。
 
--  Row iRow is not present in the table,
+用 `sqlite3_blob_bytes()` 接口确定打开的 blob 的大小。此接口不能改变 blob 的大小，请用
+UPDATE SQL 命令改变 blob 的大小。
 
--  The specified column of row iRow contains a value that is not
-a TEXT or BLOB value,
+`sqlite3_bind_zeroblob()` 和 `sqlite3_result_zeroblob()` 接口以及内建的 zeroblob SQL 函数，
+可用于创建用增量 blob 接口读写所需的零填充 blob。
 
--  Column zColumn is part of an index, PRIMARY KEY or UNIQUE
-constraint and the blob is being opened for read/write access,
+为避免资源泄漏，每个打开的 BLOB 句柄最终都应由对 `sqlite3_blob_close()` 的调用释放。
 
--  Foreign key constraints are enabled,
-column zColumn is part of a child key definition and the blob is
-being opened for read/write access.
-
-Unless it returns SQLITE_MISUSE, this function sets the
-database connection error code and message accessible via
-sqlite3_errcode() and sqlite3_errmsg() and related functions.
-
-A BLOB referenced by sqlite3_blob_open() may be read using the
-sqlite3_blob_read() interface and modified by using
-sqlite3_blob_write().  The BLOB handle can be moved to a
-different row of the same table using the sqlite3_blob_reopen()
-interface.  However, the column, table, or database of a BLOB handle
-cannot be changed after the BLOB handle is opened.
-
-If the row that a BLOB handle points to is modified by an
-UPDATE, DELETE, or by ON CONFLICT side-effects
-then the BLOB handle is marked as "expired".
-This is true if any column of the row is changed, even a column
-other than the one the BLOB handle is open on.
-Calls to sqlite3_blob_read() and sqlite3_blob_write() for
-an expired BLOB handle fail with a return code of SQLITE_ABORT.
-Changes written into a BLOB prior to the BLOB expiring are not
-rolled back by the expiration of the BLOB.  Such changes will eventually
-commit if the transaction continues to completion.
-
-Use the sqlite3_blob_bytes() interface to determine the size of
-the opened blob.  The size of a blob may not be changed by this
-interface.  Use the UPDATE SQL command to change the size of a
-blob.
-
-The sqlite3_bind_zeroblob() and sqlite3_result_zeroblob() interfaces
-and the built-in zeroblob SQL function may be used to create a
-zero-filled blob to read or write using the incremental-blob interface.
-
-To avoid a resource leak, every open BLOB handle should eventually
-be released by a call to sqlite3_blob_close().
-
-See also: sqlite3_blob_close(),
-sqlite3_blob_reopen(), sqlite3_blob_read(),
-sqlite3_blob_bytes(), sqlite3_blob_write().
+另见：sqlite3_blob_close()、sqlite3_blob_reopen()、sqlite3_blob_read()、
+sqlite3_blob_bytes()、sqlite3_blob_write()。
 
 ---
 
-## Read Data From A BLOB Incrementally
+## 从 BLOB 增量读取数据（Read Data From A BLOB Incrementally）
 
 ```
-
 int sqlite3_blob_read(sqlite3_blob *, void *Z, int N, int iOffset);
-
 ```
 
-This function is used to read data from an open BLOB handle into a
-caller-supplied buffer. N bytes of data are copied into buffer Z
-from the open BLOB, starting at offset iOffset.
+此函数用于把数据从打开的 BLOB 句柄读入调用者提供的缓冲区。从打开的 BLOB 中、从偏移 iOffset
+开始，把 N 字节数据拷入缓冲区 Z。
 
-If offset iOffset is less than N bytes from the end of the BLOB,
-SQLITE_ERROR is returned and no data is read.  If N or iOffset is
-less than zero, SQLITE_ERROR is returned and no data is read.
-The size of the blob (and hence the maximum value of N+iOffset)
-can be determined using the sqlite3_blob_bytes() interface.
+若偏移 iOffset 距 BLOB 末尾不足 N 字节，返回 `SQLITE_ERROR` 且不读取数据。若 N 或 iOffset
+小于零，返回 `SQLITE_ERROR` 且不读取数据。blob 的大小（因而 N+iOffset 的最大值）可用
+`sqlite3_blob_bytes()` 接口确定。
 
-An attempt to read from an expired BLOB handle fails with an
-error code of SQLITE_ABORT.
+尝试读取过期 BLOB 句柄会以 `SQLITE_ABORT` 错误码失败。
 
-On success, sqlite3_blob_read() returns SQLITE_OK.
-Otherwise, an error code or an extended error code is returned.
+成功时 `sqlite3_blob_read()` 返回 `SQLITE_OK`，否则返回错误码或扩展错误码。
 
-This routine only works on a BLOB handle which has been created
-by a prior successful call to sqlite3_blob_open() and which has not
-been closed by sqlite3_blob_close().  Passing any other pointer in
-to this routine results in undefined and probably undesirable behavior.
+此例程只作用于：先前由成功的 `sqlite3_blob_open()` 调用创建、且尚未被 `sqlite3_blob_close()`
+关闭的 BLOB 句柄。向此例程传入任何其它指针，结果未定义、且多半是糟糕的行为。
 
-See also: sqlite3_blob_write().
-
----
-
-## Move a BLOB Handle to a New Row
+## 把 BLOB 句柄移到新行（Move a BLOB Handle to a New Row）
 
 ```
-
 int sqlite3_blob_reopen(sqlite3_blob *, sqlite3_int64);
-
 ```
 
-This function is used to move an existing BLOB handle so that it points
-to a different row of the same database table. The new row is identified
-by the rowid value passed as the second argument. Only the row can be
-changed. The database, table and column on which the blob handle is open
-remain the same. Moving an existing BLOB handle to a new row is
-faster than closing the existing handle and opening a new one.
+此函数用于移动现有 BLOB 句柄，使它指向同一数据库表的另一行。新行由第二个参数传入的 rowid
+值标识。只有行可以改变；blob 句柄打开的数据库、表和列保持不变。把现有 BLOB 句柄移到新行比
+关闭现有句柄再打开新的更快。
 
-The new row must meet the same criteria as for sqlite3_blob_open() -
-it must exist and there must be either a blob or text value stored in
-the nominated column. If the new row is not present in the table, or if
-it does not contain a blob or text value, or if another error occurs, an
-SQLite error code is returned and the blob handle is considered aborted.
-All subsequent calls to sqlite3_blob_read(), sqlite3_blob_write() or
-sqlite3_blob_reopen() on an aborted blob handle immediately return
-SQLITE_ABORT. Calling sqlite3_blob_bytes() on an aborted blob handle
-always returns zero.
+新行必须满足与 `sqlite3_blob_open()` 相同的条件——它必须存在，且指定列中必须存储有 blob 或
+text 值。若新行不在表中、或其中没有 blob 或 text 值、或发生其它错误，则返回 SQLite 错误码，
+且该 blob 句柄被视为"中止"。此后对中止的 blob 句柄调用 `sqlite3_blob_read()`、
+`sqlite3_blob_write()` 或 `sqlite3_blob_reopen()` 都会立即返回 `SQLITE_ABORT`。对中止的
+blob 句柄调用 `sqlite3_blob_bytes()` 总是返回零。
 
-This function sets the database handle error code and message.
+此函数设置数据库句柄的错误码和消息。
 
 ---
 
-## Write Data Into A BLOB Incrementally
+## 向 BLOB 增量写入数据（Write Data Into A BLOB Incrementally）
 
 ```
-
 int sqlite3_blob_write(sqlite3_blob *, const void *z, int n, int iOffset);
-
 ```
 
-This function is used to write data into an open BLOB handle from a
-caller-supplied buffer. N bytes of data are copied from the buffer Z
-into the open BLOB, starting at offset iOffset.
+此函数用于把调用者提供的缓冲区中的数据写入打开的 BLOB 句柄。从缓冲区 Z 中、从偏移 iOffset
+开始，把 N 字节数据拷入打开的 BLOB。
 
-On success, sqlite3_blob_write() returns SQLITE_OK.
-Otherwise, an  error code or an extended error code is returned.
-Unless SQLITE_MISUSE is returned, this function sets the
-database connection error code and message accessible via
-sqlite3_errcode() and sqlite3_errmsg() and related functions.
+成功时 `sqlite3_blob_write()` 返回 `SQLITE_OK`，否则返回错误码或扩展错误码。除非返回
+`SQLITE_MISUSE`，此函数都会设置可通过 `sqlite3_errcode()`、`sqlite3_errmsg()` 及相关函数
+访问的数据库连接错误码和消息。
 
-If the BLOB handle passed as the first argument was not opened for
-writing (the flags parameter to sqlite3_blob_open() was zero),
-this function returns SQLITE_READONLY.
+若传入的第一个参数（BLOB 句柄）不是为写入而打开的（传给 `sqlite3_blob_open()` 的 flags
+参数为零），此函数返回 `SQLITE_READONLY`。
 
-This function may only modify the contents of the BLOB; it is
-not possible to increase the size of a BLOB using this API.
-If offset iOffset is less than N bytes from the end of the BLOB,
-SQLITE_ERROR is returned and no data is written. The size of the
-BLOB (and hence the maximum value of N+iOffset) can be determined
-using the sqlite3_blob_bytes() interface. If N or iOffset are less
-than zero SQLITE_ERROR is returned and no data is written.
+此函数只能修改 BLOB 的内容，不可能用此 API 增大 BLOB 的大小。若偏移 iOffset 距 BLOB 末尾
+不足 N 字节，返回 `SQLITE_ERROR` 且不写入数据。blob 的大小（因而 N+iOffset 的最大值）可用
+`sqlite3_blob_bytes()` 接口确定。若 N 或 iOffset 小于零，返回 `SQLITE_ERROR` 且不写入数据。
 
-An attempt to write to an expired BLOB handle fails with an
-error code of SQLITE_ABORT.  Writes to the BLOB that occurred
-before the BLOB handle expired are not rolled back by the
-expiration of the handle, though of course those changes might
-have been overwritten by the statement that expired the BLOB handle
-or by other independent statements.
+尝试写入过期 BLOB 句柄会以 `SQLITE_ABORT` 错误码失败。BLOB 句柄过期前对 BLOB 的写入不会被
+句柄过期回滚，尽管这些更改当然可能已被使 BLOB 句柄过期的语句或其它独立语句覆盖。
 
-This routine only works on a BLOB handle which has been created
-by a prior successful call to sqlite3_blob_open() and which has not
-been closed by sqlite3_blob_close().  Passing any other pointer in
-to this routine results in undefined and probably undesirable behavior.
+此例程只作用于：先前由成功的 `sqlite3_blob_open()` 调用创建、且尚未被 `sqlite3_blob_close()`
+关闭的 BLOB 句柄。向此例程传入任何其它指针，结果未定义、且多半是糟糕的行为。
 
-See also: sqlite3_blob_read().
+另见：sqlite3_blob_read()。
 
 ---
 
-## Set A Busy Timeout
+## 设置忙超时（Set A Busy Timeout）
 
 ```
-
 int sqlite3_busy_timeout(sqlite3*, int ms);
-
 ```
 
-This routine sets a busy handler that sleeps
-for a specified amount of time when a table is locked.  The handler
-will sleep multiple times until at least "ms" milliseconds of sleeping
-have accumulated.  After at least "ms" milliseconds of sleeping,
-the handler returns 0 which causes sqlite3_step() to return
-SQLITE_BUSY.
+此例程设置一个忙处理器：当表被锁定时，处理器睡眠指定的一段时间。处理器会多次睡眠，直到累计
+睡眠至少 "ms" 毫秒。至少睡眠 "ms" 毫秒后，处理器返回 0，导致 `sqlite3_step()` 返回
+`SQLITE_BUSY`。
 
-Calling this routine with an argument less than or equal to zero
-turns off all busy handlers.
+用小于或等于零的参数调用此例程会关闭所有忙处理器。
 
-There can only be a single busy handler for a particular
-database connection at any given moment.  If another busy handler
-was defined  (using sqlite3_busy_handler()) prior to calling
-this routine, that other busy handler is cleared.
+在任何给定时刻，一个数据库连接只能有一个忙处理器。若在此例程之前已用 `sqlite3_busy_handler()`
+定义了另一个忙处理器，则该处理器会被清除。
 
-See also:  PRAGMA busy_timeout
+另见：PRAGMA busy_timeout
 
 ---
 
-## Cancel Automatic Extension Loading
+## 取消自动扩展加载（Cancel Automatic Extension Loading）
 
 ```
-
 int sqlite3_cancel_auto_extension(void(*xEntryPoint)(void));
-
 ```
 
-The sqlite3_cancel_auto_extension(X) interface unregisters the
-initialization routine X that was registered using a prior call to
-sqlite3_auto_extension(X).  The sqlite3_cancel_auto_extension(X)
-routine returns 1 if initialization routine X was successfully
-unregistered and it returns 0 if X was not on the list of initialization
-routines.
+`sqlite3_cancel_auto_extension(X)` 接口取消注册先前用 `sqlite3_auto_extension(X)` 注册的
+初始化例程 X。若初始化例程 X 被成功取消注册，`sqlite3_cancel_auto_extension(X)` 例程返回 1；
+若 X 不在初始化例程列表中，则返回 0。
 
 ---
 
-## Reset All Bindings On A Prepared Statement
+## 重置预编译语句上的所有绑定（Reset All Bindings On A Prepared Statement）
 
 ```
-
 int sqlite3_clear_bindings(sqlite3_stmt*);
-
 ```
 
-Contrary to the intuition of many, sqlite3_reset() does not reset
-the bindings on a prepared statement.
-Use this routine to reset all host parameters to NULL.
+与许多人的直觉相反，`sqlite3_reset()` 不会重置预编译语句上的绑定。请用此例程把所有宿主参数
+重置为 NULL。
 
 ---
 
-## Number Of Columns In A Result Set
+## 结果集中的列数（Number Of Columns In A Result Set）
 
 ```
-
 int sqlite3_column_count(sqlite3_stmt *pStmt);
-
 ```
 
-Return the number of columns in the result set returned by the
-prepared statement. If this routine returns 0, that means the
-prepared statement returns no data (for example an UPDATE).
-However, just because this routine returns a positive number does not
-mean that one or more rows of data will be returned.  A SELECT statement
-will always have a positive sqlite3_column_count() but depending on the
-WHERE clause constraints and the table content, it might return no rows.
+返回预编译语句返回的结果集中的列数。若此例程返回 0，表示该预编译语句不返回数据（例如
+UPDATE）。但是，此例程返回正数并不意味着一行或多行数据会被返回。SELECT 语句的
+`sqlite3_column_count()` 总是正数，但取决于 WHERE 子句约束和表内容，它可能不返回任何行。
 
-See also: sqlite3_data_count()
+另见：sqlite3_data_count()
 
 ---
 
-## Configuring The SQLite Library
+## 配置 SQLite 库（Configuring The SQLite Library）
 
 ```
-
 int sqlite3_config(int, ...);
-
 ```
 
-The sqlite3_config() interface is used to make global configuration
-changes to SQLite in order to tune SQLite to the specific needs of
-the application.  The default configuration is recommended for most
-applications and so this routine is usually not necessary.  It is
-provided to support rare applications with unusual needs.
+`sqlite3_config()` 接口用于对 SQLite 做全局配置更改，以把 SQLite 调优到应用的具体需求。
+对大多数应用推荐默认配置，因此通常不需要此例程。它用于支持少数有特殊需求的罕见应用。
 
-The sqlite3_config() interface is not threadsafe. The application
-must ensure that no other SQLite interfaces are invoked by other
-threads while sqlite3_config() is running.
+`sqlite3_config()` 接口不是线程安全的。应用必须确保在 `sqlite3_config()` 运行期间，没有其它
+线程调用其它 SQLite 接口。
 
-The first argument to sqlite3_config() is an integer
-configuration option that determines
-what property of SQLite is to be configured.  Subsequent arguments
-vary depending on the configuration option
-in the first argument.
+`sqlite3_config()` 的第一个参数是一个整数配置选项，决定要配置 SQLite 的哪个属性。后续参数
+随第一个参数中的配置选项而变化。
 
-For most configuration options, the sqlite3_config() interface
-may only be invoked prior to library initialization using
-sqlite3_initialize() or after shutdown by sqlite3_shutdown().
-The exceptional configuration options that may be invoked at any time
-are called "anytime configuration options".
-If sqlite3_config() is called after sqlite3_initialize() and before
-sqlite3_shutdown() with a first argument that is not an anytime
-configuration option, then the sqlite3_config() call will
-return SQLITE_MISUSE.
-Note, however, that sqlite3_config() can be called as part of the
-implementation of an application-defined sqlite3_os_init().
+对大多数配置选项，`sqlite3_config()` 接口只能在用 `sqlite3_initialize()` 进行库初始化之前、
+或经 `sqlite3_shutdown()` 关闭之后调用。那些可在任何时刻调用的例外配置选项称为"随时配置
+选项"。若在 `sqlite3_initialize()` 之后、`sqlite3_shutdown()` 之前、用非随时配置选项的首参数
+调用 `sqlite3_config()`，则该调用返回 `SQLITE_MISUSE`。注意：`sqlite3_config()` 可以在应用
+自定义的 `sqlite3_os_init()` 的实现中被调用。
 
-When a configuration option is set, sqlite3_config() returns SQLITE_OK.
-If the option is unknown or SQLite is unable to set the option
-then this routine returns a non-zero error code.
+设置配置选项时，`sqlite3_config()` 返回 `SQLITE_OK`。若选项未知或 SQLite 无法设置该选项，
+则此例程返回非零错误码。
 
 ---
 
-## Database Connection For Functions
+## 函数所属的数据库连接（Database Connection For Functions）
 
 ```
-
 sqlite3 *sqlite3_context_db_handle(sqlite3_context*);
-
 ```
 
-The sqlite3_context_db_handle() interface returns a copy of
-the pointer to the database connection (the 1st parameter)
-of the sqlite3_create_function()
-and sqlite3_create_function16() routines that originally
-registered the application defined function.
+`sqlite3_context_db_handle()` 接口返回数据库连接指针（第一参数）的副本，即最初注册该应用
+自定义函数的 `sqlite3_create_function()` 和 `sqlite3_create_function16()` 例程的第一个参数。
 
 ---
 
-## Number of columns in a result set
+## 结果集当前行的列数（Number of columns in a result set）
 
 ```
-
 int sqlite3_data_count(sqlite3_stmt *pStmt);
-
 ```
 
-The sqlite3_data_count(P) interface returns the number of columns in the
-current row of the result set of prepared statement P.
-If prepared statement P does not have results ready to return
-(via calls to the sqlite3_column() family of
-interfaces) then sqlite3_data_count(P) returns 0.
-The sqlite3_data_count(P) routine also returns 0 if P is a NULL pointer.
-The sqlite3_data_count(P) routine returns 0 if the previous call to
-sqlite3_step(P) returned SQLITE_DONE.  The sqlite3_data_count(P)
-will return non-zero if previous call to sqlite3_step(P) returned
-SQLITE_ROW, except in the case of the PRAGMA incremental_vacuum
-where it always returns zero since each step of that multi-step
-pragma returns 0 columns of data.
+`sqlite3_data_count(P)` 接口返回预编译语句 P 结果集当前行中的列数。若预编译语句 P 没有准备好
+返回的结果（通过 `sqlite3_column()` 系列接口访问），则 `sqlite3_data_count(P)` 返回 0。若 P
+是 NULL 指针，`sqlite3_data_count(P)` 例程也返回 0。若先前对 `sqlite3_step(P)` 的调用返回
+`SQLITE_DONE`，`sqlite3_data_count(P)` 例程返回 0；若先前调用返回 `SQLITE_ROW`，则返回非零，
+但 PRAGMA incremental_vacuum 除外——由于该多步 pragma 的每一步都返回 0 列数据，它总是返回 0。
 
-See also: sqlite3_column_count()
+另见：sqlite3_column_count()
 
 ---
 
-## Database File Corresponding To A Journal
+## 日志对应的数据库文件（Database File Corresponding To A Journal）
 
 ```
-
 sqlite3_file *sqlite3_database_file_object(const char*);
-
 ```
 
-If X is the name of a rollback or WAL-mode journal file that is
-passed into the xOpen method of sqlite3_vfs, then
-sqlite3_database_file_object(X) returns a pointer to the sqlite3_file
-object that represents the main database file.
+若 X 是传入 `sqlite3_vfs` 的 xOpen 方法的回滚日志或 WAL 模式日志文件名，则
+`sqlite3_database_file_object(X)` 返回代表主数据库文件的 `sqlite3_file` 对象的指针。
 
-This routine is intended for use in custom VFS implementations
-only.  It is not a general-purpose interface.
-The argument sqlite3_file_object(X) must be a filename pointer that
-has been passed into sqlite3_vfs.xOpen method where the
-flags parameter to xOpen contains one of the bits
-SQLITE_OPEN_MAIN_JOURNAL or SQLITE_OPEN_WAL.  Any other use
-of this routine results in undefined and probably undesirable
-behavior.
+此例程只供自定义 VFS 实现使用，不是通用接口。参数必须是已传入 `sqlite3_vfs.xOpen` 方法的
+文件名指针，且 xOpen 的 flags 参数包含 `SQLITE_OPEN_MAIN_JOURNAL` 或 `SQLITE_OPEN_WAL` 位
+之一。任何其它用途的结果未定义、且多半是糟糕的行为。
 
 ---
 
-## Flush caches to disk mid-transaction
+## 事务中途把缓存刷到磁盘（Flush caches to disk mid-transaction）
 
 ```
-
 int sqlite3_db_cacheflush(sqlite3*);
-
 ```
 
-If a write-transaction is open on database connection D when the
-sqlite3_db_cacheflush(D) interface is invoked, any dirty
-pages in the pager-cache that are not currently in use are written out
-to disk. A dirty page may be in use if a database cursor created by an
-active SQL statement is reading from it, or if it is page 1 of a database
-file (page 1 is always "in use").  The sqlite3_db_cacheflush(D)
-interface flushes caches for all schemas - "main", "temp", and
-any attached databases.
+若在数据库连接 D 上打开写事务时调用 `sqlite3_db_cacheflush(D)` 接口，则 pager-cache 中任何
+当前不在使用中的脏页会被写出到磁盘。若有活动的 SQL 语句创建的数据库游标正在读取某个脏页，
+或该脏页是数据库文件的第 1 页（第 1 页总是"使用中"），则该脏页可能在使用中。
+`sqlite3_db_cacheflush(D)` 接口刷新所有 schema 的缓存——"main"、"temp" 以及任何附加数据库。
 
-If this function needs to obtain extra database locks before dirty pages
-can be flushed to disk, it does so. If those locks cannot be obtained
-immediately and there is a busy-handler callback configured, it is invoked
-in the usual manner. If the required lock still cannot be obtained, then
-the database is skipped and an attempt made to flush any dirty pages
-belonging to the next (if any) database. If any databases are skipped
-because locks cannot be obtained, but no other error occurs, this
-function returns SQLITE_BUSY.
+若此函数在脏页能刷到磁盘前需要取得额外的数据库锁，它会去取。若不能立即取得这些锁、且配置了
+忙处理器回调，则按常规方式调用它。若仍无法取得所需锁，则跳过该数据库，并尝试刷新下一个（如果
+有）数据库的脏页。若有数据库因无法取得锁而被跳过、但没有发生其它错误，此函数返回 `SQLITE_BUSY`。
 
-If any other error occurs while flushing dirty pages to disk (for
-example an IO error or out-of-memory condition), then processing is
-abandoned and an SQLite error code is returned to the caller immediately.
+若在把脏页刷到磁盘时发生任何其它错误（例如 I/O 错误或内存不足），则放弃处理、立即向调用者
+返回 SQLite 错误码。
 
-Otherwise, if no error occurs, sqlite3_db_cacheflush() returns SQLITE_OK.
+否则，若没有错误发生，`sqlite3_db_cacheflush()` 返回 `SQLITE_OK`。
 
-This function does not set the database handle error code or message
-returned by the sqlite3_errcode() and sqlite3_errmsg() functions.
+此函数不设置由 `sqlite3_errcode()` 和 `sqlite3_errmsg()` 函数返回的数据库句柄错误码或消息。
 
----
-
-## Configure database connections
+## 配置数据库连接（Configure database connections）
 
 ```
-
 int sqlite3_db_config(sqlite3*, int op, ...);
-
 ```
 
-The sqlite3_db_config() interface is used to make configuration
-changes to a database connection.  The interface is similar to
-sqlite3_config() except that the changes apply to a single
-database connection (specified in the first argument).
+`sqlite3_db_config()` 接口用于对数据库连接做配置更改。该接口与 `sqlite3_config()` 类似，
+只是更改适用于单个数据库连接（由第一个参数指定）。
 
-The second argument to sqlite3_db_config(D,V,...)  is the
-configuration verb - an integer code
-that indicates what aspect of the database connection is being configured.
-Subsequent arguments vary depending on the configuration verb.
+`sqlite3_db_config(D,V,...)` 的第二个参数是配置动词——一个整数代码，指示正在配置数据库
+连接的哪个方面。后续参数随配置动词而变化。
 
-Calls to sqlite3_db_config() return SQLITE_OK if and only if
-the call is considered successful.
+当且仅当调用被认为成功时，对 `sqlite3_db_config()` 的调用返回 `SQLITE_OK`。
 
 ---
 
-## Return The Filename For A Database Connection
+## 返回数据库连接的文件名（Return The Filename For A Database Connection）
 
 ```
-
 sqlite3_filename sqlite3_db_filename(sqlite3 *db, const char *zDbName);
-
 ```
 
-The sqlite3_db_filename(D,N) interface returns a pointer to the filename
-associated with database N of connection D.
-If there is no attached database N on the database
-connection D, or if database N is a temporary or in-memory database, then
-this function will return either a NULL pointer or an empty string.
+`sqlite3_db_filename(D,N)` 接口返回与连接 D 的数据库 N 相关联的文件名指针。若数据库连接 D
+上没有附加数据库 N，或数据库 N 是临时数据库或内存数据库，则此函数返回 NULL 指针或空字符串。
 
-The string value returned by this routine is owned and managed by
-the database connection.  The value will be valid until the database N
-is DETACH-ed or until the database connection closes.
+此例程返回的字符串值由数据库连接所有和管理。该值在数据库 N 被 DETACH 之前、或数据库连接关闭
+之前一直有效。
 
-The filename returned by this function is the output of the
-xFullPathname method of the VFS.  In other words, the filename
-will be an absolute pathname, even if the filename used
-to open the database originally was a URI or relative pathname.
+此函数返回的文件名是 VFS 的 xFullPathname 方法的输出。换句话说，即使最初打开数据库时用的是
+URI 或相对路径名，文件名也将是绝对路径名。
 
-If the filename pointer returned by this routine is not NULL, then it
-can be used as the filename input parameter to these routines:
+若此例程返回的文件名指针非 NULL，则它可用作以下例程的文件名输入参数：
 
--  sqlite3_uri_parameter()
-
--  sqlite3_uri_boolean()
-
--  sqlite3_uri_int64()
-
--  sqlite3_filename_database()
-
--  sqlite3_filename_journal()
-
--  sqlite3_filename_wal()
+- sqlite3_uri_parameter()
+- sqlite3_uri_boolean()
+- sqlite3_uri_int64()
+- sqlite3_filename_database()
+- sqlite3_filename_journal()
+- sqlite3_filename_wal()
 
 ---
 
-## Find The Database Handle Of A Prepared Statement
+## 查找预编译语句的数据库句柄（Find The Database Handle Of A Prepared Statement）
 
 ```
-
 sqlite3 *sqlite3_db_handle(sqlite3_stmt*);
-
 ```
 
-The sqlite3_db_handle interface returns the database connection handle
-to which a prepared statement belongs.  The database connection
-returned by sqlite3_db_handle is the same database connection
-that was the first argument
-to the sqlite3_prepare_v2() call (or its variants) that was used to
-create the statement in the first place.
+`sqlite3_db_handle` 接口返回预编译语句所属的数据库连接句柄。返回的数据库连接与最初创建该
+语句的 `sqlite3_prepare_v2()` 调用（或其变体）的第一个参数是同一个数据库连接。
 
 ---
 
-## Retrieve the mutex for a database connection
+## 取数据库连接的互斥锁（Retrieve the mutex for a database connection）
 
 ```
-
 sqlite3_mutex *sqlite3_db_mutex(sqlite3*);
-
 ```
 
-This interface returns a pointer to the sqlite3_mutex object that
-serializes access to the database connection given in the argument
-when the threading mode is Serialized.
-If the threading mode is Single-thread or Multi-thread then this
-routine returns a NULL pointer.
+当线程模式为 Serialized 时，此接口返回一个指向 `sqlite3_mutex` 对象的指针，该对象串行化对
+参数中给定数据库连接的访问。若线程模式为 Single-thread 或 Multi-thread，则此例程返回 NULL
+指针。
 
 ---
 
-## Return The Schema Name For A Database Connection
+## 返回数据库连接的 schema 名（Return The Schema Name For A Database Connection）
 
 ```
-
 const char *sqlite3_db_name(sqlite3 *db, int N);
-
 ```
 
-The sqlite3_db_name(D,N) interface returns a pointer to the schema name
-for the N-th database on database connection D, or a NULL pointer if N is
-out of range.  An N value of 0 means the main database file.  An N of 1 is
-the "temp" schema.  Larger values of N correspond to various ATTACH-ed
-databases.
+`sqlite3_db_name(D,N)` 接口返回数据库连接 D 上第 N 个数据库的 schema 名指针；若 N 越界则
+返回 NULL 指针。N 值为 0 表示主数据库文件；N 为 1 是 "temp" schema；更大的 N 值对应各种
+ATTACH 的数据库。
 
-Space to hold the string that is returned by sqlite3_db_name() is managed
-by SQLite itself.  The string might be deallocated by any operation that
-changes the schema, including ATTACH or DETACH or calls to
-sqlite3_serialize() or sqlite3_deserialize(), even operations that
-occur on a different thread.  Applications that need to
-remember the string long-term should make their own copy.  Applications that
-are accessing the same database connection simultaneously on multiple
-threads should mutex-protect calls to this API and should make their own
-private copy of the result prior to releasing the mutex.
+`sqlite3_db_name()` 返回的字符串存储空间由 SQLite 自己管理。该字符串可能被任何改变 schema
+的操作释放，包括 ATTACH、DETACH、或对 `sqlite3_serialize()` 或 `sqlite3_deserialize()` 的
+调用，甚至包括发生在不同线程上的操作。需要长期记住该字符串的应用应自行复制。在多个线程上
+同时访问同一数据库连接的应用，应为此 API 的调用做互斥保护，并在释放互斥锁前自行保存结果的
+私有副本。
 
 ---
 
-## Determine if a database is read-only
+## 判断数据库是否只读（Determine if a database is read-only）
 
 ```
-
 int sqlite3_db_readonly(sqlite3 *db, const char *zDbName);
-
 ```
 
-The sqlite3_db_readonly(D,N) interface returns 1 if the database N
-of connection D is read-only, 0 if it is read/write, or -1 if N is not
-the name of a database on connection D.
+`sqlite3_db_readonly(D,N)` 接口：若连接 D 的数据库 N 是只读的返回 1，若可读可写返回 0，若 N
+不是连接 D 上的数据库名则返回 -1。
 
 ---
 
-## Free Memory Used By A Database Connection
+## 释放数据库连接占用的内存（Free Memory Used By A Database Connection）
 
 ```
-
 int sqlite3_db_release_memory(sqlite3*);
-
 ```
 
-The sqlite3_db_release_memory(D) interface attempts to free as much heap
-memory as possible from database connection D. Unlike the
-sqlite3_release_memory() interface, this interface is in effect even
-when the SQLITE_ENABLE_MEMORY_MANAGEMENT compile-time option is
-omitted.
+`sqlite3_db_release_memory(D)` 接口尽量从数据库连接 D 释放尽可能多的堆内存。与
+`sqlite3_release_memory()` 接口不同，即使省略 `SQLITE_ENABLE_MEMORY_MANAGEMENT` 编译期
+选项，此接口也生效。
 
-See also: sqlite3_release_memory()
+另见：sqlite3_release_memory()
 
 ---
 
-## Declare The Schema Of A Virtual Table
+## 声明虚拟表的 schema（Declare The Schema Of A Virtual Table）
 
 ```
-
 int sqlite3_declare_vtab(sqlite3*, const char *zSQL);
-
 ```
 
-The xCreate and xConnect methods of a
-virtual table module call this interface
-to declare the format (the names and datatypes of the columns) of
-the virtual tables they implement.
+虚拟表模块的 xCreate 和 xConnect 方法调用此接口，来声明它们实现的虚拟表的格式（各列的名字
+和数据类型）。
 
 ---
 
-## Deserialize a database
+## 反序列化数据库（Deserialize a database）
 
 ```
-
 int sqlite3_deserialize(
-  sqlite3 *db,            /* The database connection */
-  const char *zSchema,    /* Which DB to reopen with the deserialization */
-  unsigned char *pData,   /* The serialized database content */
-  sqlite3_int64 szDb,     /* Number of bytes in the deserialization */
-  sqlite3_int64 szBuf,    /* Total size of buffer pData[] */
-  unsigned mFlags         /* Zero or more SQLITE_DESERIALIZE_* flags */
+  sqlite3 *db,            /* 数据库连接 */
+  const char *zSchema,    /* 用反序列化重新打开的数据库 */
+  unsigned char *pData,   /* 序列化后的数据库内容 */
+  sqlite3_int64 szDb,     /* 反序列化的字节数 */
+  sqlite3_int64 szBuf,    /* 缓冲区 pData[] 的总大小 */
+  unsigned mFlags         /* 零个或多个 SQLITE_DESERIALIZE_* 标志 */
 );
-
 ```
 
-The sqlite3_deserialize(D,S,P,N,M,F) interface causes the
-database connection D to disconnect from database S and then
-reopen S as an in-memory database based on the serialization
-contained in P.  If S is a NULL pointer, the main database is
-used. The serialized database P is N bytes in size.  M is the size
-of the buffer P, which might be larger than N.  If M is larger than
-N, and the SQLITE_DESERIALIZE_READONLY bit is not set in F, then
-SQLite is permitted to add content to the in-memory database as
-long as the total size does not exceed M bytes.
+`sqlite3_deserialize(D,S,P,N,M,F)` 接口解除数据库连接 D 与数据库 S 的关联，然后基于 P 中
+包含的序列化内容把 S 作为内存数据库重新打开。若 S 是 NULL 指针，则使用主数据库。序列化后的
+数据库 P 大小为 N 字节。M 是缓冲区 P 的大小，可能大于 N。若 M 大于 N、且 F 中未设置
+`SQLITE_DESERIALIZE_READONLY` 位，则只要总大小不超过 M 字节，SQLite 就被允许向内存数据库
+添加内容。
 
-If the SQLITE_DESERIALIZE_FREEONCLOSE bit is set in F, then SQLite will
-invoke sqlite3_free() on the serialization buffer when the database
-connection closes.  If the SQLITE_DESERIALIZE_RESIZEABLE bit is set, then
-SQLite will try to increase the buffer size using sqlite3_realloc64()
-if writes on the database cause it to grow larger than M bytes.
+若 F 中设置了 `SQLITE_DESERIALIZE_FREEONCLOSE` 位，则数据库连接关闭时 SQLite 将对序列化
+缓冲区调用 `sqlite3_free()`。若设置了 `SQLITE_DESERIALIZE_RESIZEABLE` 位，则当对数据库的
+写入导致其增长到超过 M 字节时，SQLite 会尝试用 `sqlite3_realloc64()` 增大缓冲区大小。
 
-Applications must not modify the buffer P or invalidate it before
-the database connection D is closed.
+在数据库连接 D 关闭之前，应用不得修改缓冲区 P 或使其失效。
 
-The sqlite3_deserialize() interface will fail with SQLITE_BUSY if the
-database is currently in a read transaction or is involved in a backup
-operation.
+若数据库当前处于读事务中或正参与备份操作，`sqlite3_deserialize()` 接口将以 `SQLITE_BUSY`
+失败。
 
-It is not possible to deserialize into the TEMP database.  If the
-S argument to sqlite3_deserialize(D,S,P,N,M,F) is "temp" then the
-function returns SQLITE_ERROR.
+无法反序列化到 TEMP 数据库。若 `sqlite3_deserialize(D,S,P,N,M,F)` 的 S 参数是 "temp"，
+则函数返回 `SQLITE_ERROR`。
 
-The deserialized database should not be in WAL mode.  If the database
-is in WAL mode, then any attempt to use the database file will result
-in an SQLITE_CANTOPEN error.  The application can set the
-file format version numbers (bytes 18 and 19) of the input database P
-to 0x01 prior to invoking sqlite3_deserialize(D,S,P,N,M,F) to force the
-database file into rollback mode and work around this limitation.
+反序列化后的数据库不应处于 WAL 模式。若数据库处于 WAL 模式，则任何使用数据库文件的尝试都会
+导致 `SQLITE_CANTOPEN` 错误。应用可以在调用 `sqlite3_deserialize(D,S,P,N,M,F)` 之前，把
+输入数据库 P 的文件格式版本号（第 18 和 19 字节）设置为 0x01，从而强制数据库文件进入回滚
+模式，绕过此限制。
 
-If sqlite3_deserialize(D,S,P,N,M,F) fails for any reason and if the
-SQLITE_DESERIALIZE_FREEONCLOSE bit is set in argument F, then
-sqlite3_free() is invoked on argument P prior to returning.
+若 `sqlite3_deserialize(D,S,P,N,M,F)` 因任何原因失败、且参数 F 中设置了
+`SQLITE_DESERIALIZE_FREEONCLOSE` 位，则在返回前会对参数 P 调用 `sqlite3_free()`。
 
-This interface is omitted if SQLite is compiled with the
-SQLITE_OMIT_DESERIALIZE option.
+若用 `SQLITE_OMIT_DESERIALIZE` 选项编译 SQLite，则省略此接口。
 
 ---
 
-## Remove Unnecessary Virtual Table Implementations
+## 移除不必要的虚拟表实现（Remove Unnecessary Virtual Table Implementations）
 
 ```
-
 int sqlite3_drop_modules(
-  sqlite3 *db,                /* Remove modules from this connection */
-  const char **azKeep         /* Except, do not remove the ones named here */
+  sqlite3 *db,                /* 从此连接移除模块 */
+  const char **azKeep         /* 但不要移除此处列名的模块 */
 );
-
 ```
 
-The sqlite3_drop_modules(D,L) interface removes all virtual
-table modules from database connection D except those named on list L.
-The L parameter must be either NULL or a pointer to an array of pointers
-to strings where the array is terminated by a single NULL pointer.
-If the L parameter is NULL, then all virtual table modules are removed.
+`sqlite3_drop_modules(D,L)` 接口移除数据库连接 D 上除列表 L 中列名外的所有虚拟表模块。参数
+L 必须是 NULL、或一个指向字符串指针数组的指针，该数组由单个 NULL 指针终止。若参数 L 是 NULL，
+则移除所有虚拟表模块。
 
-See also: sqlite3_create_module()
+另见：sqlite3_create_module()
 
 ---
 
-## Enable Or Disable Extension Loading
+## 启用或禁用扩展加载（Enable Or Disable Extension Loading）
 
 ```
-
 int sqlite3_enable_load_extension(sqlite3 *db, int onoff);
-
 ```
 
-So as not to open security holes in older applications that are
-unprepared to deal with extension loading, and as a means of disabling
-extension loading while evaluating user-entered SQL, the following API
-is provided to turn the sqlite3_load_extension() mechanism on and off.
+为避免在尚未准备好处理扩展加载的旧应用中打开安全漏洞，并作为评估用户输入的 SQL 时禁用扩展
+加载的手段，提供以下 API 来开关 `sqlite3_load_extension()` 机制。
 
-Extension loading is off by default.
-Call the sqlite3_enable_load_extension() routine with onoff==1
-to turn extension loading on and call it with onoff==0 to turn
-it back off again.
+扩展加载默认关闭。用 onoff==1 调用 `sqlite3_enable_load_extension()` 例程以打开扩展加载，
+用 onoff==0 调用以再次关闭。
 
-This interface enables or disables both the C-API
-sqlite3_load_extension() and the SQL function load_extension().
-Use sqlite3_db_config(db,SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION,..)
-to enable or disable only the C-API.
+此接口同时启用或禁用 C-API `sqlite3_load_extension()` 和 SQL 函数 load_extension()。请用
+`sqlite3_db_config(db,SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION,..)` 只启用或禁用 C-API。
 
-Security warning: It is recommended that extension loading
-be enabled using the SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION method
-rather than this interface, so the load_extension() SQL function
-remains disabled. This will prevent SQL injections from giving attackers
-access to extension loading capabilities.
+> 安全警告：建议用 `SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION` 方法而非此接口启用扩展加载，
+> 使 load_extension() SQL 函数保持禁用。这样可防止 SQL 注入让攻击者获得扩展加载能力。
 
 ---
 
-## Enable Or Disable Shared Pager Cache
+## 启用或禁用共享页缓存（Enable Or Disable Shared Pager Cache）
 
 ```
-
 int sqlite3_enable_shared_cache(int);
-
 ```
 
-This routine enables or disables the sharing of the database cache
-and schema data structures between connections
-to the same database. Sharing is enabled if the argument is true
-and disabled if the argument is false.
+此例程启用或禁用指向同一数据库的连接之间对数据库缓存和 schema 数据结构的共享。参数为真则
+启用共享，为假则禁用。
 
-This interface is omitted if SQLite is compiled with
--DSQLITE_OMIT_SHARED_CACHE.  The -DSQLITE_OMIT_SHARED_CACHE
-compile-time option is recommended because the
-use of shared cache mode is discouraged.
+若用 `-DSQLITE_OMIT_SHARED_CACHE` 编译 SQLite，则省略此接口。推荐使用
+`-DSQLITE_OMIT_SHARED_CACHE` 编译期选项，因为不鼓励使用共享缓存模式。
 
-Cache sharing is enabled and disabled for an entire process.
-This is a change as of SQLite version 3.5.0 (2007-09-04).
-In prior versions of SQLite,
-sharing was enabled or disabled for each thread separately.
+缓存共享对整个进程启用和禁用。这是自 SQLite 版本 3.5.0（2007-09-04）以来的变化；在更早的
+SQLite 版本中，共享是对每个线程分别启用或禁用的。
 
-The cache sharing mode set by this interface effects all subsequent
-calls to sqlite3_open(), sqlite3_open_v2(), and sqlite3_open16().
-Existing database connections continue to use the sharing mode
-that was in effect at the time they were opened.
+此接口设置的缓存共享模式影响其后所有对 `sqlite3_open()`、`sqlite3_open_v2()` 和
+`sqlite3_open16()` 的调用。现有数据库连接继续使用打开它们时生效的共享模式。
 
-This routine returns SQLITE_OK if shared cache was enabled or disabled
-successfully.  An error code is returned otherwise.
+若共享缓存被成功启用或禁用，此例程返回 `SQLITE_OK`，否则返回错误码。
 
-Shared cache is disabled by default. It is recommended that it stay
-that way.  In other words, do not use this routine.  This interface
-continues to be provided for historical compatibility, but its use is
-discouraged.  Any use of shared cache is discouraged.  If shared cache
-must be used, it is recommended that shared cache only be enabled for
-individual database connections using the sqlite3_open_v2() interface
-with the SQLITE_OPEN_SHAREDCACHE flag.
+共享缓存默认禁用，建议保持这样。换句话说，不要使用此例程。此接口为历史兼容而继续提供，但
+不鼓励使用。任何共享缓存的使用都不被鼓励。若必须使用共享缓存，建议只用带 `SQLITE_OPEN_SHAREDCACHE`
+标志的 `sqlite3_open_v2()` 接口为单个数据库连接启用。
 
-Note: This method is disabled on MacOS X 10.7 and iOS version 5.0
-and will always return SQLITE_MISUSE. On those systems,
-shared cache mode should be enabled per-database connection via
-sqlite3_open_v2() with SQLITE_OPEN_SHAREDCACHE.
+> 注：此方法在 MacOS X 10.7 和 iOS 版本 5.0 上被禁用，将总是返回 `SQLITE_MISUSE`。在这些
+> 系统上，共享缓存模式应通过带 `SQLITE_OPEN_SHAREDCACHE` 的 `sqlite3_open_v2()` 按数据库
+> 连接启用。
 
-This interface is threadsafe on processors where writing a
-32-bit integer is atomic.
+此接口在写入 32 位整数是原子的处理器上是线程安全的。
 
-See Also:  SQLite Shared-Cache Mode
+另见：SQLite Shared-Cache Mode
+
+## 启用或禁用共享页缓存
+
+（使用共享缓存模式不被鼓励）缓存共享对整个进程启用和禁用。这是自 SQLite 版本 3.5.0
+（2007-09-04）以来的变化；在更早的 SQLite 版本中，共享是对每个线程分别启用或禁用的。
+
+此接口设置的缓存共享模式影响其后所有对 `sqlite3_open()`、`sqlite3_open_v2()` 和
+`sqlite3_open16()` 的调用。现有数据库连接继续使用打开它们时生效的共享模式。
+
+若共享缓存被成功启用或禁用，此例程返回 `SQLITE_OK`，否则返回错误码。
+
+共享缓存默认禁用，建议保持这样。换句话说，不要使用此例程。此接口为历史兼容而继续提供，但
+不鼓励使用。任何共享缓存的使用都不被鼓励。若必须使用共享缓存，建议只用带 `SQLITE_OPEN_SHAREDCACHE`
+标志的 `sqlite3_open_v2()` 接口为单个数据库连接启用。
+
+> 注：此方法在 MacOS X 10.7 和 iOS 版本 5.0 上被禁用，将总是返回 `SQLITE_MISUSE`。在这些
+> 系统上，共享缓存模式应通过带 `SQLITE_OPEN_SHAREDCACHE` 的 `sqlite3_open_v2()` 按数据库
+> 连接启用。
+
+此接口在写入 32 位整数是原子的处理器上是线程安全的。
+
+另见：SQLite Shared-Cache Mode
 
 ---
 
-## One-Step Query Execution Interface
+## 一步查询执行接口（One-Step Query Execution Interface）
 
 ```
-
 int sqlite3_exec(
-  sqlite3*,                                  /* An open database */
-  const char *sql,                           /* SQL to be evaluated */
-  int (*callback)(void*,int,char**,char**),  /* Callback function */
-  void *,                                    /* 1st argument to callback */
-  char **errmsg                              /* Error msg written here */
+  sqlite3*,                                  /* 打开的数据库 */
+  const char *sql,                           /* 要求值的 SQL */
+  int (*callback)(void*,int,char**,char**),  /* 回调函数 */
+  void *,                                    /* 回调的第 1 个参数 */
+  char **errmsg                              /* 错误消息写在此处 */
 );
-
 ```
 
-The sqlite3_exec() interface is a convenience wrapper around
-sqlite3_prepare_v2(), sqlite3_step(), and sqlite3_finalize(),
-that allows an application to run multiple statements of SQL
-without having to use a lot of C code.
+`sqlite3_exec()` 接口是 `sqlite3_prepare_v2()`、`sqlite3_step()` 和 `sqlite3_finalize()`
+的便捷包装，允许应用在不写大量 C 代码的情况下运行多条 SQL 语句。
 
-The sqlite3_exec() interface runs zero or more UTF-8 encoded,
-semicolon-separated SQL statements passed into its 2nd argument,
-in the context of the database connection passed in as its 1st
-argument.  If the callback function of the 3rd argument to
-sqlite3_exec() is not NULL, then it is invoked for each result row
-coming out of the evaluated SQL statements.  The 4th argument to
-sqlite3_exec() is relayed through to the 1st argument of each
-callback invocation.  If the callback pointer to sqlite3_exec()
-is NULL, then no callback is ever invoked and result rows are
-ignored.
+`sqlite3_exec()` 接口在其第 1 个参数传入的数据库连接上下文中，运行其第 2 个参数传入的零条
+或多条 UTF-8 编码、以分号分隔的 SQL 语句。若 `sqlite3_exec()` 的第 3 个参数（回调函数）非
+NULL，则对求值的 SQL 语句产生的每个结果行调用它。`sqlite3_exec()` 的第 4 个参数被传递到每次
+回调调用的第 1 个参数。若传给 `sqlite3_exec()` 的回调指针是 NULL，则从不调用回调，结果行被
+忽略。
 
-If an error occurs while evaluating the SQL statements passed into
-sqlite3_exec(), then execution of the current statement stops and
-subsequent statements are skipped.  If the 5th parameter to sqlite3_exec()
-is not NULL then any error message is written into memory obtained
-from sqlite3_malloc() and passed back through the 5th parameter.
-To avoid memory leaks, the application should invoke sqlite3_free()
-on error message strings returned through the 5th parameter of
-sqlite3_exec() after the error message string is no longer needed.
-If the 5th parameter to sqlite3_exec() is not NULL and no errors
-occur, then sqlite3_exec() sets the pointer in its 5th parameter to
-NULL before returning.
+若求值传入 `sqlite3_exec()` 的 SQL 语句时发生错误，则当前语句的执行停止，后续语句被跳过。
+若 `sqlite3_exec()` 的第 5 个参数非 NULL，则任何错误消息会被写入从 `sqlite3_malloc()` 获得的
+内存、并通过第 5 个参数传回。为避免内存泄漏，应用应在不再需要错误消息字符串后，对
+`sqlite3_exec()` 第 5 个参数返回的字符串调用 `sqlite3_free()`。若 `sqlite3_exec()` 的第 5 个
+参数非 NULL 且没有错误发生，则 `sqlite3_exec()` 在返回前把其第 5 个参数中的指针置为 NULL。
 
-If an sqlite3_exec() callback returns non-zero, the sqlite3_exec()
-routine returns SQLITE_ABORT without invoking the callback again and
-without running any subsequent SQL statements.
+若 `sqlite3_exec()` 回调返回非零，则 `sqlite3_exec()` 例程返回 `SQLITE_ABORT`，不再调用回调、
+也不再运行任何后续 SQL 语句。
 
-The 2nd argument to the sqlite3_exec() callback function is the
-number of columns in the result.  The 3rd argument to the sqlite3_exec()
-callback is an array of pointers to strings obtained as if from
-sqlite3_column_text(), one for each column.  If an element of a
-result row is NULL then the corresponding string pointer for the
-sqlite3_exec() callback is a NULL pointer.  The 4th argument to the
-sqlite3_exec() callback is an array of pointers to strings where each
-entry represents the name of a corresponding result column as obtained
-from sqlite3_column_name().
+`sqlite3_exec()` 回调函数的第 2 个参数是结果中的列数。第 3 个参数是一个字符串指针数组，每个
+字符串仿佛经 `sqlite3_column_text()` 获得，每个结果列一个。若结果行的某个元素是 NULL，则回调
+对应的字符串指针为 NULL 指针。第 4 个参数是一个字符串指针数组，每项代表对应结果列的名字，
+仿佛经 `sqlite3_column_name()` 获得。
 
-If the 2nd parameter to sqlite3_exec() is a NULL pointer, a pointer
-to an empty string, or a pointer that contains only whitespace and/or
-SQL comments, then no SQL statements are evaluated and the database
-is not changed.
+若 `sqlite3_exec()` 的第 2 个参数是 NULL 指针、空字符串指针、或只包含空白和/或 SQL 注释的
+指针，则不求值任何 SQL 语句，数据库也不被改变。
 
-Restrictions:
+限制：
 
--  The application must ensure that the 1st parameter to sqlite3_exec()
-is a valid and open database connection.
-
--  The application must not close the database connection specified by
-the 1st parameter to sqlite3_exec() while sqlite3_exec() is running.
-
--  The application must not modify the SQL statement text passed into
-the 2nd parameter of sqlite3_exec() while sqlite3_exec() is running.
-
--  The application must not dereference the arrays or string pointers
-passed as the 3rd and 4th callback parameters after it returns.
+- 应用必须确保 `sqlite3_exec()` 的第 1 个参数是有效且打开的数据库连接。
+- 在 `sqlite3_exec()` 运行期间，应用不得关闭其第 1 个参数指定的数据库连接。
+- 在 `sqlite3_exec()` 运行期间，应用不得修改传入其第 2 个参数的 SQL 语句文本。
+- 返回后，应用不得解引用作为第 3 和第 4 个回调参数传入的数组或字符串指针。
 
 ---
 
-## Enable Or Disable Extended Result Codes
+## 启用或禁用扩展结果码（Enable Or Disable Extended Result Codes）
 
 ```
-
 int sqlite3_extended_result_codes(sqlite3*, int onoff);
-
 ```
 
-The sqlite3_extended_result_codes() routine enables or disables the
-extended result codes feature of SQLite. The extended result
-codes are disabled by default for historical compatibility.
+`sqlite3_extended_result_codes()` 例程启用或禁用 SQLite 的扩展结果码特性。为历史兼容，扩展
+结果码默认禁用。
 
 ---
 
-## Destroy A Prepared Statement Object
+## 销毁预编译语句对象（Destroy A Prepared Statement Object）
 
 ```
-
 int sqlite3_finalize(sqlite3_stmt *pStmt);
-
 ```
 
-The sqlite3_finalize() function is called to delete a prepared statement.
-If the most recent evaluation of the statement encountered no errors
-or if the statement has never been evaluated, then sqlite3_finalize() returns
-SQLITE_OK.  If the most recent evaluation of statement S failed, then
-sqlite3_finalize(S) returns the appropriate error code or
-extended error code.
+`sqlite3_finalize()` 函数用于删除预编译语句。若语句最近一次求值未遇到错误、或语句从未被求值，
+则 `sqlite3_finalize()` 返回 `SQLITE_OK`。若语句 S 最近一次求值失败，则 `sqlite3_finalize(S)`
+返回适当的错误码或扩展错误码。
 
-The sqlite3_finalize(S) routine can be called at any point during
-the life cycle of prepared statement S:
-before statement S is ever evaluated, after
-one or more calls to sqlite3_reset(), or after any call
-to sqlite3_step() regardless of whether or not the statement has
-completed execution.
+`sqlite3_finalize(S)` 例程可以在预编译语句 S 生命周期的任何时刻调用：在语句 S 被求值之前、
+在一次或多次 `sqlite3_reset()` 调用之后、或任何 `sqlite3_step()` 调用之后（无论语句是否完成
+执行）。
 
-Invoking sqlite3_finalize() on a NULL pointer is a harmless no-op.
+对 NULL 指针调用 `sqlite3_finalize()` 是无害的空操作。
 
-The application must finalize every prepared statement in order to avoid
-resource leaks.  It is a grievous error for the application to try to use
-a prepared statement after it has been finalized.  Any use of a prepared
-statement after it has been finalized can result in undefined and
-undesirable behavior such as segfaults and heap corruption.
+为避免资源泄漏，应用必须终结每条预编译语句。语句被终结后应用仍尝试使用它是严重错误。终结后
+使用预编译语句的任何行为都可能导致未定义、糟糕的行为，如段错误和堆损坏。
 
 ---
 
-## Last Insert Rowid
+## 最后一次插入的 Rowid（Last Insert Rowid）
 
 ```
-
 sqlite3_int64 sqlite3_last_insert_rowid(sqlite3*);
-
 ```
 
-Each entry in most SQLite tables (except for WITHOUT ROWID tables)
-has a unique 64-bit signed
-integer key called the "rowid". The rowid is always available
-as an undeclared column named ROWID, OID, or _ROWID_ as long as those
-names are not also used by explicitly declared columns. If
-the table has a column of type INTEGER PRIMARY KEY then that column
-is another alias for the rowid.
+大多数 SQLite 表（WITHOUT ROWID 表除外）中的每个条目都有一个唯一的 64 位有符号整数键，称为
+"rowid"。只要 ROWID、OID 或 _ROWID_ 这些名字没有被显式声明的列占用，rowid 就总是可作为名为
+ROWID、OID 或 _ROWID_ 的未声明列使用。若表有 INTEGER PRIMARY KEY 类型的列，则该列是 rowid
+的另一个别名。
 
-The sqlite3_last_insert_rowid(D) interface usually returns the rowid of
-the most recent successful INSERT into a rowid table or virtual table
-on database connection D. Inserts into WITHOUT ROWID tables are not
-recorded. If no successful INSERTs into rowid tables have ever occurred
-on the database connection D, then sqlite3_last_insert_rowid(D) returns
-zero.
+`sqlite3_last_insert_rowid(D)` 接口通常返回数据库连接 D 上最近一次对 rowid 表或虚拟表的成功
+INSERT 的 rowid。对 WITHOUT ROWID 表的插入不被记录。若数据库连接 D 上从未发生过对 rowid 表
+的成功 INSERT，则 `sqlite3_last_insert_rowid(D)` 返回零。
 
-As well as being set automatically as rows are inserted into database
-tables, the value returned by this function may be set explicitly by
-sqlite3_set_last_insert_rowid()
+此函数返回的值除了在向数据库表插入行时被自动设置外，还可以由 `sqlite3_set_last_insert_rowid()`
+显式设置。
 
-Some virtual table implementations may INSERT rows into rowid tables as
-part of committing a transaction (e.g. to flush data accumulated in memory
-to disk). In this case subsequent calls to this function return the rowid
-associated with these internal INSERT operations, which leads to
-unintuitive results. Virtual table implementations that do write to rowid
-tables in this way can avoid this problem by restoring the original
-rowid value using sqlite3_set_last_insert_rowid() before returning
-control to the user.
+某些虚拟表实现可能在提交事务时向 rowid 表 INSERT 行（例如把累积在内存中的数据刷到磁盘）。
+此时，此函数的后续调用会返回与这些内部 INSERT 操作关联的 rowid，导致不符合直觉的结果。以
+这种方式向 rowid 表写入的虚拟表实现，可以在把控制权交回用户前用 `sqlite3_set_last_insert_rowid()`
+恢复原始的 rowid 值，从而避免此问题。
 
-If an INSERT occurs within a trigger then this routine will
-return the rowid of the inserted row as long as the trigger is
-running. Once the trigger program ends, the value returned
-by this routine reverts to what it was before the trigger was fired.
+若 INSERT 发生在触发器内，则只要触发器正在运行，此例程就返回被插入行的 rowid。一旦触发器程序
+结束，此例程返回的值会恢复到触发器被触发前的值。
 
-An INSERT that fails due to a constraint violation is not a
-successful INSERT and does not change the value returned by this
-routine.  Thus INSERT OR FAIL, INSERT OR IGNORE, INSERT OR ROLLBACK,
-and INSERT OR ABORT make no changes to the return value of this
-routine when their insertion fails.  When INSERT OR REPLACE
-encounters a constraint violation, it does not fail.  The
-INSERT continues to completion after deleting rows that caused
-the constraint problem so INSERT OR REPLACE will always change
-the return value of this interface.
+因约束冲突而失败的 INSERT 不是成功的 INSERT，不会改变此例程返回的值。因此 INSERT OR FAIL、
+INSERT OR IGNORE、INSERT OR ROLLBACK 和 INSERT OR ABORT 在插入失败时不改变此例程的返回值。
+当 INSERT OR REPLACE 遇到约束冲突时，它不会失败；在删除引起约束问题的行后 INSERT 继续完成，
+所以 INSERT OR REPLACE 总会改变此接口的返回值。
 
-For the purposes of this routine, an INSERT is considered to
-be successful even if it is subsequently rolled back.
+就本例程而言，INSERT 即使随后被回滚，也被视为成功。
 
-This function is accessible to SQL statements via the
-last_insert_rowid() SQL function.
+此函数可通过 last_insert_rowid() SQL 函数供 SQL 语句访问。
 
-If a separate thread performs a new INSERT on the same
-database connection while the sqlite3_last_insert_rowid()
-function is running and thus changes the last insert rowid,
-then the value returned by sqlite3_last_insert_rowid() is
-unpredictable and might not equal either the old or the new
-last insert rowid.
+若在 `sqlite3_last_insert_rowid()` 函数运行期间，另一个线程对同一数据库连接执行新的 INSERT、
+从而改变 last insert rowid，则 `sqlite3_last_insert_rowid()` 返回的值不可预测，可能既不等于
+旧值、也不等于新值。
 
 ---
 
-## Run-time Limits
+## 运行时限制（Run-time Limits）
 
 ```
-
 int sqlite3_limit(sqlite3*, int id, int newVal);
-
 ```
 
-This interface allows the size of various constructs to be limited
-on a connection by connection basis.  The first parameter is the
-database connection whose limit is to be set or queried.  The
-second parameter is one of the limit categories that define a
-class of constructs to be size limited.  The third parameter is the
-new limit for that construct.
+此接口允许按连接逐个限制各种构造的大小。第一个参数是待设置或查询限制的数据库连接。第二个
+参数是限制类别之一，定义一类要被限制大小的构造。第三个参数是该构造的新限制。
 
-If the new limit is a negative number, the limit is unchanged.
-For each limit category SQLITE_LIMIT_NAME there is a
-hard upper bound
-set at compile-time by a C preprocessor macro called
-SQLITE_MAX_NAME.
-(The "_LIMIT_" in the name is changed to "_MAX_".)
-Attempts to increase a limit above its hard upper bound are
-silently truncated to the hard upper bound.
+若新限制是负数，则限制不变。对每个限制类别 SQLITE_LIMIT_NAME，都有一个由名为 SQLITE_MAX_NAME
+的 C 预处理宏在编译期设置的硬上限。（名字里的 "_LIMIT_" 会被改成 "_MAX_"。）试图把限制增大到
+硬上限之上的行为会被静默截断到硬上限。
 
-Regardless of whether or not the limit was changed, the
-sqlite3_limit() interface returns the prior value of the limit.
-Hence, to find the current value of a limit without changing it,
-simply invoke this interface with the third parameter set to -1.
+无论限制是否改变，`sqlite3_limit()` 接口都返回该限制的先前值。因此，想在不改变限制的情况下
+查出当前值，只需用第三个参数 -1 调用此接口。
 
-Run-time limits are intended for use in applications that manage
-both their own internal database and also databases that are controlled
-by untrusted external sources.  An example application might be a
-web browser that has its own databases for storing history and
-separate databases controlled by JavaScript applications downloaded
-off the Internet.  The internal databases can be given the
-large, default limits.  Databases managed by external sources can
-be given much smaller limits designed to prevent a denial of service
-attack.  Developers might also want to use the sqlite3_set_authorizer()
-interface to further control untrusted SQL.  The size of the database
-created by an untrusted script can be contained using the
-max_page_count PRAGMA.
+运行时限制用于既管理自己的内部数据库、也管理由不可信外部源控制的数据库的应用。一个示例应用
+是：既有存储历史的自有数据库、又有下载自互联网的 JavaScript 应用控制的独立数据库的 Web 浏览器。
+内部数据库可以有大的默认限制；由外部源管理的数据库可以被赋予小得多的限制，以防止拒绝服务攻击。
+开发者可能还想用 `sqlite3_set_authorizer()` 接口进一步控制不可信的 SQL。不可信脚本创建的数据库
+的大小可用 max_page_count PRAGMA 来限制。
 
-New run-time limit categories may be added in future releases.
+未来版本可能增加新的运行时限制类别。
 
 ---
 
-## Load An Extension
+## 加载扩展（Load An Extension）
 
 ```
-
 int sqlite3_load_extension(
-  sqlite3 *db,          /* Load the extension into this database connection */
-  const char *zFile,    /* Name of the shared library containing extension */
-  const char *zProc,    /* Entry point.  Derived from zFile if 0 */
-  char **pzErrMsg       /* Put error message here if not 0 */
+  sqlite3 *db,          /* 把扩展加载到此数据库连接 */
+  const char *zFile,    /* 包含扩展的共享库文件名 */
+  const char *zProc,    /* 入口点。若为 0 则从 zFile 推导 */
+  char **pzErrMsg       /* 若非 0，错误消息写在此处 */
 );
-
 ```
 
-This interface loads an SQLite extension library from the named file.
+此接口从指定文件加载 SQLite 扩展库。
 
-The sqlite3_load_extension() interface attempts to load an
-SQLite extension library contained in the file zFile.  If
-the file cannot be loaded directly, attempts are made to load
-with various operating-system specific filename extensions added.
-So for example, if "samplelib" cannot be loaded, then names like
-"samplelib.so" or "samplelib.dylib" or "samplelib.dll" might
-be tried also.
+`sqlite3_load_extension()` 接口尝试加载文件 zFile 中包含的 SQLite 扩展库。若文件无法直接加载，
+则尝试加各种操作系统特定的文件扩展名后再加载。例如，若 "samplelib" 无法加载，则可能也会尝试
+"samplelib.so"、"samplelib.dylib" 或 "samplelib.dll" 等名字。
 
-The entry point is zProc.
-zProc may be 0, in which case SQLite will try to come up with an
-entry point name on its own.  It first tries "sqlite3_extension_init".
-If that does not work, it tries names of the form "sqlite3_X_init"
-where X consists of the lower-case equivalent of all ASCII alphabetic
-characters or all ASCII alphanumeric characters in the filename from
-the last "/" to the first following "." and omitting any initial "lib".
-The sqlite3_load_extension() interface returns
-SQLITE_OK on success and SQLITE_ERROR if something goes wrong.
-If an error occurs and pzErrMsg is not 0, then the
-sqlite3_load_extension() interface shall attempt to
-fill *pzErrMsg with error message text stored in memory
-obtained from sqlite3_malloc(). The calling function
-should free this memory by calling sqlite3_free().
+入口点是 zProc。zProc 可以是 0，此时 SQLite 会尝试自行得出入口点名字。它先试
+"sqlite3_extension_init"。若不行，则试形如 "sqlite3_X_init" 的名字，其中 X 由文件名中从最后
+一个 "/" 到后面第一个 "." 之间的所有 ASCII 字母、或所有 ASCII 字母数字字符的小写等价形式组成，
+并去掉开头的 "lib"。
 
-Extension loading must be enabled using
-sqlite3_enable_load_extension() or
-sqlite3_db_config(db,SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION,1,NULL)
-prior to calling this API,
-otherwise an error will be returned.
+## 加载扩展
 
-Security warning: It is recommended that the
-SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION method be used to enable only this
-interface.  The use of the sqlite3_enable_load_extension() interface
-should be avoided.  This will keep the SQL function load_extension()
-disabled and prevent SQL injections from giving attackers
-access to extension loading capabilities.
+（入口点名字由文件名中从最后一个 "/" 到第一个 "." 之间的字符组成，去掉开头的 "lib"）
+`sqlite3_load_extension()` 接口成功时返回 `SQLITE_OK`，出错时返回 `SQLITE_ERROR`。若发生错误
+且 pzErrMsg 非 0，则 `sqlite3_load_extension()` 接口会尝试用存储在从 `sqlite3_malloc()` 获得的
+内存中的错误消息文本填充 *pzErrMsg。调用函数应通过调用 `sqlite3_free()` 释放这块内存。
 
-See also the load_extension() SQL function.
+调用此 API 之前必须用 `sqlite3_enable_load_extension()` 或
+`sqlite3_db_config(db,SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION,1,NULL)` 启用扩展加载，否则将
+返回错误。
+
+> 安全警告：建议用 `SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION` 方法只启用此接口。应避免使用
+> `sqlite3_enable_load_extension()` 接口。这样可使 SQL 函数 load_extension() 保持禁用，防止
+> SQL 注入让攻击者获得扩展加载能力。
+
+另见 load_extension() SQL 函数。
 
 ---
 
-## Error Logging Interface
+## 错误日志接口（Error Logging Interface）
 
 ```
-
 void sqlite3_log(int iErrCode, const char *zFormat, ...);
-
 ```
 
-The sqlite3_log() interface writes a message into the error log
-established by the SQLITE_CONFIG_LOG option to sqlite3_config().
-If logging is enabled, the zFormat string and subsequent arguments are
-used with sqlite3_snprintf() to generate the final output string.
+`sqlite3_log()` 接口把一条消息写入由 `sqlite3_config()` 的 `SQLITE_CONFIG_LOG` 选项建立的
+错误日志。若日志已启用，则用 zFormat 字符串及其后续参数配合 `sqlite3_snprintf()` 生成最终
+输出字符串。
 
-The sqlite3_log() interface is intended for use by extensions such as
-virtual tables, collating functions, and SQL functions.  While there is
-nothing to prevent an application from calling sqlite3_log(), doing so
-is considered bad form.
+`sqlite3_log()` 接口供虚拟表、排序函数、SQL 函数等扩展使用。虽然没有什么阻止应用调用
+`sqlite3_log()`，但这样做被视为不好的形式。
 
-The zFormat string must not be NULL.
+zFormat 字符串必须非 NULL。
 
-To avoid deadlocks and other threading problems, the sqlite3_log() routine
-will not use dynamically allocated memory.  The log message is stored in
-a fixed-length buffer on the stack.  If the log message is longer than
-a few hundred characters, it will be truncated to the length of the
-buffer.
+为避免死锁和其它线程问题，`sqlite3_log()` 例程不使用动态分配的内存。日志消息存储在为固定长度
+的栈缓冲区中。若日志消息超过几百个字符，将被截断到缓冲区的长度。
 
 ---
 
-## Find the next prepared statement
+## 查找下一条预编译语句（Find the next prepared statement）
 
 ```
-
 sqlite3_stmt *sqlite3_next_stmt(sqlite3 *pDb, sqlite3_stmt *pStmt);
-
 ```
 
-This interface returns a pointer to the next prepared statement after
-pStmt associated with the database connection pDb.  If pStmt is NULL
-then this interface returns a pointer to the first prepared statement
-associated with the database connection pDb.  If no prepared statement
-satisfies the conditions of this routine, it returns NULL.
+此接口返回与数据库连接 pDb 关联的、pStmt 之后的下一条预编译语句指针。若 pStmt 是 NULL，则此
+接口返回与数据库连接 pDb 关联的第一条预编译语句指针。若没有预编译语句满足本例程的条件，则
+返回 NULL。
 
-The database connection pointer D in a call to
-sqlite3_next_stmt(D,S) must refer to an open database
-connection and in particular must not be a NULL pointer.
+`sqlite3_next_stmt(D,S)` 调用中的数据库连接指针 D 必须指向打开的数据库连接，尤其不能是 NULL
+指针。
 
 ---
 
-## Overload A Function For A Virtual Table
+## 为虚拟表重载函数（Overload A Function For A Virtual Table）
 
 ```
-
 int sqlite3_overload_function(sqlite3*, const char *zFuncName, int nArg);
-
 ```
 
-Virtual tables can provide alternative implementations of functions
-using the xFindFunction method of the virtual table module.
-But global versions of those functions
-must exist in order to be overloaded.
+虚拟表可以用虚拟表模块的 xFindFunction 方法提供函数的替代实现。但要被重载，这些函数的全局
+版本必须已存在。
 
-This API makes sure a global version of a function with a particular
-name and number of parameters exists.  If no such function exists
-before this API is called, a new function is created.  The implementation
-of the new function always causes an exception to be thrown.  So
-the new function is not good for anything by itself.  Its only
-purpose is to be a placeholder function that can be overloaded
-by a virtual table.
+此 API 确保具有特定名字和参数个数的函数全局版本存在。若调用此 API 前没有这样的函数，则创建
+一个新函数。新函数的实现总是抛出异常。因此新函数本身没什么用，其唯一用途是作为可被虚拟表
+重载的占位函数。
 
 ---
 
-## Query Progress Callbacks
+## 查询进度回调（Query Progress Callbacks）
 
 ```
-
 void sqlite3_progress_handler(sqlite3*, int, int(*)(void*), void*);
-
 ```
 
-The sqlite3_progress_handler(D,N,X,P) interface causes the callback
-function X to be invoked periodically during long running calls to
-sqlite3_step() and sqlite3_prepare() and similar for
-database connection D.  An example use for this
-interface is to keep a GUI updated during a large query.
+`sqlite3_progress_handler(D,N,X,P)` 接口使回调函数 X 在数据库连接 D 上 `sqlite3_step()` 和
+`sqlite3_prepare()` 等长时间运行的调用期间被定期调用。此接口的一个示例用途是在大查询期间保持
+GUI 更新。
 
-The parameter P is passed through as the only parameter to the
-callback function X.  The parameter N is the approximate number of
-virtual machine instructions that are evaluated between successive
-invocations of the callback X.  If N is less than one then the progress
-handler is disabled.
+参数 P 作为唯一参数传给回调函数 X。参数 N 是两次连续回调 X 调用之间求值的虚拟机指令的大致
+数量。若 N 小于 1，则禁用进度处理器。
 
-Only a single progress handler may be defined at one time per
-database connection; setting a new progress handler cancels the
-old one.  Setting parameter X to NULL disables the progress handler.
-The progress handler is also disabled by setting N to a value less
-than 1.
+每个数据库连接一次只能定义一个进度处理器；设置新的进度处理器会取消旧的。把参数 X 设为 NULL
+会禁用进度处理器。把 N 设为小于 1 的值也会禁用进度处理器。
 
-If the progress callback returns non-zero, the operation is
-interrupted.  This feature can be used to implement a
-"Cancel" button on a GUI progress dialog box.
+若进度回调返回非零，则操作被中断。此特性可用于实现 GUI 进度对话框上的"取消"按钮。
 
-The progress handler callback must not do anything that will modify
-the database connection that invoked the progress handler.
-Note that sqlite3_prepare_v2() and sqlite3_step() both modify their
-database connections for the meaning of "modify" in this paragraph.
+进度处理器回调不得做任何会修改调用它的数据库连接的事情。就本段中的"修改"而言，注意
+`sqlite3_prepare_v2()` 和 `sqlite3_step()` 都会修改它们的数据库连接。
 
-The progress handler callback would originally only be invoked from the
-bytecode engine.  It still might be invoked during sqlite3_prepare()
-and similar because those routines might force a reparse of the schema
-which involves running the bytecode engine.  However, beginning with
-SQLite version 3.41.0, the progress handler callback might also be
-invoked directly from sqlite3_prepare() while analyzing and generating
-code for complex queries.
+进度处理器回调最初只会从字节码引擎调用。它仍可能在 `sqlite3_prepare()` 等期间被调用，因为这些
+例程可能强制重新解析 schema，其中涉及运行字节码引擎。不过从 SQLite 版本 3.41.0 开始，进度
+处理器回调在分析和生成复杂查询的代码时，也可能被直接从 `sqlite3_prepare()` 调用。
 
 ---
 
-## Pseudo-Random Number Generator
+## 伪随机数生成器（Pseudo-Random Number Generator）
 
 ```
-
 void sqlite3_randomness(int N, void *P);
-
 ```
 
-SQLite contains a high-quality pseudo-random number generator (PRNG) used to
-select random ROWIDs when inserting new records into a table that
-already uses the largest possible ROWID.  The PRNG is also used for
-the built-in random() and randomblob() SQL functions.  This interface allows
-applications to access the same PRNG for other purposes.
+SQLite 包含一个高质量的伪随机数生成器（PRNG），用于在向已经使用最大可能 ROWID 的表插入新
+记录时选择随机 ROWID。该 PRNG 也用于内建的 random() 和 randomblob() SQL 函数。此接口允许
+应用为其它用途访问同一个 PRNG。
 
-A call to this routine stores N bytes of randomness into buffer P.
-The P parameter can be a NULL pointer.
+调用此例程会把 N 字节的随机数存入缓冲区 P。参数 P 可以是 NULL 指针。
 
-If this routine has not been previously called or if the previous
-call had N less than one or a NULL pointer for P, then the PRNG is
-seeded using randomness obtained from the xRandomness method of
-the default sqlite3_vfs object.
-If the previous call to this routine had an N of 1 or more and a
-non-NULL P then the pseudo-randomness is generated
-internally and without recourse to the sqlite3_vfs xRandomness
-method.
+若此例程先前未被调用、或前一次调用 N 小于 1 或 P 是 NULL 指针，则 PRNG 用从默认 `sqlite3_vfs`
+对象的 xRandomness 方法获得的随机性播种。若前一次调用此例程的 N 为 1 或更大、且 P 非 NULL，
+则伪随机性在内部生成，不求助于 sqlite3_vfs 的 xRandomness 方法。
 
 ---
 
-## Attempt To Free Heap Memory
+## 尝试释放堆内存（Attempt To Free Heap Memory）
 
 ```
-
 int sqlite3_release_memory(int);
-
 ```
 
-The sqlite3_release_memory() interface attempts to free N bytes
-of heap memory by deallocating non-essential memory allocations
-held by the database library.   Memory used to cache database
-pages to improve performance is an example of non-essential memory.
-sqlite3_release_memory() returns the number of bytes actually freed,
-which might be more or less than the amount requested.
-The sqlite3_release_memory() routine is a no-op returning zero
-if SQLite is not compiled with SQLITE_ENABLE_MEMORY_MANAGEMENT.
+`sqlite3_release_memory()` 接口尝试通过释放 SQLite 库持有的非必要内存分配，来释放 N 字节的堆
+内存。用于缓存数据库页以提高性能的内存是非必要内存的一个例子。`sqlite3_release_memory()` 返回
+实际释放的字节数，可能多于或少于请求量。若 SQLite 未用 `SQLITE_ENABLE_MEMORY_MANAGEMENT`
+编译，则 `sqlite3_release_memory()` 例程是返回零的空操作。
 
-See also: sqlite3_db_release_memory()
+另见：sqlite3_db_release_memory()
 
 ---
 
-## Reset A Prepared Statement Object
+## 重置预编译语句对象（Reset A Prepared Statement Object）
 
 ```
-
 int sqlite3_reset(sqlite3_stmt *pStmt);
-
 ```
 
-The sqlite3_reset() function is called to reset a prepared statement
-object back to its initial state, ready to be re-executed.
-Any SQL statement variables that had values bound to them using
-the sqlite3_bind_*() API retain their values.
-Use sqlite3_clear_bindings() to reset the bindings.
+`sqlite3_reset()` 函数用于把预编译语句对象重置回其初始状态，准备重新执行。任何经
+`sqlite3_bind_*()` API 绑定过值的 SQL 语句参数都保留其值。请用 `sqlite3_clear_bindings()`
+重置绑定。
 
-The sqlite3_reset(S) interface resets the prepared statement S
-back to the beginning of its program.
+`sqlite3_reset(S)` 接口把预编译语句 S 重置回其程序的起点。
 
-The return code from sqlite3_reset(S) indicates whether or not
-the previous evaluation of prepared statement S completed successfully.
-If sqlite3_step(S) has never before been called on S or if
-sqlite3_step(S) has not been called since the previous call
-to sqlite3_reset(S), then sqlite3_reset(S) will return
-SQLITE_OK.
+`sqlite3_reset(S)` 的返回码指示预编译语句 S 先前的求值是否成功完成。若 S 上从未调用过
+`sqlite3_step(S)`、或自上次 `sqlite3_reset(S)` 调用以来未再调用过 `sqlite3_step(S)`，则
+`sqlite3_reset(S)` 返回 `SQLITE_OK`。
 
-If the most recent call to sqlite3_step(S) for the
-prepared statement S indicated an error, then
-sqlite3_reset(S) returns an appropriate error code.
-The sqlite3_reset(S) interface might also return an error code
-if there were no prior errors but the process of resetting
-the prepared statement caused a new error. For example, if an
-INSERT statement with a RETURNING clause is only stepped one time,
-that one call to sqlite3_step(S) might return SQLITE_ROW but
-the overall statement might still fail and the sqlite3_reset(S) call
-might return SQLITE_BUSY if locking constraints prevent the
-database change from committing.  Therefore, it is important that
-applications check the return code from sqlite3_reset(S) even if
-no prior call to sqlite3_step(S) indicated a problem.
+若预编译语句 S 最近一次 `sqlite3_step(S)` 调用指示错误，则 `sqlite3_reset(S)` 返回适当的错误码。
+即使先前没有错误，但重置预编译语句的过程引起新错误，`sqlite3_reset(S)` 接口也可能返回错误码。
+例如，若带 RETURNING 子句的 INSERT 语句只调用了一次 `sqlite3_step(S)`，那次调用可能返回
+`SQLITE_ROW`，但整个语句仍可能失败；若锁定约束阻止数据库更改提交，`sqlite3_reset(S)` 调用
+可能返回 `SQLITE_BUSY`。因此，即使先前没有 `sqlite3_step(S)` 调用指示问题，应用检查
+`sqlite3_reset(S)` 的返回码也很重要。
 
-The sqlite3_reset(S) interface does not change the values
-of any bindings on the prepared statement S.
+`sqlite3_reset(S)` 接口不改变预编译语句 S 上任何绑定的值。
 
 ---
 
-## Reset Automatic Extension Loading
+## 重置自动扩展加载（Reset Automatic Extension Loading）
 
 ```
-
 void sqlite3_reset_auto_extension(void);
-
 ```
 
-This interface disables all automatic extensions previously
-registered using sqlite3_auto_extension().
+此接口禁用先前用 `sqlite3_auto_extension()` 注册的所有自动扩展。
 
 ---
 
-## Setting The Subtype Of An SQL Function
+## 设置 SQL 函数的子类型（Setting The Subtype Of An SQL Function）
 
 ```
-
 void sqlite3_result_subtype(sqlite3_context*,unsigned int);
-
 ```
 
-The sqlite3_result_subtype(C,T) function causes the subtype of
-the result from the application-defined SQL function with
-sqlite3_context C to be the value T.  Only the lower 8 bits
-of the subtype T are preserved in current versions of SQLite;
-higher order bits are discarded.
-The number of subtype bytes preserved by SQLite might increase
-in future releases of SQLite.
+`sqlite3_result_subtype(C,T)` 函数使应用自定义 SQL 函数（其 sqlite3_context 为 C）的结果的
+子类型成为值 T。在当前版本的 SQLite 中，只保留子类型 T 的低 8 位，高位被丢弃。SQLite 未来版本
+可能增加保留的子类型字节数。
 
-Every application-defined SQL function that invokes this interface
-should include the SQLITE_RESULT_SUBTYPE property in its
-text encoding argument when the SQL function is
-registered.  If the SQLITE_RESULT_SUBTYPE
-property is omitted from the function that invokes sqlite3_result_subtype(),
-then in some cases the sqlite3_result_subtype() might fail to set
-the result subtype.
+每个调用此接口的应用自定义 SQL 函数，在注册该 SQL 函数时都应在文本编码参数中包含
+`SQLITE_RESULT_SUBTYPE` 属性。若调用 `sqlite3_result_subtype()` 的函数省略了
+`SQLITE_RESULT_SUBTYPE` 属性，则某些情况下 `sqlite3_result_subtype()` 可能无法设置结果子类型。
 
-If SQLite is compiled with -DSQLITE_STRICT_SUBTYPE=1, then any
-SQL function that invokes the sqlite3_result_subtype() interface
-and that does not have the SQLITE_RESULT_SUBTYPE property will raise
-an error.  Future versions of SQLite might enable -DSQLITE_STRICT_SUBTYPE=1
-by default.
+若用 `-DSQLITE_STRICT_SUBTYPE=1` 编译 SQLite，则任何调用 `sqlite3_result_subtype()` 接口、
+且没有 `SQLITE_RESULT_SUBTYPE` 属性的 SQL 函数都会报错。未来版本的 SQLite 可能默认启用
+`-DSQLITE_STRICT_SUBTYPE=1`。
 
 ---
 
-## Serialize a database
+## 序列化数据库（Serialize a database）
 
 ```
-
 unsigned char *sqlite3_serialize(
-  sqlite3 *db,           /* The database connection */
-  const char *zSchema,   /* Which DB to serialize. ex: "main", "temp", ... */
-  sqlite3_int64 *piSize, /* Write size of the DB here, if not NULL */
-  unsigned int mFlags    /* Zero or more SQLITE_SERIALIZE_* flags */
+  sqlite3 *db,           /* 数据库连接 */
+  const char *zSchema,   /* 要序列化的数据库。例如："main"、"temp" ... */
+  sqlite3_int64 *piSize, /* 若非 NULL，把数据库大小写在此处 */
+  unsigned int mFlags    /* 零个或多个 SQLITE_SERIALIZE_* 标志 */
 );
-
 ```
 
-The sqlite3_serialize(D,S,P,F) interface returns a pointer to
-memory that is a serialization of the S database on
-database connection D.  If S is a NULL pointer, the main database is used.
-If P is not a NULL pointer, then the size of the database in bytes
-is written into *P.
+`sqlite3_serialize(D,S,P,F)` 接口返回指向一段内存的指针，该内存是数据库连接 D 上数据库 S 的
+序列化。若 S 是 NULL 指针，则使用主数据库。若 P 非 NULL 指针，则把数据库的字节大小写入 *P。
 
-For an ordinary on-disk database file, the serialization is just a
-copy of the disk file.  For an in-memory database or a "TEMP" database,
-the serialization is the same sequence of bytes which would be written
-to disk if that database were backed up to disk.
+对普通的磁盘数据库文件，序列化只是磁盘文件的副本。对内存数据库或 "TEMP" 数据库，序列化与若把
+该数据库备份到磁盘会写入的字节序列相同。
 
-The usual case is that sqlite3_serialize() copies the serialization of
-the database into memory obtained from sqlite3_malloc64() and returns
-a pointer to that memory.  The caller is responsible for freeing the
-returned value to avoid a memory leak.  However, if the F argument
-contains the SQLITE_SERIALIZE_NOCOPY bit, then no memory allocations
-are made, and the sqlite3_serialize() function will return a pointer
-to the contiguous memory representation of the database that SQLite
-is currently using for that database, or NULL if no such contiguous
-memory representation of the database exists.  A contiguous memory
-representation of the database will usually only exist if there has
-been a prior call to sqlite3_deserialize(D,S,...) with the same
-values of D and S.
-The size of the database is written into *P even if the
-SQLITE_SERIALIZE_NOCOPY bit is set but no contiguous copy
-of the database exists.
+## 序列化数据库
 
-After the call, if the SQLITE_SERIALIZE_NOCOPY bit had been set,
-the returned buffer content will remain accessible and unchanged
-until either the next write operation on the connection or when
-the connection is closed, and applications must not modify the
-buffer. If the bit had been clear, the returned buffer will not
-be accessed by SQLite after the call.
+（序列化与若把该数据库备份到磁盘会写入的字节序列相同。）
 
-A call to sqlite3_serialize(D,S,P,F) might return NULL even if the
-SQLITE_SERIALIZE_NOCOPY bit is omitted from argument F if a memory
-allocation error occurs.
+通常，`sqlite3_serialize()` 把数据库的序列化复制到从 `sqlite3_malloc64()` 获得的内存中，并
+返回指向该内存的指针。调用者负责释放返回的值以避免内存泄漏。但若 F 参数包含
+`SQLITE_SERIALIZE_NOCOPY` 位，则不进行任何内存分配，`sqlite3_serialize()` 函数将返回 SQLite
+当前为该数据库使用的连续内存表示的指针；若不存在这样的连续内存表示，则返回 NULL。数据库的连续
+内存表示通常只在先前以相同的 D 和 S 值调用过 `sqlite3_deserialize(D,S,...)` 时才存在。即使
+设置了 `SQLITE_SERIALIZE_NOCOPY` 位、但数据库没有连续副本，数据库的大小也会写入 *P。
 
-This interface is omitted if SQLite is compiled with the
-SQLITE_OMIT_DESERIALIZE option.
+调用之后，若已设置 `SQLITE_SERIALIZE_NOCOPY` 位，则返回的缓冲区内容在连接上的下一次写操作
+之前、或连接关闭之前保持可访问且不变，应用不得修改该缓冲区。若该位已被清除，则调用后 SQLite
+不会访问返回的缓冲区。
+
+即使从参数 F 中省略 `SQLITE_SERIALIZE_NOCOPY` 位，若发生内存分配错误，
+`sqlite3_serialize(D,S,P,F)` 调用也可能返回 NULL。
+
+若用 `SQLITE_OMIT_DESERIALIZE` 选项编译 SQLite，则省略此接口。
 
 ---
 
-## Set Error Code And Message
+## 设置错误码和消息（Set Error Code And Message）
 
 ```
-
 int sqlite3_set_errmsg(sqlite3 *db, int errcode, const char *zErrMsg);
-
 ```
 
-Set the error code of the database handle passed as the first argument
-to errcode, and the error message to a copy of nul-terminated string
-zErrMsg. If zErrMsg is passed NULL, then the error message is set to
-the default message associated with the supplied error code.  Subsequent
-calls to sqlite3_errcode() and sqlite3_errmsg() and similar will
-return the values set by this routine in place of what was previously
-set by SQLite itself.
+把第一个参数传入的数据库句柄的错误码设置为 errcode，把错误消息设置为 NUL 结尾字符串 zErrMsg
+的副本。若 zErrMsg 传 NULL，则错误消息被设置为与所给错误码关联的默认消息。其后对
+`sqlite3_errcode()`、`sqlite3_errmsg()` 等的调用将返回此例程设置的值，以取代 SQLite 自己先前
+设置的值。
 
-This function returns SQLITE_OK if the error code and error message are
-successfully set, SQLITE_NOMEM if an OOM occurs, and SQLITE_MISUSE if
-the database handle is NULL or invalid.
+若错误码和错误消息被成功设置，此函数返回 `SQLITE_OK`；若发生内存不足则返回 `SQLITE_NOMEM`；
+若数据库句柄为 NULL 或无效则返回 `SQLITE_MISUSE`。
 
-The error code and message set by this routine remains in effect until
-they are changed, either by another call to this routine or until they are
-changed to by SQLite itself to reflect the result of some subsquent
-API call.
+此例程设置的错误码和消息一直有效，直到它们被改变——要么被对它的另一次调用，要么被 SQLite 自己
+改变以反映后续某次 API 调用的结果。
 
-This function is intended for use by SQLite extensions or wrappers.  The
-idea is that an extension or wrapper can use this routine to set error
-messages and error codes and thus behave more like a core SQLite
-feature from the point of view of an application.
+此函数供 SQLite 扩展或包装器使用。其思想是：扩展或包装器可以用此例程设置错误消息和错误码，
+从而在应用看来更像核心 SQLite 特性。
 
 ---
 
-## Set the Last Insert Rowid value.
+## 设置最后一次插入的 Rowid 值（Set the Last Insert Rowid value）
 
 ```
-
 void sqlite3_set_last_insert_rowid(sqlite3*,sqlite3_int64);
-
 ```
 
-The sqlite3_set_last_insert_rowid(D, R) method allows the application to
-set the value returned by calling sqlite3_last_insert_rowid(D) to R
-without inserting a row into the database.
+`sqlite3_set_last_insert_rowid(D, R)` 方法允许应用把调用 `sqlite3_last_insert_rowid(D)` 返回
+的值设置为 R，而不向数据库插入行。
 
 ---
 
-## Set the Setlk Timeout
+## 设置 Setlk 超时（Set the Setlk Timeout）
 
 ```
-
 int sqlite3_setlk_timeout(sqlite3*, int ms, int flags);
-
 ```
 
-This routine is only useful in SQLITE_ENABLE_SETLK_TIMEOUT builds. If
-the VFS supports blocking locks, it sets the timeout in ms used by
-eligible locks taken on wal mode databases by the specified database
-handle. In non-SQLITE_ENABLE_SETLK_TIMEOUT builds, or if the VFS does
-not support blocking locks, this function is a no-op.
+此例程只在 `SQLITE_ENABLE_SETLK_TIMEOUT` 构建中有用。若 VFS 支持阻塞锁，它设置指定数据库句柄
+在 wal 模式数据库上取得的符合条件的锁所使用的超时（毫秒）。在非 `SQLITE_ENABLE_SETLK_TIMEOUT`
+构建中、或 VFS 不支持阻塞锁时，此函数是空操作。
 
-Passing 0 to this function disables blocking locks altogether. Passing
--1 to this function requests that the VFS blocks for a long time -
-indefinitely if possible. The results of passing any other negative value
-are undefined.
+向此函数传 0 会完全禁用阻塞锁。向此函数传 -1 是请求 VFS 长时间阻塞——若可能则无限期。传任何
+其它负值的结果未定义。
 
-Internally, each SQLite database handle stores two timeout values - the
-busy-timeout (used for rollback mode databases, or if the VFS does not
-support blocking locks) and the setlk-timeout (used for blocking locks
-on wal-mode databases). The sqlite3_busy_timeout() method sets both
-values, this function sets only the setlk-timeout value. Therefore,
-to configure separate busy-timeout and setlk-timeout values for a single
-database handle, call sqlite3_busy_timeout() followed by this function.
+每个 SQLite 数据库句柄在内部存储两个超时值：busy-timeout（用于回滚模式数据库，或 VFS 不支持
+阻塞锁时）和 setlk-timeout（用于 wal 模式数据库上的阻塞锁）。`sqlite3_busy_timeout()` 方法
+同时设置两个值，此函数只设置 setlk-timeout 值。因此，要为单个数据库句柄配置不同的 busy-timeout
+和 setlk-timeout 值，先调用 `sqlite3_busy_timeout()`，再调用此函数。
 
-Whenever the number of connections to a wal mode database falls from
-1 to 0, the last connection takes an exclusive lock on the database,
-then checkpoints and deletes the wal file. While it is doing this, any
-new connection that tries to read from the database fails with an
-SQLITE_BUSY error. Or, if the SQLITE_SETLK_BLOCK_ON_CONNECT flag is
-passed to this API, the new connection blocks until the exclusive lock
-has been released.
+每当 wal 模式数据库的连接数从 1 降到 0 时，最后一个连接对数据库取排他锁，然后检查点并删除 wal
+文件。在其执行期间，任何试图读取该数据库的新连接都会以 `SQLITE_BUSY` 错误失败。或者，若向此
+API 传 `SQLITE_SETLK_BLOCK_ON_CONNECT` 标志，则新连接阻塞，直到排他锁被释放。
 
 ---
 
-## Suspend Execution For A Short Time
+## 短时挂起执行（Suspend Execution For A Short Time）
 
 ```
-
 int sqlite3_sleep(int);
-
 ```
 
-The sqlite3_sleep() function causes the current thread to suspend execution
-for at least a number of milliseconds specified in its parameter.
+`sqlite3_sleep()` 函数使当前线程至少挂起执行其参数指定的毫秒数。
 
-If the operating system does not support sleep requests with
-millisecond time resolution, then the time will be rounded up to
-the nearest second. The number of milliseconds of sleep actually
-requested from the operating system is returned.
+若操作系统不支持毫秒级时间分辨率的睡眠请求，则时间向上取整到最近的秒。返回实际向操作系统请求
+的睡眠毫秒数。
 
-SQLite implements this interface by calling the xSleep()
-method of the default sqlite3_vfs object.  If the xSleep() method
-of the default VFS is not implemented correctly, or not implemented at
-all, then the behavior of sqlite3_sleep() may deviate from the description
-in the previous paragraphs.
+SQLite 通过调用默认 `sqlite3_vfs` 对象的 xSleep() 方法实现此接口。若默认 VFS 的 xSleep() 方法
+实现不正确、或根本没有实现，则 `sqlite3_sleep()` 的行为可能偏离前面几段的描述。
 
-If a negative argument is passed to sqlite3_sleep() the results vary by
-VFS and operating system.  Some system treat a negative argument as an
-instruction to sleep forever.  Others understand it to mean do not sleep
-at all. In SQLite version 3.42.0 and later, a negative
-argument passed into sqlite3_sleep() is changed to zero before it is relayed
-down into the xSleep method of the VFS.
+若向 `sqlite3_sleep()` 传负参数，结果因 VFS 和操作系统而异。有些系统把负参数理解为永远睡眠的
+指令；另一些理解为完全不要睡眠。在 SQLite 版本 3.42.0 及以后，传入 `sqlite3_sleep()` 的负参数
+在传递到 VFS 的 xSleep 方法之前会被改为零。
 
 ---
 
-## Compare the ages of two snapshot handles.
+## 比较两个快照句柄的先后（Compare the ages of two snapshot handles）
 
 ```
-
 int sqlite3_snapshot_cmp(
   sqlite3_snapshot *p1,
   sqlite3_snapshot *p2
 );
-
 ```
 
-The sqlite3_snapshot_cmp(P1, P2) interface is used to compare the ages
-of two valid snapshot handles.
+`sqlite3_snapshot_cmp(P1, P2)` 接口用于比较两个有效快照句柄的先后。
 
-If the two snapshot handles are not associated with the same database
-file, the result of the comparison is undefined.
+若两个快照句柄不与同一个数据库文件关联，则比较结果未定义。
 
-Additionally, the result of the comparison is only valid if both of the
-snapshot handles were obtained by calling sqlite3_snapshot_get() since the
-last time the wal file was deleted. The wal file is deleted when the
-database is changed back to rollback mode or when the number of database
-clients drops to zero. If either snapshot handle was obtained before the
-wal file was last deleted, the value returned by this function
-is undefined.
+此外，仅当两个快照句柄都是在 wal 文件上次被删除之后、通过调用 `sqlite3_snapshot_get()` 获得的，
+比较结果才有效。当数据库改回回滚模式、或数据库客户端数降到零时，wal 文件被删除。若任一快照句柄
+是在 wal 文件上次被删除之前获得的，则此函数返回的值未定义。
 
-Otherwise, this API returns a negative value if P1 refers to an older
-snapshot than P2, zero if the two handles refer to the same database
-snapshot, and a positive value if P1 is a newer snapshot than P2.
+否则，若 P1 引用的快照比 P2 旧，此 API 返回负值；若两个句柄引用同一个数据库快照，返回零；若
+P1 是比 P2 新的快照，返回正值。
 
-This interface is only available if SQLite is compiled with the
-SQLITE_ENABLE_SNAPSHOT option.
+此接口仅在用 `SQLITE_ENABLE_SNAPSHOT` 选项编译 SQLite 时可用。
 
 ---
 
-## Destroy a snapshot
+## 销毁快照（Destroy a snapshot）
 
 ```
-
 void sqlite3_snapshot_free(sqlite3_snapshot*);
-
 ```
 
-The sqlite3_snapshot_free(P) interface destroys sqlite3_snapshot P.
-The application must eventually free every sqlite3_snapshot object
-using this routine to avoid a memory leak.
+`sqlite3_snapshot_free(P)` 接口销毁 sqlite3_snapshot P。为避免内存泄漏，应用必须最终用此例程
+释放每个 sqlite3_snapshot 对象。
 
-The sqlite3_snapshot_free() interface is only available when the
-SQLITE_ENABLE_SNAPSHOT compile-time option is used.
+`sqlite3_snapshot_free()` 接口仅在用 `SQLITE_ENABLE_SNAPSHOT` 编译期选项时可用。
 
 ---
 
-## Record A Database Snapshot
+## 记录数据库快照（Record A Database Snapshot）
 
 ```
-
 int sqlite3_snapshot_get(
   sqlite3 *db,
   const char *zSchema,
   sqlite3_snapshot **ppSnapshot
 );
-
 ```
 
-The sqlite3_snapshot_get(D,S,P) interface attempts to make a
-new sqlite3_snapshot object that records the current state of
-schema S in database connection D.  On success, the
-sqlite3_snapshot_get(D,S,P) interface writes a pointer to the newly
-created sqlite3_snapshot object into *P and returns SQLITE_OK.
-If there is not already a read-transaction open on schema S when
-this function is called, one is opened automatically.
+`sqlite3_snapshot_get(D,S,P)` 接口尝试创建一个新的 sqlite3_snapshot 对象，记录数据库连接 D 中
+schema S 的当前状态。成功时，`sqlite3_snapshot_get(D,S,P)` 接口把指向新创建的 sqlite3_snapshot
+对象的指针写入 *P 并返回 `SQLITE_OK`。若调用此函数时 schema S 上还没有打开的读事务，则自动
+打开一个。
 
-If a read-transaction is opened by this function, then it is guaranteed
-that the returned snapshot object may not be invalidated by a database
-writer or checkpointer until after the read-transaction is closed. This
-is not guaranteed if a read-transaction is already open when this
-function is called. In that case, any subsequent write or checkpoint
-operation on the database may invalidate the returned snapshot handle,
-even while the read-transaction remains open.
+若读事务由本函数打开，则保证返回的快照对象在读事务关闭之前不会失效，即使数据库写者或检查点
+操作试图使其失效。若调用此函数时读事务已经打开，则没有这种保证。此时，对数据库的任何后续写或
+检查点操作都可能使返回的快照句柄失效，即使读事务保持打开。
 
-The following must be true for this function to succeed. If any of
-the following statements are false when sqlite3_snapshot_get() is
-called, SQLITE_ERROR is returned. The final value of *P is undefined
-in this case.
+要使此函数成功，以下条件必须全部成立。若调用 `sqlite3_snapshot_get()` 时以下任一语句为假，
+则返回 `SQLITE_ERROR`，此时 *P 的最终值未定义。
 
--  The database handle must not be in autocommit mode.
+- 数据库句柄不得处于自动提交模式。
+- 数据库连接 D 的 schema S 必须是 WAL 模式数据库。
+- 数据库连接 D 的 schema S 上不得有打开的写事务。
+- 自当前 wal 文件在磁盘上创建以来（无论由哪个连接），必须已向其中写入一个或多个事务。这
+  意味着：首次打开后、还没有 wal 文件的 WAL 模式数据库上不能立即获取快照，必须先向其中写入
+  至少一个事务。
 
--  Schema S of database connection D must be a WAL mode database.
+此函数也可能返回 `SQLITE_NOMEM`。若在数据库句柄处于自动提交模式时调用、但因其它原因失败，
+则是否在 schema S 上打开读事务未定义。
 
--  There must not be a write transaction open on schema S of database
-connection D.
+成功调用 `sqlite3_snapshot_get()` 返回的 sqlite3_snapshot 对象必须用 `sqlite3_snapshot_free()`
+释放，以避免内存泄漏。
 
--  One or more transactions must have been written to the current wal
-file since it was created on disk (by any connection). This means
-that a snapshot cannot be taken on a wal mode database with no wal
-file immediately after it is first opened. At least one transaction
-must be written to it first.
-
-This function may also return SQLITE_NOMEM.  If it is called with the
-database handle in autocommit mode but fails for some other reason,
-whether or not a read transaction is opened on schema S is undefined.
-
-The sqlite3_snapshot object returned from a successful call to
-sqlite3_snapshot_get() must be freed using sqlite3_snapshot_free()
-to avoid a memory leak.
-
-The sqlite3_snapshot_get() interface is only available when the
-SQLITE_ENABLE_SNAPSHOT compile-time option is used.
+`sqlite3_snapshot_get()` 接口仅在用 `SQLITE_ENABLE_SNAPSHOT` 编译期选项时可用。
 
 ---
 
-## Start a read transaction on an historical snapshot
+## 在历史快照上开始读事务（Start a read transaction on an historical snapshot）
 
 ```
-
 int sqlite3_snapshot_open(
   sqlite3 *db,
   const char *zSchema,
   sqlite3_snapshot *pSnapshot
 );
-
 ```
 
-The sqlite3_snapshot_open(D,S,P) interface either starts a new read
-transaction or upgrades an existing one for schema S of
-database connection D such that the read transaction refers to
-historical snapshot P, rather than the most recent change to the
-database. The sqlite3_snapshot_open() interface returns SQLITE_OK
-on success or an appropriate error code if it fails.
+`sqlite3_snapshot_open(D,S,P)` 接口要么开始一个新的读事务、要么升级数据库连接 D 上 schema S
+的现有读事务，使该读事务指向历史快照 P，而不是数据库最近的变化。`sqlite3_snapshot_open()`
+接口成功时返回 `SQLITE_OK`，失败时返回适当的错误码。
 
-In order to succeed, the database connection must not be in
-autocommit mode when sqlite3_snapshot_open(D,S,P) is called. If there
-is already a read transaction open on schema S, then the database handle
-must have no active statements (SELECT statements that have been passed
-to sqlite3_step() but not sqlite3_reset() or sqlite3_finalize()).
-SQLITE_ERROR is returned if either of these conditions is violated, or
-if schema S does not exist, or if the snapshot object is invalid.
+要使调用成功，`sqlite3_snapshot_open(D,S,P)` 调用时数据库连接必须不处于自动提交模式。若 schema
+S 上已有打开的读事务，则数据库句柄不得有活动语句（已传给 `sqlite3_step()` 但未传给
+`sqlite3_reset()` 或 `sqlite3_finalize()` 的 SELECT 语句）。若违反这两个条件中的任一个、或
+schema S 不存在、或快照对象无效，则返回 `SQLITE_ERROR`。
 
-A call to sqlite3_snapshot_open() will fail to open if the specified
-snapshot has been overwritten by a checkpoint. In this case
-SQLITE_ERROR_SNAPSHOT is returned.
+若指定的快照已被检查点覆盖，对 `sqlite3_snapshot_open()` 的调用将无法打开。此时返回
+`SQLITE_ERROR_SNAPSHOT`。
 
-If there is already a read transaction open when this function is
-invoked, then the same read transaction remains open (on the same
-database snapshot) if SQLITE_ERROR, SQLITE_BUSY or SQLITE_ERROR_SNAPSHOT
-is returned. If another error code - for example SQLITE_PROTOCOL or an
-SQLITE_IOERR error code - is returned, then the final state of the
-read transaction is undefined. If SQLITE_OK is returned, then the
-read transaction is now open on database snapshot P.
+若调用此函数时已有打开的读事务，则若返回 `SQLITE_ERROR`、`SQLITE_BUSY` 或
+`SQLITE_ERROR_SNAPSHOT`，同一个读事务（在同一数据库快照上）保持打开。若返回其它错误码——例如
+`SQLITE_PROTOCOL` 或某个 `SQLITE_IOERR` 错误码——则读事务的最终状态未定义。若返回
+`SQLITE_OK`，则读事务现在打开在数据库快照 P 上。
 
-A call to sqlite3_snapshot_open(D,S,P) will fail if the
-database connection D does not know that the database file for
-schema S is in WAL mode.  A database connection might not know
-that the database file is in WAL mode if there has been no prior
-I/O on that database connection, or if the database entered WAL mode
-after the most recent I/O on the database connection.
-(Hint: Run "PRAGMA application_id" against a newly opened
-database connection in order to make it ready to use snapshots.)
+## 在历史快照上开始读事务
 
-The sqlite3_snapshot_open() interface is only available when the
-SQLITE_ENABLE_SNAPSHOT compile-time option is used.
+若数据库连接 D 不知道 schema S 的数据库文件处于 WAL 模式，对 `sqlite3_snapshot_open(D,S,P)`
+的调用将失败。若该数据库连接上先前没有 I/O 发生、或数据库在该连接最近一次 I/O 之后进入 WAL
+模式，则连接可能不知道数据库文件处于 WAL 模式。（提示：对新建的数据库连接运行 "PRAGMA
+application_id"，以使其准备好使用快照。）
+
+`sqlite3_snapshot_open()` 接口仅在用 `SQLITE_ENABLE_SNAPSHOT` 编译期选项时可用。
 
 ---
 
-## Recover snapshots from a wal file
+## 从 wal 文件恢复快照（Recover snapshots from a wal file）
 
 ```
-
 int sqlite3_snapshot_recover(sqlite3 *db, const char *zDb);
-
 ```
 
-If a WAL file remains on disk after all database connections close
-(either through the use of the SQLITE_FCNTL_PERSIST_WAL file control
-or because the last process to have the database opened exited without
-calling sqlite3_close()) and a new connection is subsequently opened
-on that database and WAL file, the sqlite3_snapshot_open() interface
-will only be able to open the last transaction added to the WAL file
-even though the WAL file contains other valid transactions.
+若所有数据库连接都关闭后（要么通过使用 `SQLITE_FCNTL_PERSIST_WAL` 文件控制，要么因为最后一个
+打开数据库的进程在未调用 `sqlite3_close()` 的情况下退出），WAL 文件仍留在磁盘上，随后在该
+数据库和 WAL 文件上打开新连接，则 `sqlite3_snapshot_open()` 接口只能打开添加到 WAL 文件的最后
+一个事务，尽管 WAL 文件还包含其它有效事务。
 
-This function attempts to scan the WAL file associated with database zDb
-of database handle db and make all valid snapshots available to
-sqlite3_snapshot_open(). It is an error if there is already a read
-transaction open on the database, or if the database is not a WAL mode
-database.
+此函数尝试扫描数据库句柄 db 的数据库 zDb 关联的 WAL 文件，使所有有效快照可用于
+`sqlite3_snapshot_open()`。若数据库上已有打开的读事务、或数据库不是 WAL 模式数据库，则是错误。
 
-SQLITE_OK is returned if successful, or an SQLite error code otherwise.
+成功时返回 `SQLITE_OK`，否则返回 SQLite 错误码。
 
-This interface is only available if SQLite is compiled with the
-SQLITE_ENABLE_SNAPSHOT option.
+此接口仅在用 `SQLITE_ENABLE_SNAPSHOT` 选项编译 SQLite 时可用。
 
 ---
 
-## Deprecated Soft Heap Limit Interface
+## 已废弃的软堆上限接口（Deprecated Soft Heap Limit Interface）
 
 ```
-
 void sqlite3_soft_heap_limit(int N);
-
 ```
 
-This is a deprecated version of the sqlite3_soft_heap_limit64()
-interface.  This routine is provided for historical compatibility
-only.  All new applications should use the
-sqlite3_soft_heap_limit64() interface rather than this one.
+这是 `sqlite3_soft_heap_limit64()` 接口的废弃版本。此例程仅为历史兼容而提供。所有新应用都应
+使用 `sqlite3_soft_heap_limit64()` 接口而非本接口。
 
 ---
 
-## Evaluate An SQL Statement
+## 求值 SQL 语句（Evaluate An SQL Statement）
 
 ```
-
 int sqlite3_step(sqlite3_stmt*);
-
 ```
 
-After a prepared statement has been prepared using any of
-sqlite3_prepare_v2(), sqlite3_prepare_v3(), sqlite3_prepare16_v2(),
-or sqlite3_prepare16_v3() or one of the legacy
-interfaces sqlite3_prepare() or sqlite3_prepare16(), this function
-must be called one or more times to evaluate the statement.
+在预编译语句用 `sqlite3_prepare_v2()`、`sqlite3_prepare_v3()`、`sqlite3_prepare16_v2()`、
+`sqlite3_prepare16_v3()` 或传统接口 `sqlite3_prepare()`、`sqlite3_prepare16()` 之一准备之后，
+必须调用此函数一次或多次来求值该语句。
 
-The details of the behavior of the sqlite3_step() interface depend
-on whether the statement was prepared using the newer "vX" interfaces
-sqlite3_prepare_v3(), sqlite3_prepare_v2(), sqlite3_prepare16_v3(),
-sqlite3_prepare16_v2() or the older legacy
-interfaces sqlite3_prepare() and sqlite3_prepare16().  The use of the
-new "vX" interface is recommended for new applications but the legacy
-interface will continue to be supported.
+`sqlite3_step()` 接口的行为细节取决于语句是用较新的 "vX" 接口（`sqlite3_prepare_v3()`、
+`sqlite3_prepare_v2()`、`sqlite3_prepare16_v3()`、`sqlite3_prepare16_v2()`）还是较旧的传统接口
+（`sqlite3_prepare()` 和 `sqlite3_prepare16()`）准备的。新应用推荐使用新的 "vX" 接口，但传统
+接口将继续支持。
 
-In the legacy interface, the return value will be either SQLITE_BUSY,
-SQLITE_DONE, SQLITE_ROW, SQLITE_ERROR, or SQLITE_MISUSE.
-With the "v2" interface, any of the other result codes or
-extended result codes might be returned as well.
+在传统接口中，返回值是 `SQLITE_BUSY`、`SQLITE_DONE`、`SQLITE_ROW`、`SQLITE_ERROR` 或
+`SQLITE_MISUSE` 之一。用 "v2" 接口，也可能返回任何其它结果码或扩展结果码。
 
-SQLITE_BUSY means that the database engine was unable to acquire the
-database locks it needs to do its job.  If the statement is a COMMIT
-or occurs outside of an explicit transaction, then you can retry the
-statement.  If the statement is not a COMMIT and occurs within an
-explicit transaction then you should rollback the transaction before
-continuing.
+`SQLITE_BUSY` 表示数据库引擎无法取得完成工作所需的数据库锁。若语句是 COMMIT、或发生在显式
+事务之外，则可以重试该语句。若语句不是 COMMIT、且发生在显式事务之内，则应在继续前回滚事务。
 
-SQLITE_DONE means that the statement has finished executing
-successfully.  sqlite3_step() should not be called again on this virtual
-machine without first calling sqlite3_reset() to reset the virtual
-machine back to its initial state.
+`SQLITE_DONE` 表示语句已成功完成执行。除非先调用 `sqlite3_reset()` 把虚拟机重置回初始状态，
+否则不应在此虚拟机上再次调用 `sqlite3_step()`。
 
-If the SQL statement being executed returns any data, then SQLITE_ROW
-is returned each time a new row of data is ready for processing by the
-caller. The values may be accessed using the column access functions.
-sqlite3_step() is called again to retrieve the next row of data.
+若被执行的 SQL 语句返回任何数据，则每行新数据准备好供调用者处理时返回 `SQLITE_ROW`。可用列
+访问函数访问这些值。再次调用 `sqlite3_step()` 以取回下一行数据。
 
-SQLITE_ERROR means that a run-time error (such as a constraint
-violation) has occurred.  sqlite3_step() should not be called again on
-the VM. More information may be found by calling sqlite3_errmsg().
-With the legacy interface, a more specific error code (for example,
-SQLITE_INTERRUPT, SQLITE_SCHEMA, SQLITE_CORRUPT, and so forth)
-can be obtained by calling sqlite3_reset() on the
-prepared statement.  In the "v2" interface,
-the more specific error code is returned directly by sqlite3_step().
+`SQLITE_ERROR` 表示发生了运行时错误（如约束冲突）。不应再在此虚拟机上调用 `sqlite3_step()`。
+调用 `sqlite3_errmsg()` 可找到更多信息。用传统接口，调用 `sqlite3_reset()` 可获得更具体的错误码
+（例如 `SQLITE_INTERRUPT`、`SQLITE_SCHEMA`、`SQLITE_CORRUPT` 等）。在 "v2" 接口中，更具体的
+错误码由 `sqlite3_step()` 直接返回。
 
-SQLITE_MISUSE means that the this routine was called inappropriately.
-Perhaps it was called on a prepared statement that has
-already been finalized or on one that had
-previously returned SQLITE_ERROR or SQLITE_DONE.  Or it could
-be the case that the same database connection is being used by two or
-more threads at the same moment in time.
+`SQLITE_MISUSE` 表示此例程被不适当地调用。也许它被调用在一个已终结的预编译语句上、或一个先前
+已返回 `SQLITE_ERROR` 或 `SQLITE_DONE` 的语句上。也可能是同一时刻有两个或多个线程使用同一个
+数据库连接。
 
-For all versions of SQLite up to and including 3.6.23.1, a call to
-sqlite3_reset() was required after sqlite3_step() returned anything
-other than SQLITE_ROW before any subsequent invocation of
-sqlite3_step().  Failure to reset the prepared statement using
-sqlite3_reset() would result in an SQLITE_MISUSE return from
-sqlite3_step().  But after version 3.6.23.1 (2010-03-26),
-sqlite3_step() began
-calling sqlite3_reset() automatically in this circumstance rather
-than returning SQLITE_MISUSE.  This is not considered a compatibility
-break because any application that ever receives an SQLITE_MISUSE error
-is broken by definition.  The SQLITE_OMIT_AUTORESET compile-time option
-can be used to restore the legacy behavior.
+对于直到并包括 3.6.23.1 的所有 SQLite 版本，在 `sqlite3_step()` 返回 `SQLITE_ROW` 以外的任何
+值之后、任何后续 `sqlite3_step()` 调用之前，都需要调用 `sqlite3_reset()`。用 `sqlite3_reset()`
+重置预编译语句失败会导致 `sqlite3_step()` 返回 `SQLITE_MISUSE`。但在 3.6.23.1（2010-03-26）
+之后，`sqlite3_step()` 开始在这种情形下自动调用 `sqlite3_reset()`，而不是返回 `SQLITE_MISUSE`。
+这不被视为兼容性破坏，因为任何收到 `SQLITE_MISUSE` 错误的应用按定义就是坏的。
+`SQLITE_OMIT_AUTORESET` 编译期选项可用于恢复传统行为。
 
-Goofy Interface Alert: In the legacy interface, the sqlite3_step()
-API always returns a generic error code, SQLITE_ERROR, following any
-error other than SQLITE_BUSY and SQLITE_MISUSE.  You must call
-sqlite3_reset() or sqlite3_finalize() in order to find one of the
-specific error codes that better describes the error.
-We admit that this is a goofy design.  The problem has been fixed
-with the "v2" interface.  If you prepare all of your SQL statements
-using sqlite3_prepare_v3() or sqlite3_prepare_v2()
-or sqlite3_prepare16_v2() or sqlite3_prepare16_v3() instead
-of the legacy sqlite3_prepare() and sqlite3_prepare16() interfaces,
-then the more specific error codes are returned directly
-by sqlite3_step().  The use of the "vX" interfaces is recommended.
+> 接口提示（Goofy Interface Alert）：在传统接口中，除 `SQLITE_BUSY` 和 `SQLITE_MISUSE` 外的
+> 任何错误之后，`sqlite3_step()` API 总是返回通用错误码 `SQLITE_ERROR`。必须调用
+> `sqlite3_reset()` 或 `sqlite3_finalize()` 才能找到更具体地描述错误的错误码之一。我们承认这是
+> 笨拙的设计。此问题已在 "v2" 接口中修复。若用 `sqlite3_prepare_v3()` 或 `sqlite3_prepare_v2()`
+> 或 `sqlite3_prepare16_v2()` 或 `sqlite3_prepare16_v3()` 而非传统 `sqlite3_prepare()` 和
+> `sqlite3_prepare16()` 接口准备所有 SQL 语句，则更具体的错误码由 `sqlite3_step()` 直接返回。
+> 推荐使用 "vX" 接口。
 
 ---
 
-## Determine If A Prepared Statement Has Been Reset
+## 判断预编译语句是否已被重置（Determine If A Prepared Statement Has Been Reset）
 
 ```
-
 int sqlite3_stmt_busy(sqlite3_stmt*);
-
 ```
 
-The sqlite3_stmt_busy(S) interface returns true (non-zero) if the
-prepared statement S has been stepped at least once using
-sqlite3_step(S) but has neither run to completion (returned
-SQLITE_DONE from sqlite3_step(S)) nor
-been reset using sqlite3_reset(S).  The sqlite3_stmt_busy(S)
-interface returns false if S is a NULL pointer.  If S is not a
-NULL pointer and is not a pointer to a valid prepared statement
-object, then the behavior is undefined and probably undesirable.
+`sqlite3_stmt_busy(S)` 接口：若预编译语句 S 已调用过 `sqlite3_step(S)` 至少一次、但既未运行到
+完成（`sqlite3_step(S)` 未返回 `SQLITE_DONE`）、也未用 `sqlite3_reset(S)` 重置，则返回真（非零）。
+若 S 是 NULL 指针，`sqlite3_stmt_busy(S)` 接口返回假。若 S 非 NULL 指针、但又不是指向有效预编译
+语句对象的指针，则行为未定义、且多半糟糕。
 
-This interface can be used in combination sqlite3_next_stmt()
-to locate all prepared statements associated with a database
-connection that are in need of being reset.  This can be used,
-for example, in diagnostic routines to search for prepared
-statements that are holding a transaction open.
+此接口可配合 `sqlite3_next_stmt()` 使用，找出与某个数据库连接关联的所有需要被重置的预编译语句。
+例如可用于诊断例程，搜索持有事务打开的预编译语句。
 
 ---
 
-## Change The EXPLAIN Setting For A Prepared Statement
+## 改变预编译语句的 EXPLAIN 设置（Change The EXPLAIN Setting For A Prepared Statement）
 
 ```
-
 int sqlite3_stmt_explain(sqlite3_stmt *pStmt, int eMode);
-
 ```
 
-The sqlite3_stmt_explain(S,E) interface changes the EXPLAIN
-setting for prepared statement S.  If E is zero, then S becomes
-a normal prepared statement.  If E is 1, then S behaves as if
-its SQL text began with "EXPLAIN".  If E is 2, then S behaves as if
-its SQL text began with "EXPLAIN QUERY PLAN".
+`sqlite3_stmt_explain(S,E)` 接口改变预编译语句 S 的 EXPLAIN 设置。若 E 为零，则 S 变成普通预编译
+语句。若 E 为 1，则 S 表现得仿佛其 SQL 文本以 "EXPLAIN" 开头。若 E 为 2，则 S 表现得仿佛其 SQL
+文本以 "EXPLAIN QUERY PLAN" 开头。
 
-Calling sqlite3_stmt_explain(S,E) might cause S to be reprepared.
-SQLite tries to avoid a reprepare, but a reprepare might be necessary
-on the first transition into EXPLAIN or EXPLAIN QUERY PLAN mode.
+调用 `sqlite3_stmt_explain(S,E)` 可能使 S 被重新准备。SQLite 尽量避免重新准备，但在第一次转入
+EXPLAIN 或 EXPLAIN QUERY PLAN 模式时可能必须重新准备。
 
-Because of the potential need to reprepare, a call to
-sqlite3_stmt_explain(S,E) will fail with SQLITE_ERROR if S cannot be
-reprepared because it was created using sqlite3_prepare() instead of
-the newer sqlite3_prepare_v2() or sqlite3_prepare_v3() interfaces and
-hence has no saved SQL text with which to reprepare.
+由于可能需要重新准备，若 S 因用 `sqlite3_prepare()` 而非较新的 `sqlite3_prepare_v2()` 或
+`sqlite3_prepare_v3()` 接口创建、因而没有用于重新准备的已保存 SQL 文本、无法重新准备，则对
+`sqlite3_stmt_explain(S,E)` 的调用会以 `SQLITE_ERROR` 失败。
 
-Changing the explain setting for a prepared statement does not change
-the original SQL text for the statement.  Hence, if the SQL text originally
-began with EXPLAIN or EXPLAIN QUERY PLAN, but sqlite3_stmt_explain(S,0)
-is called to convert the statement into an ordinary statement, the EXPLAIN
-or EXPLAIN QUERY PLAN keywords will still appear in the sqlite3_sql(S)
-output, even though the statement now acts like a normal SQL statement.
+改变预编译语句的 EXPLAIN 设置不改变该语句的原始 SQL 文本。因此，若 SQL 文本最初以 EXPLAIN 或
+EXPLAIN QUERY PLAN 开头，但调用了 `sqlite3_stmt_explain(S,0)` 把语句转换为普通语句，则 EXPLAIN
+或 EXPLAIN QUERY PLAN 关键字仍会出现在 `sqlite3_sql(S)` 输出中，尽管该语句现在表现得像普通 SQL
+语句。
 
-This routine returns SQLITE_OK if the explain mode is successfully
-changed, or an error code if the explain mode could not be changed.
-The explain mode cannot be changed while a statement is active.
-Hence, it is good practice to call sqlite3_reset(S)
-immediately prior to calling sqlite3_stmt_explain(S,E).
+若 EXPLAIN 模式被成功改变，此例程返回 `SQLITE_OK`；若无法改变，返回错误码。语句处于活动状态时
+不能改变 EXPLAIN 模式。因此，好的做法是在调用 `sqlite3_stmt_explain(S,E)` 之前立即调用
+`sqlite3_reset(S)`。
 
 ---
 
-## Query The EXPLAIN Setting For A Prepared Statement
+## 查询预编译语句的 EXPLAIN 设置（Query The EXPLAIN Setting For A Prepared Statement）
 
 ```
-
 int sqlite3_stmt_isexplain(sqlite3_stmt *pStmt);
-
 ```
 
-The sqlite3_stmt_isexplain(S) interface returns 1 if the
-prepared statement S is an EXPLAIN statement, or 2 if the
-statement S is an EXPLAIN QUERY PLAN.
-The sqlite3_stmt_isexplain(S) interface returns 0 if S is
-an ordinary statement or a NULL pointer.
+`sqlite3_stmt_isexplain(S)` 接口：若预编译语句 S 是 EXPLAIN 语句返回 1，若语句 S 是 EXPLAIN
+QUERY PLAN 返回 2。若 S 是普通语句或 NULL 指针，`sqlite3_stmt_isexplain(S)` 接口返回 0。
 
 ---
 
-## Determine If An SQL Statement Writes The Database
+## 判断 SQL 语句是否写数据库（Determine If An SQL Statement Writes The Database）
 
 ```
-
 int sqlite3_stmt_readonly(sqlite3_stmt *pStmt);
-
 ```
 
-The sqlite3_stmt_readonly(X) interface returns true (non-zero) if
-and only if the prepared statement X makes no direct changes to
-the content of the database file.
+`sqlite3_stmt_readonly(X)` 接口：当且仅当预编译语句 X 不直接改变数据库文件的内容时返回真（非零）。
 
-Note that application-defined SQL functions or
-virtual tables might change the database indirectly as a side effect.
-For example, if an application defines a function "eval()" that
-calls sqlite3_exec(), then the following SQL statement would
-change the database file through side-effects:
+注意：应用自定义的 SQL 函数或虚拟表可能作为副作用间接改变数据库。例如，若应用定义一个调用
+`sqlite3_exec()` 的函数 "eval()"，则以下 SQL 语句会通过副作用改变数据库文件：
 
 ```
-
 SELECT eval('DELETE FROM t1') FROM t2;
-
 ```
 
-But because the SELECT statement does not change the database file
-directly, sqlite3_stmt_readonly() would still return true.
+但因为 SELECT 语句不直接改变数据库文件，`sqlite3_stmt_readonly()` 仍会返回真。
 
-Transaction control statements such as BEGIN, COMMIT, ROLLBACK,
-SAVEPOINT, and RELEASE cause sqlite3_stmt_readonly() to return true,
-since the statements themselves do not actually modify the database but
-rather they control the timing of when other statements modify the
-database.  The ATTACH and DETACH statements also cause
-sqlite3_stmt_readonly() to return true since, while those statements
-change the configuration of a database connection, they do not make
-changes to the content of the database files on disk.
-The sqlite3_stmt_readonly() interface returns true for BEGIN since
-BEGIN merely sets internal flags, but the BEGIN IMMEDIATE and
-BEGIN EXCLUSIVE commands do touch the database and so
-sqlite3_stmt_readonly() returns false for those commands.
+BEGIN、COMMIT、ROLLBACK、SAVEPOINT 和 RELEASE 等事务控制语句会使 `sqlite3_stmt_readonly()`
+返回真，因为这些语句本身并不真正修改数据库，而是控制其它语句修改数据库的时机。ATTACH 和 DETACH
+语句也使 `sqlite3_stmt_readonly()` 返回真，因为虽然这些语句改变数据库连接的配置，却不改变磁盘
+上数据库文件的内容。`sqlite3_stmt_readonly()` 接口对 BEGIN 返回真，因为 BEGIN 只是设置内部标志；
+但 BEGIN IMMEDIATE 和 BEGIN EXCLUSIVE 命令确实会访问数据库文件（读取/写入或加锁），因此对这些
+命令 `sqlite3_stmt_readonly()` 返回假。
 
-This routine returns false if there is any possibility that the
-statement might change the database file.  A false return does
-not guarantee that the statement will change the database file.
-For example, an UPDATE statement might have a WHERE clause that
-makes it a no-op, but the sqlite3_stmt_readonly() result would still
-be false.  Similarly, a CREATE TABLE IF NOT EXISTS statement is a
-read-only no-op if the table already exists, but
-sqlite3_stmt_readonly() still returns false for such a statement.
+若语句有任何可能改变数据库文件，此例程返回假。返回假并不保证语句会改变数据库文件。例如，UPDATE
+语句的 WHERE 子句可能使其成为空操作，但 `sqlite3_stmt_readonly()` 结果仍为假。类似地，CREATE
+TABLE IF NOT EXISTS 语句在表已存在时是只读空操作，但对这样的语句 `sqlite3_stmt_readonly()` 仍
+返回假。
 
-If prepared statement X is an EXPLAIN or EXPLAIN QUERY PLAN
-statement, then sqlite3_stmt_readonly(X) returns the same value as
-if the EXPLAIN or EXPLAIN QUERY PLAN prefix were omitted.
+若预编译语句 X 是 EXPLAIN 或 EXPLAIN QUERY PLAN 语句，则 `sqlite3_stmt_readonly(X)` 返回与省略
+EXPLAIN 或 EXPLAIN QUERY PLAN 前缀时相同的值。
 
 ---
 
-## Zero Scan-Status Counters
+## 清零扫描状态计数器（Zero Scan-Status Counters）
 
 ```
-
 void sqlite3_stmt_scanstatus_reset(sqlite3_stmt*);
-
 ```
 
-Zero all sqlite3_stmt_scanstatus() related event counters.
+清零所有与 `sqlite3_stmt_scanstatus()` 相关的事件计数器。
 
-This API is only available if the library is built with pre-processor
-symbol SQLITE_ENABLE_STMT_SCANSTATUS defined.
+此 API 仅在库用预处理器符号 `SQLITE_ENABLE_STMT_SCANSTATUS` 定义构建时可用。
 
 ---
 
-## Prepared Statement Status
+## 预编译语句状态（Prepared Statement Status）
 
 ```
+
+## 预编译语句状态（Prepared Statement Status）
 
 int sqlite3_stmt_status(sqlite3_stmt*, int op,int resetFlg);
-
 ```
 
-Each prepared statement maintains various
-SQLITE_STMTSTATUS counters that measure the number
-of times it has performed specific operations.  These counters can
-be used to monitor the performance characteristics of the prepared
-statements.  For example, if the number of table steps greatly exceeds
-the number of table searches or result rows, that would tend to indicate
-that the prepared statement is using a full table scan rather than
-an index.
+每条预编译语句维护各种 `SQLITE_STMTSTATUS` 计数器，测量它执行特定操作的次数。这些计数器可用于
+监控预编译语句的性能特征。例如，若表步进次数远远超过表搜索次数或结果行数，则往往表明该预编译
+语句在做全表扫描而非使用索引。
 
-This interface is used to retrieve and reset counter values from
-a prepared statement.  The first argument is the prepared statement
-object to be interrogated.  The second argument
-is an integer code for a specific SQLITE_STMTSTATUS counter
-to be interrogated.
-The current value of the requested counter is returned.
-If the resetFlg is true, then the counter is reset to zero after this
-interface call returns.
+此接口用于从预编译语句取回和重置计数器值。第一个参数是要查询的预编译语句对象。第二个参数是要
+查询的特定 `SQLITE_STMTSTATUS` 计数器的整数代码。返回所请求计数器的当前值。若 resetFlg 为真，
+则此接口调用返回后计数器被重置为零。
 
-See also: sqlite3_status() and sqlite3_db_status().
+另见：sqlite3_status() 和 sqlite3_db_status()。
 
 ---
 
-## Create A New Dynamic String Object
+## 创建新的动态字符串对象（Create A New Dynamic String Object）
 
 ```
-
 sqlite3_str *sqlite3_str_new(sqlite3*);
-
 ```
 
-The sqlite3_str_new(D) interface allocates and initializes
-a new sqlite3_str object.  To avoid memory leaks, the object returned by
-sqlite3_str_new() must be freed by a subsequent call to
-sqlite3_str_finish(X).
+`sqlite3_str_new(D)` 接口分配并初始化一个新的 sqlite3_str 对象。为避免内存泄漏，
+`sqlite3_str_new()` 返回的对象必须由随后的 `sqlite3_str_finish(X)` 调用释放。
 
-The sqlite3_str_new(D) interface always returns a pointer to a
-valid sqlite3_str object, though in the event of an out-of-memory
-error the returned object might be a special singleton that will
-silently reject new text, always return SQLITE_NOMEM from
-sqlite3_str_errcode(), always return 0 for
-sqlite3_str_length(), and always return NULL from
-sqlite3_str_finish(X).  It is always safe to use the value
-returned by sqlite3_str_new(D) as the sqlite3_str parameter
-to any of the other sqlite3_str methods.
+`sqlite3_str_new(D)` 接口总是返回指向有效 sqlite3_str 对象的指针；不过若发生内存不足错误，返回
+的对象可能是特殊的单例对象，它会静默拒绝新文本、总是从 `sqlite3_str_errcode()` 返回
+`SQLITE_NOMEM`、总是为 `sqlite3_str_length()` 返回 0、总是从 `sqlite3_str_finish(X)` 返回 NULL。
+把 `sqlite3_str_new(D)` 返回的值用作任何其它 sqlite3_str 方法的 sqlite3_str 参数总是安全的。
 
-The D parameter to sqlite3_str_new(D) may be NULL.  If the
-D parameter in sqlite3_str_new(D) is not NULL, then the maximum
-length of the string contained in the sqlite3_str object will be
-the value set for sqlite3_limit(D,SQLITE_LIMIT_LENGTH) instead
-of SQLITE_MAX_LENGTH.
+`sqlite3_str_new(D)` 的 D 参数可以是 NULL。若 `sqlite3_str_new(D)` 的 D 参数非 NULL，则
+sqlite3_str 对象中包含的字符串的最大长度将是 `sqlite3_limit(D,SQLITE_LIMIT_LENGTH)` 设置的值，
+而不是 `SQLITE_MAX_LENGTH`。
 
 ---
 
-## String Globbing
+## 字符串 GLOB 匹配（String Globbing）
 
 ```
-
 int sqlite3_strglob(const char *zGlob, const char *zStr);
-
 ```
 
-The sqlite3_strglob(P,X) interface returns zero if and only if
-string X matches the GLOB pattern P.
-The definition of GLOB pattern matching used in
-sqlite3_strglob(P,X) is the same as for the "X GLOB P" operator in the
-SQL dialect understood by SQLite.  The sqlite3_strglob(P,X) function
-is case sensitive.
+`sqlite3_strglob(P,X)` 接口：当且仅当字符串 X 匹配 GLOB 模式 P 时返回零。`sqlite3_strglob(P,X)`
+使用的 GLOB 模式匹配定义与 SQLite 理解的 SQL 方言中 "X GLOB P" 算子相同。`sqlite3_strglob(P,X)`
+函数区分大小写。
 
-Note that this routine returns zero on a match and non-zero if the strings
-do not match, the same as sqlite3_stricmp() and sqlite3_strnicmp().
+注意：此例程在匹配时返回零、字符串不匹配时返回非零，与 `sqlite3_stricmp()` 和 `sqlite3_strnicmp()`
+相同。
 
-See also: sqlite3_strlike().
+另见：sqlite3_strlike()。
 
 ---
 
-## String LIKE Matching
+## 字符串 LIKE 匹配（String LIKE Matching）
 
 ```
-
 int sqlite3_strlike(const char *zGlob, const char *zStr, unsigned int cEsc);
-
 ```
 
-The sqlite3_strlike(P,X,E) interface returns zero if and only if
-string X matches the LIKE pattern P with escape character E.
-The definition of LIKE pattern matching used in
-sqlite3_strlike(P,X,E) is the same as for the "X LIKE P ESCAPE E"
-operator in the SQL dialect understood by SQLite.  For "X LIKE P" without
-the ESCAPE clause, set the E parameter of sqlite3_strlike(P,X,E) to 0.
-As with the LIKE operator, the sqlite3_strlike(P,X,E) function is case
-insensitive - equivalent upper and lower case ASCII characters match
-one another.
+`sqlite3_strlike(P,X,E)` 接口：当且仅当字符串 X 匹配带转义字符 E 的 LIKE 模式 P 时返回零。
+`sqlite3_strlike(P,X,E)` 使用的 LIKE 模式匹配定义与 SQLite 理解的 SQL 方言中 "X LIKE P ESCAPE E"
+算子相同。对于不带 ESCAPE 子句的 "X LIKE P"，把 `sqlite3_strlike(P,X,E)` 的 E 参数设为 0。与
+LIKE 算子一样，`sqlite3_strlike(P,X,E)` 函数不区分大小写——等价的大写和小写 ASCII 字符互相匹配。
 
-The sqlite3_strlike(P,X,E) function matches Unicode characters, though
-only ASCII characters are case folded.
+`sqlite3_strlike(P,X,E)` 函数匹配 Unicode 字符，但只有 ASCII 字符做大小写折叠。
 
-Note that this routine returns zero on a match and non-zero if the strings
-do not match, the same as sqlite3_stricmp() and sqlite3_strnicmp().
+注意：此例程在匹配时返回零、字符串不匹配时返回非零，与 `sqlite3_stricmp()` 和 `sqlite3_strnicmp()`
+相同。
 
-See also: sqlite3_strglob().
+另见：sqlite3_strglob()。
 
 ---
 
-## Low-level system error code
+## 底层系统错误码（Low-level system error code）
 
 ```
-
 int sqlite3_system_errno(sqlite3*);
-
 ```
 
-Attempt to return the underlying operating system error code or error
-number that caused the most recent I/O error or failure to open a file.
-The return value is OS-dependent.  For example, on unix systems, after
-sqlite3_open_v2() returns SQLITE_CANTOPEN, this interface could be
-called to get back the underlying "errno" that caused the problem, such
-as ENOSPC, EAUTH, EISDIR, and so forth.
+尝试返回导致最近一次 I/O 错误或打开文件失败的底层操作系统错误码或错误号。返回值取决于操作系统。
+例如，在 unix 系统上，`sqlite3_open_v2()` 返回 `SQLITE_CANTOPEN` 之后，可调用此接口取回导致
+问题的底层 "errno"，如 ENOSPC、EAUTH、EISDIR 等。
 
 ---
 
-## Extract Metadata About A Column Of A Table
+## 提取表列的元数据（Extract Metadata About A Column Of A Table）
 
 ```
-
 int sqlite3_table_column_metadata(
-  sqlite3 *db,                /* Connection handle */
-  const char *zDbName,        /* Database name or NULL */
-  const char *zTableName,     /* Table name */
-  const char *zColumnName,    /* Column name */
-  char const **pzDataType,    /* OUTPUT: Declared data type */
-  char const **pzCollSeq,     /* OUTPUT: Collation sequence name */
-  int *pNotNull,              /* OUTPUT: True if NOT NULL constraint exists */
-  int *pPrimaryKey,           /* OUTPUT: True if column part of PK */
-  int *pAutoinc               /* OUTPUT: True if column is auto-increment */
+  sqlite3 *db,                /* 连接句柄 */
+  const char *zDbName,        /* 数据库名或 NULL */
+  const char *zTableName,     /* 表名 */
+  const char *zColumnName,    /* 列名 */
+  char const **pzDataType,    /* 输出：声明的数据类型 */
+  char const **pzCollSeq,     /* 输出：排序规则名 */
+  int *pNotNull,              /* 输出：存在 NOT NULL 约束则为真 */
+  int *pPrimaryKey,           /* 输出：列为 PK 一部分则为真 */
+  int *pAutoinc               /* 输出：列为自增则为真 */
 );
-
 ```
 
-The sqlite3_table_column_metadata(X,D,T,C,....) routine returns
-information about column C of table T in database D
-on database connection X.  The sqlite3_table_column_metadata()
-interface returns SQLITE_OK and fills in the non-NULL pointers in
-the final five arguments with appropriate values if the specified
-column exists.  The sqlite3_table_column_metadata() interface returns
-SQLITE_ERROR if the specified column does not exist.
-If the column-name parameter to sqlite3_table_column_metadata() is a
-NULL pointer, then this routine simply checks for the existence of the
-table and returns SQLITE_OK if the table exists and SQLITE_ERROR if it
-does not.  If the table name parameter T in a call to
-sqlite3_table_column_metadata(X,D,T,C,...) is NULL then the result is
-undefined behavior.
+`sqlite3_table_column_metadata(X,D,T,C,....)` 例程返回数据库连接 X 上、数据库 D 中、表 T 的
+列 C 的信息。若指定列存在，`sqlite3_table_column_metadata()` 接口返回 `SQLITE_OK`，并用适当值
+填充最后五个参数中的非 NULL 指针。若指定列不存在，`sqlite3_table_column_metadata()` 接口返回
+`SQLITE_ERROR`。若传给 `sqlite3_table_column_metadata()` 的列名参数是 NULL 指针，则此例程只
+检查表是否存在：表存在返回 `SQLITE_OK`，不存在返回 `SQLITE_ERROR`。若调用
+`sqlite3_table_column_metadata(X,D,T,C,...)` 时表名参数 T 是 NULL，则结果未定义。
 
-The column is identified by the second, third and fourth parameters to
-this function. The second parameter is either the name of the database
-(i.e. "main", "temp", or an attached database) containing the specified
-table or NULL. If it is NULL, then all attached databases are searched
-for the table using the same algorithm used by the database engine to
-resolve unqualified table references.
+列由此函数的第二、三、四个参数标识。第二个参数要么是包含指定表的数据库名（即 "main"、"temp"
+或附加数据库），要么是 NULL。若为 NULL，则用数据库引擎解析非限定表引用所用的同一算法在所有
+附加数据库中搜索该表。
 
-The third and fourth parameters to this function are the table and column
-name of the desired column, respectively.
+此函数的第三和第四个参数分别是所需列的表名和列名。
 
-Metadata is returned by writing to the memory locations passed as the 5th
-and subsequent parameters to this function. Any of these arguments may be
-NULL, in which case the corresponding element of metadata is omitted.
+元数据通过写入作为此函数第 5 个及后续参数传入的内存位置返回。其中任何参数都可为 NULL，此时省略
+元数据的对应元素。
 
- Parameter  Output
-Type   Description
+| 参数 | 输出类型 | 说明 |
+|------|----------|------|
+| 5th | const char* | 数据类型 |
+| 6th | const char* | 默认排序规则名 |
+| 7th | int | 列是否有 NOT NULL 约束 |
+| 8th | int | 列是否为主键一部分 |
+| 9th | int | 列是否自增（AUTOINCREMENT） |
 
- 5th  const char*  Data type
- 6th  const char*  Name of default collation sequence
- 7th  int          True if column has a NOT NULL constraint
- 8th  int          True if column is part of the PRIMARY KEY
- 9th  int          True if column is AUTOINCREMENT
+为声明类型和排序规则返回的字符指针指向的内存，在下一次调用任何 SQLite API 函数之前有效。
 
-The memory pointed to by the character pointers returned for the
-declaration type and collation sequence is valid until the next
-call to any SQLite API function.
+若指定表实际上是视图，则返回错误码。
 
-If the specified table is actually a view, an error code is returned.
-
-If the specified column is "rowid", "oid" or "_rowid_" and the table
-is not a WITHOUT ROWID table and an
-INTEGER PRIMARY KEY column has been explicitly declared, then the output
-parameters are set for the explicitly declared column. If there is no
-INTEGER PRIMARY KEY column, then the outputs
-for the rowid are set as follows:
+若指定列是 "rowid"、"oid" 或 "_rowid_"，且表不是 WITHOUT ROWID 表、并已显式声明 INTEGER PRIMARY
+KEY 列，则输出参数为显式声明的列设置。若没有 INTEGER PRIMARY KEY 列，则 rowid 的输出设置如下：
 
 ```
-
 data type: "INTEGER"
 collation sequence: "BINARY"
 not null: 0
 primary key: 1
 auto increment: 0
-
 ```
 
-This function causes all database schemas to be read from disk and
-parsed, if that has not already been done, and returns an error if
-any errors are encountered while loading the schema.
+此函数导致所有数据库 schema 从磁盘读取并解析（若尚未完成此操作），并在加载 schema 时遇到任何
+错误则返回错误。
 
 ---
 
-## Testing Interface
+## 测试接口（Testing Interface）
 
 ```
-
 int sqlite3_test_control(int op, ...);
-
 ```
 
-The sqlite3_test_control() interface is used to read out internal
-state of SQLite and to inject faults into SQLite for testing
-purposes.  The first parameter is an operation code that determines
-the number, meaning, and operation of all subsequent parameters.
+`sqlite3_test_control()` 接口用于读取 SQLite 的内部状态，并出于测试目的向 SQLite 注入故障。
+第一个参数是一个操作码，决定所有后续参数的数量、含义和操作。
 
-This interface is not for use by applications.  It exists solely
-for verifying the correct operation of the SQLite library.  Depending
-on how the SQLite library is compiled, this interface might not exist.
+此接口不供应用使用。它只用于验证 SQLite 库的正确运行。取决于 SQLite 库的编译方式，此接口可能
+不存在。
 
-The details of the operation codes, their meanings, the parameters
-they take, and what they do are all subject to change without notice.
-Unlike most of the SQLite API, this function is not guaranteed to
-operate consistently from one release to the next.
+操作码的细节、它们的含义、它们接受的参数以及它们做什么，都可能随时更改而无需通知。与大多数
+SQLite API 不同，此函数不保证从一个版本到下一个版本一致运行。
 
 ---
 
-## Test To See If The Library Is Threadsafe
+## 测试库是否线程安全（Test To See If The Library Is Threadsafe）
 
 ```
-
 int sqlite3_threadsafe(void);
-
 ```
 
-The sqlite3_threadsafe() function returns zero if and only if
-SQLite was compiled with mutexing code omitted due to the
-SQLITE_THREADSAFE compile-time option being set to 0.
+`sqlite3_threadsafe()` 函数：当且仅当 SQLite 因 `SQLITE_THREADSAFE` 编译期选项设为 0 而省略了
+互斥锁代码时返回零。
 
-SQLite can be compiled with or without mutexes.  When
-the SQLITE_THREADSAFE C preprocessor macro is 1 or 2, mutexes
-are enabled and SQLite is threadsafe.  When the
-SQLITE_THREADSAFE macro is 0,
-the mutexes are omitted.  Without the mutexes, it is not safe
-to use SQLite concurrently from more than one thread.
+SQLite 可以带或不带互斥锁编译。当 `SQLITE_THREADSAFE` C 预处理宏为 1 或 2 时，互斥锁被启用，
+SQLite 是线程安全的。当宏为 0 时，互斥锁被省略。没有互斥锁，从多个线程并发使用 SQLite 是不
+安全的。
 
-Enabling mutexes incurs a measurable performance penalty.
-So if speed is of utmost importance, it makes sense to disable
-the mutexes.  But for maximum safety, mutexes should be enabled.
-The default behavior is for mutexes to be enabled.
+启用互斥锁会带来可衡量的性能损失。因此若速度至关重要，禁用互斥锁是合理的。但为最大安全，应
+启用互斥锁。默认行为是启用互斥锁。
 
-This interface can be used by an application to make sure that the
-version of SQLite that it is linking against was compiled with
-the desired setting of the SQLITE_THREADSAFE macro.
+应用可用此接口确认它链接的 SQLite 版本是按 `SQLITE_THREADSAFE` 宏的理想设置编译的。
 
-This interface only reports on the compile-time mutex setting
-of the SQLITE_THREADSAFE flag.  If SQLite is compiled with
-SQLITE_THREADSAFE=1 or =2 then mutexes are enabled by default but
-can be fully or partially disabled using a call to sqlite3_config()
-with the verbs SQLITE_CONFIG_SINGLETHREAD, SQLITE_CONFIG_MULTITHREAD,
-or SQLITE_CONFIG_SERIALIZED.  The return value of the
-sqlite3_threadsafe() function shows only the compile-time setting of
-thread safety, not any run-time changes to that setting made by
-sqlite3_config(). In other words, the return value from sqlite3_threadsafe()
-is unchanged by calls to sqlite3_config().
+此接口只报告 `SQLITE_THREADSAFE` 标志的编译期互斥锁设置。若 SQLite 用 `SQLITE_THREADSAFE=1`
+或 =2 编译，则互斥锁默认启用，但可以用 `sqlite3_config()` 配合 `SQLITE_CONFIG_SINGLETHREAD`、
+`SQLITE_CONFIG_MULTITHREAD` 或 `SQLITE_CONFIG_SERIALIZED` 动词完全或部分禁用。
+`sqlite3_threadsafe()` 函数的返回值只显示线程安全的编译期设置，不显示 `sqlite3_config()` 对该
+设置所做的任何运行时更改。换句话说，`sqlite3_threadsafe()` 的返回值不受对 `sqlite3_config()`
+调用的影响。
 
-See the threading mode documentation for additional information.
+更多信息见线程模式文档。
 
 ---
 
-## SQL Trace Hook
+## SQL 跟踪钩子（SQL Trace Hook）
 
 ```
-
 int sqlite3_trace_v2(
   sqlite3*,
   unsigned uMask,
   int(*xCallback)(unsigned,void*,void*,void*),
   void *pCtx
 );
-
 ```
 
-The sqlite3_trace_v2(D,M,X,P) interface registers a trace callback
-function X against database connection D, using property mask M
-and context pointer P.  If the X callback is
-NULL or if the M mask is zero, then tracing is disabled.  The
-M argument should be the bitwise OR-ed combination of
-zero or more SQLITE_TRACE constants.
+`sqlite3_trace_v2(D,M,X,P)` 接口对数据库连接 D 注册跟踪回调函数 X，使用属性掩码 M 和上下文
+指针 P。若 X 回调是 NULL 或 M 掩码为零，则禁用跟踪。M 参数应是零个或多个 `SQLITE_TRACE` 常量
+的按位 OR 组合。
 
-Each call to either sqlite3_trace(D,X,P) or sqlite3_trace_v2(D,M,X,P)
-overrides (cancels) all prior calls to sqlite3_trace(D,X,P) or
-sqlite3_trace_v2(D,M,X,P) for the database connection D.  Each
-database connection may have at most one trace callback.
+对 `sqlite3_trace(D,X,P)` 或 `sqlite3_trace_v2(D,M,X,P)` 的每次调用都会覆盖（取消）对数据库
+连接 D 先前所有 `sqlite3_trace(D,X,P)` 或 `sqlite3_trace_v2(D,M,X,P)` 调用。每个数据库连接
+最多有一个跟踪回调。
 
-The X callback is invoked whenever any of the events identified by
-mask M occur.  The integer return value from the callback is currently
-ignored, though this may change in future releases.  Callback
-implementations should return zero to ensure future compatibility.
+每当掩码 M 标识的任一事件发生时调用 X 回调。回调的整数返回值当前被忽略，但未来版本可能改变。
+回调实现应返回零以保证未来兼容。
 
-A trace callback is invoked with four arguments: callback(T,C,P,X).
-The T argument is one of the SQLITE_TRACE
-constants to indicate why the callback was invoked.
-The C argument is a copy of the context pointer.
-The P and X arguments are pointers whose meanings depend on T.
+跟踪回调以四个参数调用：callback(T,C,P,X)。T 参数是 `SQLITE_TRACE` 常量之一，指示回调被调用
+的原因。C 参数是上下文指针的副本。P 和 X 参数是指针，其含义取决于 T。
 
-The sqlite3_trace_v2() interface is intended to replace the legacy
-interfaces sqlite3_trace() and sqlite3_profile(), both of which
-are deprecated.
+## SQL 跟踪钩子
+
+每个数据库连接最多有一个跟踪回调。
+
+每当掩码 M 标识的任一事件发生时调用 X 回调。回调的整数返回值当前被忽略，但未来版本可能改变。
+回调实现应返回零以保证未来兼容。
+
+跟踪回调以四个参数调用：callback(T,C,P,X)。T 参数是 `SQLITE_TRACE` 常量之一，指示回调被调用
+的原因。C 参数是上下文指针的副本。P 和 X 参数是指针，其含义取决于 T。
+
+`sqlite3_trace_v2()` 接口旨在取代传统接口 `sqlite3_trace()` 和 `sqlite3_profile()`，两者均已
+废弃。
 
 ---
 
-## Determine the transaction state of a database
+## 确定数据库的事务状态（Determine the transaction state of a database）
 
 ```
-
 int sqlite3_txn_state(sqlite3*,const char *zSchema);
-
 ```
 
-The sqlite3_txn_state(D,S) interface returns the current
-transaction state of schema S in database connection D.  If S is NULL,
-then the highest transaction state of any schema on database connection D
-is returned.  Transaction states are (in order of lowest to highest):
+`sqlite3_txn_state(D,S)` 接口返回数据库连接 D 中 schema S 的当前事务状态。若 S 是 NULL，则返回
+数据库连接 D 上任何 schema 的最高事务状态。事务状态（从低到高）为：
 
-1.  SQLITE_TXN_NONE
+1. `SQLITE_TXN_NONE`
+2. `SQLITE_TXN_READ`
+3. `SQLITE_TXN_WRITE`
 
-2.  SQLITE_TXN_READ
-
-3.  SQLITE_TXN_WRITE
-
-If the S argument to sqlite3_txn_state(D,S) is not the name of
-a valid schema, then -1 is returned.
+若 `sqlite3_txn_state(D,S)` 的 S 参数不是有效 schema 的名字，则返回 -1。
 
 ---
 
-## Unlock Notification
+## 解锁通知（Unlock Notification）
 
 ```
-
 int sqlite3_unlock_notify(
-  sqlite3 *pBlocked,                          /* Waiting connection */
-  void (*xNotify)(void **apArg, int nArg),    /* Callback function to invoke */
-  void *pNotifyArg                            /* Argument to pass to xNotify */
+  sqlite3 *pBlocked,                          /* 等待中的连接 */
+  void (*xNotify)(void **apArg, int nArg),    /* 要调用的回调函数 */
+  void *pNotifyArg                            /* 传给 xNotify 的参数 */
 );
-
 ```
 
-When running in shared-cache mode, a database operation may fail with
-an SQLITE_LOCKED error if the required locks on the shared-cache or
-individual tables within the shared-cache cannot be obtained. See
-SQLite Shared-Cache Mode for a description of shared-cache locking.
-This API may be used to register a callback that SQLite will invoke
-when the connection currently holding the required lock relinquishes it.
-This API is only available if the library was compiled with the
-SQLITE_ENABLE_UNLOCK_NOTIFY C-preprocessor symbol defined.
+在共享缓存模式下运行，若无法取得共享缓存或其内单个表上所需的锁，数据库操作可能以 `SQLITE_LOCKED`
+错误失败。共享缓存锁定的描述见 SQLite Shared-Cache Mode。此 API 可用于注册一个回调：当当前持有
+所需锁的连接放弃该锁时，SQLite 会调用该回调。此 API 仅在库用 `SQLITE_ENABLE_UNLOCK_NOTIFY`
+C 预处理器符号定义编译时可用。
 
-See Also: Using the SQLite Unlock Notification Feature.
+另见：使用 SQLite 解锁通知特性。
 
-Shared-cache locks are released when a database connection concludes
-its current transaction, either by committing it or rolling it back.
+共享缓存锁在数据库连接结束当前事务（无论是提交还是回滚）时释放。
 
-When a connection (known as the blocked connection) fails to obtain a
-shared-cache lock and SQLITE_LOCKED is returned to the caller, the
-identity of the database connection (the blocking connection) that
-has locked the required resource is stored internally. After an
-application receives an SQLITE_LOCKED error, it may call the
-sqlite3_unlock_notify() method with the blocked connection handle as
-the first argument to register for a callback that will be invoked
-when the blocking connection's current transaction is concluded. The
-callback is invoked from within the sqlite3_step or sqlite3_close
-call that concludes the blocking connection's transaction.
+当连接（称为被阻塞连接）无法取得共享缓存锁、向调用者返回 `SQLITE_LOCKED` 时，已锁定所需资源的
+数据库连接（阻塞连接）的身份被内部存储。应用收到 `SQLITE_LOCKED` 错误后，可用被阻塞连接句柄
+作为第一个参数调用 `sqlite3_unlock_notify()` 方法注册回调，该回调将在阻塞连接的当前事务结束时
+被调用。回调在结束阻塞连接事务的 `sqlite3_step` 或 `sqlite3_close` 调用内部被调用。
 
-If sqlite3_unlock_notify() is called in a multi-threaded application,
-there is a chance that the blocking connection will have already
-concluded its transaction by the time sqlite3_unlock_notify() is invoked.
-If this happens, then the specified callback is invoked immediately,
-from within the call to sqlite3_unlock_notify().
+若在多线程应用中调用 `sqlite3_unlock_notify()`，则调用 `sqlite3_unlock_notify()` 时阻塞连接
+可能已经结束其事务。若发生这种情况，则从 `sqlite3_unlock_notify()` 调用内部立即调用指定回调。
 
-If the blocked connection is attempting to obtain a write-lock on a
-shared-cache table, and more than one other connection currently holds
-a read-lock on the same table, then SQLite arbitrarily selects one of
-the other connections to use as the blocking connection.
+若被阻塞连接试图取得共享缓存表的写锁，且当前有不止一个其它连接持有同一表的读锁，则 SQLite
+任意选择其中一个连接作为阻塞连接。
 
-There may be at most one unlock-notify callback registered by a
-blocked connection. If sqlite3_unlock_notify() is called when the
-blocked connection already has a registered unlock-notify callback,
-then the new callback replaces the old. If sqlite3_unlock_notify() is
-called with a NULL pointer as its second argument, then any existing
-unlock-notify callback is canceled. The blocked connection's
-unlock-notify callback may also be canceled by closing the blocked
-connection using sqlite3_close().
+被阻塞连接最多可注册一个解锁通知回调。若在被阻塞连接已注册解锁通知回调时调用
+`sqlite3_unlock_notify()`，则新回调取代旧回调。若以 NULL 指针作为第二个参数调用
+`sqlite3_unlock_notify()`，则取消任何现有的解锁通知回调。被阻塞连接的解锁通知回调也可通过用
+`sqlite3_close()` 关闭被阻塞连接来取消。
 
-The unlock-notify callback is not reentrant. If an application invokes
-any sqlite3_xxx API functions from within an unlock-notify callback, a
-crash or deadlock may be the result.
+解锁通知回调不可重入。若应用从解锁通知回调内部调用任何 sqlite3_xxx API 函数，可能导致崩溃或
+死锁。
 
-Unless deadlock is detected (see below), sqlite3_unlock_notify() always
-returns SQLITE_OK.
+除非检测到死锁（见下），`sqlite3_unlock_notify()` 总是返回 `SQLITE_OK`。
 
-Callback Invocation Details
+**回调调用细节**
 
-When an unlock-notify callback is registered, the application provides a
-single void* pointer that is passed to the callback when it is invoked.
-However, the signature of the callback function allows SQLite to pass
-it an array of void* context pointers. The first argument passed to
-an unlock-notify callback is a pointer to an array of void* pointers,
-and the second is the number of entries in the array.
+注册解锁通知回调时，应用提供单个 void\* 指针，回调被调用时传入该指针。但回调函数的签名允许
+SQLite 传入一个 void\* 上下文指针数组。传给解锁通知回调的第一个参数是指向 void\* 指针数组的
+指针，第二个参数是数组中的条目数。
 
-When a blocking connection's transaction is concluded, there may be
-more than one blocked connection that has registered for an unlock-notify
-callback. If two or more such blocked connections have specified the
-same callback function, then instead of invoking the callback function
-multiple times, it is invoked once with the set of void* context pointers
-specified by the blocked connections bundled together into an array.
-This gives the application an opportunity to prioritize any actions
-related to the set of unblocked database connections.
+阻塞连接的事务结束时，可能有不止一个被阻塞连接注册了解锁通知回调。若两个或多个这样的被阻塞
+连接指定了同一个回调函数，则不多次调用该回调函数，而是调用一次，并把被阻塞连接指定的 void\*
+上下文指针集合捆绑成数组传入。这给应用一个机会，对被解锁的数据库连接集合相关的任何操作排定
+优先级。
 
-Deadlock Detection
+**死锁检测**
 
-Assuming that after registering for an unlock-notify callback a
-database waits for the callback to be issued before taking any further
-action (a reasonable assumption), then using this API may cause the
-application to deadlock. For example, if connection X is waiting for
-connection Y's transaction to be concluded, and similarly connection
-Y is waiting on connection X's transaction, then neither connection
-will proceed and the system may remain deadlocked indefinitely.
+假设注册解锁通知回调后，数据库在采取任何进一步动作之前等待回调发出（一个合理假设），则使用此
+API 可能导致应用死锁。例如，若连接 X 在等待连接 Y 的事务结束，同时连接 Y 也在等待连接 X 的
+事务，则两个连接都不会继续，系统可能无限期死锁。
 
-To avoid this scenario, the sqlite3_unlock_notify() performs deadlock
-detection. If a given call to sqlite3_unlock_notify() would put the
-system in a deadlocked state, then SQLITE_LOCKED is returned and no
-unlock-notify callback is registered. The system is said to be in
-a deadlocked state if connection A has registered for an unlock-notify
-callback on the conclusion of connection B's transaction, and connection
-B has itself registered for an unlock-notify callback when connection
-A's transaction is concluded. Indirect deadlock is also detected, so
-the system is also considered to be deadlocked if connection B has
-registered for an unlock-notify callback on the conclusion of connection
-C's transaction, where connection C is waiting on connection A. Any
-number of levels of indirection are allowed.
+为避免这种情形，`sqlite3_unlock_notify()` 执行死锁检测。若某次对 `sqlite3_unlock_notify()`
+的调用会使系统进入死锁状态，则返回 `SQLITE_LOCKED`、不注册解锁通知回调。若连接 A 在连接 B 的
+事务结束时注册了解锁通知回调，且连接 B 自己在连接 A 的事务结束时注册了解锁通知回调，则称系统
+处于死锁状态。间接死锁也会被检测到：若连接 B 在连接 C 的事务结束时注册了解锁通知回调，而连接 C
+在等待连接 A，则系统也被视为死锁。允许任意层数的间接。
 
-The "DROP TABLE" Exception
+**"DROP TABLE" 例外**
 
-When a call to sqlite3_step() returns SQLITE_LOCKED, it is almost
-always appropriate to call sqlite3_unlock_notify(). There is however,
-one exception. When executing a "DROP TABLE" or "DROP INDEX" statement,
-SQLite checks if there are any currently executing SELECT statements
-that belong to the same connection. If there are, SQLITE_LOCKED is
-returned. In this case there is no "blocking connection", so invoking
-sqlite3_unlock_notify() results in the unlock-notify callback being
-invoked immediately. If the application then re-attempts the "DROP TABLE"
-or "DROP INDEX" query, an infinite loop might be the result.
+当对 `sqlite3_step()` 的调用返回 `SQLITE_LOCKED` 时，调用 `sqlite3_unlock_notify()` 几乎总是
+适当的。但有一个例外。执行 "DROP TABLE" 或 "DROP INDEX" 语句时，SQLite 检查是否有任何属于同一
+连接、当前正在执行的 SELECT 语句。若有，则返回 `SQLITE_LOCKED`。此时没有"阻塞连接"，因此调用
+`sqlite3_unlock_notify()` 会导致解锁通知回调被立即调用。若应用随后重试 "DROP TABLE" 或 "DROP
+INDEX" 查询，可能导致无限循环。
 
-One way around this problem is to check the extended error code returned
-by an sqlite3_step() call. If there is a blocking connection, then the
-extended error code is set to SQLITE_LOCKED_SHAREDCACHE. Otherwise, in
-the special "DROP TABLE/INDEX" case, the extended error code is just
-SQLITE_LOCKED.
+解决此问题的一个方法是检查 `sqlite3_step()` 调用返回的扩展错误码。若有阻塞连接，则扩展错误码被
+设为 `SQLITE_LOCKED_SHAREDCACHE`。否则，在特殊的 "DROP TABLE/INDEX" 情形下，扩展错误码就是
+`SQLITE_LOCKED`。
 
 ---
 
-## Data Change Notification Callbacks
+## 数据变更通知回调（Data Change Notification Callbacks）
 
 ```
-
 void *sqlite3_update_hook(
   sqlite3*,
   void(*)(void *,int ,char const *,char const *,sqlite3_int64),
   void*
 );
-
 ```
 
-The sqlite3_update_hook() interface registers a callback function
-with the database connection identified by the first argument
-to be invoked whenever a row is updated, inserted or deleted in
-a rowid table.
-Any callback set by a previous call to this function
-for the same database connection is overridden.
+`sqlite3_update_hook()` 接口对第一个参数标识的数据库连接注册回调函数，每当 rowid 表中的行被
+更新、插入或删除时调用它。此函数先前对同一数据库连接设置的任何回调都被覆盖。
 
-The second argument is a pointer to the function to invoke when a
-row is updated, inserted or deleted in a rowid table.
-The update hook is disabled by invoking sqlite3_update_hook()
-with a NULL pointer as the second parameter.
-The first argument to the callback is a copy of the third argument
-to sqlite3_update_hook().
-The second callback argument is one of SQLITE_INSERT, SQLITE_DELETE,
-or SQLITE_UPDATE, depending on the operation that caused the callback
-to be invoked.
-The third and fourth arguments to the callback contain pointers to the
-database and table name containing the affected row.
-The final callback parameter is the rowid of the row.
-In the case of an update, this is the rowid after the update takes place.
+第二个参数是当 rowid 表中的行被更新、插入或删除时要调用的函数指针。用 NULL 指针作为第二个参数
+调用 `sqlite3_update_hook()` 会禁用更新钩子。回调的第一个参数是 `sqlite3_update_hook()` 第三个
+参数的副本。回调的第二个参数是 `SQLITE_INSERT`、`SQLITE_DELETE` 或 `SQLITE_UPDATE` 之一，取决
+于引起回调被调用的操作。回调的第三和第四个参数包含指向受影响行所在数据库名和表名的指针。回调的
+最后一个参数是行的 rowid。在更新的情况下，这是更新发生后的 rowid。
 
-The update hook is not invoked when internal system tables are
-modified (i.e. sqlite_sequence).
-The update hook is not invoked when WITHOUT ROWID tables are modified.
+修改内部系统表（即 sqlite_sequence）时不调用更新钩子。修改 WITHOUT ROWID 表时不调用更新钩子。
 
-In the current implementation, the update hook
-is not invoked when conflicting rows are deleted because of an
-ON CONFLICT REPLACE clause.  Nor is the update hook
-invoked when rows are deleted using the truncate optimization.
-The exceptions defined in this paragraph might change in a future
-release of SQLite.
+在当前实现中，因 ON CONFLICT REPLACE 子句而删除冲突行时不调用更新钩子。用 truncate 优化删除行时
+也不调用更新钩子。本段定义的例外可能在 SQLite 未来版本中改变。
 
-Whether the update hook is invoked before or after the
-corresponding change is currently unspecified and may differ
-depending on the type of change. Do not rely on the order of the
-hook call with regards to the final result of the operation which
-triggers the hook.
+更新钩子是在相应变更之前还是之后被调用，目前未指定，可能因变更类型而异。不要依赖钩子调用相对触发
+钩子的操作最终结果的顺序。
 
-The update hook implementation must not do anything that will modify
-the database connection that invoked the update hook.  Any actions
-to modify the database connection must be deferred until after the
-completion of the sqlite3_step() call that triggered the update hook.
-Note that sqlite3_prepare_v2() and sqlite3_step() both modify their
-database connections for the meaning of "modify" in this paragraph.
+更新钩子实现不得做任何会修改调用它的数据库连接的事情。任何修改数据库连接的动作必须推迟到触发
+更新钩子的 `sqlite3_step()` 调用完成之后。注意：就本段中的"修改"而言，`sqlite3_prepare_v2()`
+和 `sqlite3_step()` 都会修改它们的数据库连接。
 
-The sqlite3_update_hook(D,C,P) function
-returns the P argument from the previous call
-on the same database connection D, or NULL for
-the first call on D.
+`sqlite3_update_hook(D,C,P)` 函数返回同一数据库连接 D 上先前调用的 P 参数；若是对 D 的第一次
+调用，则返回 NULL。
 
-See also the sqlite3_commit_hook(), sqlite3_rollback_hook(),
-and sqlite3_preupdate_hook() interfaces.
+另见 sqlite3_commit_hook()、sqlite3_rollback_hook() 和 sqlite3_preupdate_hook() 接口。
 
 ---
 
-## User Data For Functions
+## 函数的用户数据（User Data For Functions）
 
 ```
-
 void *sqlite3_user_data(sqlite3_context*);
-
 ```
 
-The sqlite3_user_data() interface returns a copy of
-the pointer that was the pUserData parameter (the 5th parameter)
-of the sqlite3_create_function()
-and sqlite3_create_function16() routines that originally
-registered the application defined function.
+`sqlite3_user_data()` 接口返回指针的副本，即最初注册该应用自定义函数的 `sqlite3_create_function()`
+和 `sqlite3_create_function16()` 例程的 pUserData 参数（第 5 个参数）。
 
-This routine must be called from the same thread in which
-the application-defined function is running.
+此例程必须在应用自定义函数运行的同一线程中调用。
 
 ---
 
-## Report the internal text encoding state of an sqlite3_value object
+## 报告 sqlite3_value 对象的内部文本编码状态（Report the internal text encoding state of an sqlite3_value object）
 
 ```
-
 int sqlite3_value_encoding(sqlite3_value*);
-
 ```
 
-The sqlite3_value_encoding(X) interface returns one of SQLITE_UTF8,
-SQLITE_UTF16BE, or SQLITE_UTF16LE according to the current text encoding
-of the value X, assuming that X has type TEXT.  If sqlite3_value_type(X)
-returns something other than SQLITE_TEXT, then the return value from
-sqlite3_value_encoding(X) is meaningless.  Calls to
-sqlite3_value_text(X), sqlite3_value_text16(X),
-sqlite3_value_text16be(X),
-sqlite3_value_text16le(X), sqlite3_value_bytes(X), or
-sqlite3_value_bytes16(X) might change the encoding of the value X and
-thus change the return from subsequent calls to sqlite3_value_encoding(X).
+`sqlite3_value_encoding(X)` 接口根据值 X 的当前文本编码返回 `SQLITE_UTF8`、`SQLITE_UTF16BE`
+或 `SQLITE_UTF16LE` 之一，假设 X 的类型为 TEXT。若 `sqlite3_value_type(X)` 返回的不是
+`SQLITE_TEXT`，则 `sqlite3_value_encoding(X)` 的返回值无意义。调用 `sqlite3_value_text(X)`、
+`sqlite3_value_text16(X)`、`sqlite3_value_text16be(X)`、`sqlite3_value_text16le(X)`、
+`sqlite3_value_bytes(X)` 或 `sqlite3_value_bytes16(X)` 可能改变值 X 的编码，从而改变随后对
+`sqlite3_value_encoding(X)` 调用的返回。
 
-This routine is intended for used by applications that test and validate
-the SQLite implementation.  This routine is inquiring about the opaque
-internal state of an sqlite3_value object.  Ordinary applications should
-not need to know what the internal state of an sqlite3_value object is and
-hence should not need to use this interface.
+此例程供测试和验证 SQLite 实现的应用使用。此例程询问 sqlite3_value 对象的不透明内部状态。普通
+应用不需要知道 sqlite3_value 对象的内部状态，因此不应使用此接口。
 
 ---
 
-## Finding The Subtype Of SQL Values
+## 查找 SQL 值的子类型（Finding The Subtype Of SQL Values）
 
 ```
-
 unsigned int sqlite3_value_subtype(sqlite3_value*);
-
 ```
 
-The sqlite3_value_subtype(V) function returns the subtype for
-an application-defined SQL function argument V.  The subtype
-information can be used to pass a limited amount of context from
-one SQL function to another.  Use the sqlite3_result_subtype()
-routine to set the subtype for the return value of an SQL function.
+`sqlite3_value_subtype(V)` 函数返回应用自定义 SQL 函数参数 V 的子类型。子类型信息可用于从一个
+SQL 函数向另一个 SQL 函数传递有限量的上下文。用 `sqlite3_result_subtype()` 例程设置 SQL 函数
+返回值的子类型。
 
-Every application-defined SQL function that invokes this interface
-should include the SQLITE_SUBTYPE property in the text
-encoding argument when the function is registered.
-If the SQLITE_SUBTYPE property is omitted, then sqlite3_value_subtype()
-might return zero instead of the upstream subtype in some corner cases.
+每个调用此接口的应用自定义 SQL 函数，在注册函数时都应在文本编码参数中包含 `SQLITE_SUBTYPE`
+属性。若省略 `SQLITE_SUBTYPE` 属性，则某些边角情形下 `sqlite3_value_subtype()` 可能返回零而非
+上游子类型。
+
+## 查找 SQL 值的子类型
+
+（若省略 `SQLITE_SUBTYPE` 属性）某些边角情形下 `sqlite3_value_subtype()` 可能返回零而非上游
+子类型。
 
 ---
 
-## Determine The Collation For a Virtual Table Constraint
+## 确定虚拟表约束的排序规则（Determine The Collation For a Virtual Table Constraint）
 
 ```
-
 const char *sqlite3_vtab_collation(sqlite3_index_info*,int);
-
 ```
 
-This function may only be called from within a call to the xBestIndex
-method of a virtual table.  This function returns a pointer to a string
-that is the name of the appropriate collation sequence to use for text
-comparisons on the constraint identified by its arguments.
+此函数只能从虚拟表的 xBestIndex 方法内部调用。此函数返回一个字符串指针，该字符串是对其参数
+标识的约束做文本比较时使用的适当排序规则的名字。
 
-The first argument must be the pointer to the sqlite3_index_info object
-that is the first parameter to the xBestIndex() method. The second argument
-must be an index into the aConstraint[] array belonging to the
-sqlite3_index_info structure passed to xBestIndex.
+第一个参数必须是指向作为 xBestIndex() 方法第一参数的 `sqlite3_index_info` 对象的指针。第二个
+参数必须是属于传给 xBestIndex 的 `sqlite3_index_info` 结构的 aConstraint[] 数组的索引。
 
-Important:
-The first parameter must be the same pointer that is passed into the
-xBestMethod() method.  The first parameter may not be a pointer to a
-different sqlite3_index_info object, even an exact copy.
+> 重要：第一个参数必须与传入 xBestIndex() 方法的指针相同。第一个参数不能是指向不同的
+> `sqlite3_index_info` 对象的指针，即使是完全相同的副本。
 
-The return value is computed as follows:
+返回值计算如下：
 
-1.
- If the constraint comes from a WHERE clause expression that contains
-a COLLATE operator, then the name of the collation specified by
-that COLLATE operator is returned.
-
-2.
- If there is no COLLATE operator, but the column that is the subject
-of the constraint specifies an alternative collating sequence via
-a COLLATE clause on the column definition within the CREATE TABLE
-statement that was passed into sqlite3_declare_vtab(), then the
-name of that alternative collating sequence is returned.
-
-3.
- Otherwise, "BINARY" is returned.
+1. 若约束来自含 COLLATE 算子的 WHERE 子句表达式，则返回该 COLLATE 算子指定的排序规则名。
+2. 若没有 COLLATE 算子，但作为约束主体的列、通过传给 `sqlite3_declare_vtab()` 的 CREATE
+   TABLE 语句中列定义上的 COLLATE 子句指定了替代排序规则，则返回该替代排序规则名。
+3. 否则返回 "BINARY"。
 
 ---
 
-## Virtual Table Interface Configuration
+## 虚拟表接口配置（Virtual Table Interface Configuration）
 
 ```
-
 int sqlite3_vtab_config(sqlite3*, int op, ...);
-
 ```
 
-This function may be called by either the xConnect or xCreate method
-of a virtual table implementation to configure
-various facets of the virtual table interface.
+此函数可由虚拟表实现的 xConnect 或 xCreate 方法调用，配置虚拟表接口的各个方面。
 
-If this interface is invoked outside the context of an xConnect or
-xCreate virtual table method then the behavior is undefined.
+若在 xConnect 或 xCreate 虚拟表方法上下文之外调用此接口，则行为未定义。
 
-In the call sqlite3_vtab_config(D,C,...) the D parameter is the
-database connection in which the virtual table is being created and
-which is passed in as the first argument to the xConnect or xCreate
-method that is invoking sqlite3_vtab_config().  The C parameter is one
-of the virtual table configuration options.  The presence and meaning
-of parameters after C depend on which virtual table configuration option
-is used.
+在调用 `sqlite3_vtab_config(D,C,...)` 中，D 参数是正在创建虚拟表所在、并作为调用
+`sqlite3_vtab_config()` 的 xConnect 或 xCreate 方法第一参数传入的数据库连接。C 参数是虚拟表
+配置选项之一。C 之后参数的存在和含义取决于使用哪个虚拟表配置选项。
 
 ---
 
-## Determine if a virtual table query is DISTINCT
+## 判断虚拟表查询是否为 DISTINCT（Determine if a virtual table query is DISTINCT）
 
 ```
-
 int sqlite3_vtab_distinct(sqlite3_index_info*);
-
 ```
 
-This API may only be used from within an xBestIndex method
-of a virtual table implementation. The result of calling this
-interface from outside of xBestIndex() is undefined and probably harmful.
+此 API 只能从虚拟表实现的 xBestIndex 方法内部使用。从 xBestIndex() 之外调用此接口的结果未定义、
+且多半有害。
 
-The sqlite3_vtab_distinct() interface returns an integer between 0 and
-3.  The integer returned by sqlite3_vtab_distinct()
-gives the virtual table additional information about how the query
-planner wants the output to be ordered. As long as the virtual table
-can meet the ordering requirements of the query planner, it may set
-the "orderByConsumed" flag.
+`sqlite3_vtab_distinct()` 接口返回 0 到 3 之间的整数。返回的整数给虚拟表关于查询规划器希望
+输出如何排序的额外信息。只要虚拟表能满足查询规划器的排序要求，它就可以设置 "orderByConsumed"
+标志。
 
-1.
+1. 若 `sqlite3_vtab_distinct()` 接口返回 0，表示查询规划器需要虚拟表按 `sqlite3_index_info`
+   对象的 "nOrderBy" 和 "aOrderBy" 字段定义的排序顺序返回所有行。这是默认预期。若虚拟表按排序
+   顺序输出所有行，则无论 `sqlite3_vtab_distinct()` 返回什么，xBestIndex 方法设置
+   "orderByConsumed" 标志总是安全的。
 
-If the sqlite3_vtab_distinct() interface returns 0, that means
-that the query planner needs the virtual table to return all rows in the
-sort order defined by the "nOrderBy" and "aOrderBy" fields of the
-sqlite3_index_info object.  This is the default expectation.  If the
-virtual table outputs all rows in sorted order, then it is always safe for
-the xBestIndex method to set the "orderByConsumed" flag, regardless of
-the return value from sqlite3_vtab_distinct().
+2. 若返回 1，表示只要 "aOrderBy" 字段标识的所有列上值相同的所有行相邻，查询规划器就不需要行
+   按排序顺序返回。查询规划器做 GROUP BY 时使用此模式。
 
-2.
+3. 若返回 2，表示只要 "aOrderBy" 标识的所有列上值相同的行相邻，查询规划器就不需要行以任何特定
+   顺序返回。此外，当两行或多行在 "colUsed" 标识的所有列上含相同值时，结果中可可选地省略除一行
+   外的所有此类行。虚拟表并非必须省略 "colUsed" 列上重复的行，但若虚拟表能不过度费力地做到，
+   可能有助于查询运行更快。此模式用于 DISTINCT 查询。
 
-If the sqlite3_vtab_distinct() interface returns 1, that means
-that the query planner does not need the rows to be returned in sorted order
-as long as all rows with the same values in all columns identified by the
-"aOrderBy" field are adjacent.  This mode is used when the query planner
-is doing a GROUP BY.
+4. 若返回 3，表示虚拟表必须按 "aOrderBy" 定义的顺序返回行，仿佛 `sqlite3_vtab_distinct()`
+   接口返回了 0。但若结果中两行或多行在 "colUsed" 标识的所有列上含相同值，则可选地省略除一行外
+   的所有此类行。与返回值 2 时一样，虚拟表并非必须省略 "colUsed" 列上重复的行，但若能做到不过度
+   费力，可能有助于查询运行更快。此模式用于同时有 DISTINCT 和 ORDER BY 子句的查询。
 
-3.
+下表总结了虚拟表允许基于 `sqlite3_vtab_distinct()` 返回值设置 "orderByConsumed" 标志的条件。
+此表是对前面四段的复述：
 
-If the sqlite3_vtab_distinct() interface returns 2, that means
-that the query planner does not need the rows returned in any particular
-order, as long as rows with the same values in all columns identified
-by "aOrderBy" are adjacent.  Furthermore, when two or more rows
-contain the same values for all columns identified by "colUsed", all but
-one such row may optionally be omitted from the result.
-The virtual table is not required to omit rows that are duplicates
-over the "colUsed" columns, but if the virtual table can do that without
-too much extra effort, it could potentially help the query to run faster.
-This mode is used for a DISTINCT query.
+| sqlite3_vtab_distinct() 返回值 | 行按 aOrderBy 顺序返回 | 所有 aOrderBy 列上值相同的行相邻 | 可省略所有 colUsed 列上重复的行 |
+|------|------|------|------|
+| 0 | 是 | 是 | 否 |
+| 1 | 否 | 是 | 否 |
+| 2 | 否 | 是 | 是 |
+| 3 | 是 | 是 | 是 |
 
-4.
+为排序目的比较虚拟表输出值是否相同时，两个 NULL 值被视为相同。换句话说，比较算子为 "IS"
+（或 "IS NOT DISTINCT FROM"），而非 "=="。
 
-If the sqlite3_vtab_distinct() interface returns 3, that means the
-virtual table must return rows in the order defined by "aOrderBy" as
-if the sqlite3_vtab_distinct() interface had returned 0.  However if
-two or more rows in the result have the same values for all columns
-identified by "colUsed", then all but one such row may optionally be
-omitted.  Like when the return value is 2, the virtual table
-is not required to omit rows that are duplicates over the "colUsed"
-columns, but if the virtual table can do that without
-too much extra effort, it could potentially help the query to run faster.
-This mode is used for queries
-that have both DISTINCT and ORDER BY clauses.
+若虚拟表实现无法满足上述要求，则不得在 `sqlite3_index_info` 对象中设置 "orderByConsumed"
+标志，否则可能产生错误答案。
 
-The following table summarizes the conditions under which the
-virtual table is allowed to set the "orderByConsumed" flag based on
-the value returned by sqlite3_vtab_distinct().  This table is a
-restatement of the previous four paragraphs:
-
-sqlite3_vtab_distinct() return value
-Rows are returned in aOrderBy order
-Rows with the same value in all aOrderBy columns are
-adjacent
-Duplicates over all colUsed columns may be omitted
-0yesyesno
-1noyesno
-2noyesyes
-3yesyesyes
-
-For the purposes of comparing virtual table output values to see if the
-values are the same value for sorting purposes, two NULL values are
-considered to be the same.  In other words, the comparison operator is "IS"
-(or "IS NOT DISTINCT FROM") and not "==".
-
-If a virtual table implementation is unable to meet the requirements
-specified above, then it must not set the "orderByConsumed" flag in the
-sqlite3_index_info object or an incorrect answer may result.
-
-A virtual table implementation is always free to return rows in any order
-it wants, as long as the "orderByConsumed" flag is not set.  When the
-"orderByConsumed" flag is unset, the query planner will add extra
-bytecode to ensure that the final results returned by the SQL query are
-ordered correctly.  The use of the "orderByConsumed" flag and the
-sqlite3_vtab_distinct() interface is merely an optimization.  Careful
-use of the sqlite3_vtab_distinct() interface and the "orderByConsumed"
-flag might help queries against a virtual table to run faster.  Being
-overly aggressive and setting the "orderByConsumed" flag when it is not
-valid to do so, on the other hand, might cause SQLite to return incorrect
-results.
+只要未设置 "orderByConsumed" 标志，虚拟表实现总是可以按任何想要的顺序返回行。未设置该标志时，
+查询规划器会添加额外字节码，确保 SQL 查询返回的最终结果排序正确。使用 "orderByConsumed" 标志
+和 `sqlite3_vtab_distinct()` 接口只是优化。谨慎使用 `sqlite3_vtab_distinct()` 接口和
+"orderByConsumed" 标志可能有助于针对虚拟表的查询运行更快。另一方面，过度激进地在不该设置时设置
+"orderByConsumed" 标志，可能导致 SQLite 返回错误结果。
 
 ---
 
-## Identify and handle IN constraints in xBestIndex
+## 在 xBestIndex 中识别并处理 IN 约束（Identify and handle IN constraints in xBestIndex）
 
 ```
-
 int sqlite3_vtab_in(sqlite3_index_info*, int iCons, int bHandle);
-
 ```
 
-This interface may only be used from within an
-xBestIndex() method of a virtual table implementation.
-The result of invoking this interface from any other context is
-undefined and probably harmful.
+此接口只能从虚拟表实现的 xBestIndex() 方法内部使用。从任何其它上下文调用此接口的结果未定义、
+且多半有害。
 
-A constraint on a virtual table of the form
-"column IN (...)" is
-communicated to the xBestIndex method as a
-SQLITE_INDEX_CONSTRAINT_EQ constraint.  If xBestIndex wants to use
-this constraint, it must set the corresponding
-aConstraintUsage[].argvIndex to a positive integer.  Then, under
-the usual mode of handling IN operators, SQLite generates bytecode
-that invokes the xFilter() method once for each value
-on the right-hand side of the IN operator.  Thus the virtual table
-only sees a single value from the right-hand side of the IN operator
-at a time.
+形如 "column IN (...)" 的虚拟表约束作为 `SQLITE_INDEX_CONSTRAINT_EQ` 约束传给 xBestIndex
+方法。若 xBestIndex 想使用此约束，它必须把对应的 aConstraintUsage[].argvIndex 设为正整数。
+然后，在通常的 IN 算子处理模式下，SQLite 生成字节码：对 IN 算子右侧的每个值调用一次 xFilter()
+方法。因此虚拟表一次只能看到 IN 算子右侧的单个值。
 
-In some cases, however, it would be advantageous for the virtual
-table to see all values on the right-hand of the IN operator all at
-once.  The sqlite3_vtab_in() interfaces facilitates this in two ways:
+但在某些情况下，让虚拟表一次看到 IN 算子右侧的所有值会更好。`sqlite3_vtab_in()` 接口以两种方式
+促进这一点：
 
-1.
+1. 调用 `sqlite3_vtab_in(P,N,-1)`：当且仅当 P->aConstraint[N] 约束是能一次性处理的 IN 算子时
+   返回真（非零）。换句话说，第三个参数为 -1 的 `sqlite3_vtab_in()` 是虚拟表询问 SQLite：是否
+   甚至可能对 IN 算子做一次性处理的机制。
 
-A call to sqlite3_vtab_in(P,N,-1) will return true (non-zero)
-if and only if the P->aConstraint[N] constraint
-is an IN operator that can be processed all at once.  In other words,
-sqlite3_vtab_in() with -1 in the third argument is a mechanism
-by which the virtual table can ask SQLite if all-at-once processing
-of the IN operator is even possible.
+2. 第三个参数 F==1 或 F==0 的调用 `sqlite3_vtab_in(P,N,F)`，分别向 SQLite 表示虚拟表想或不
+   想一次性处理 IN 算子。因此当第三个参数 (F) 非负时，此接口是虚拟表告诉 SQLite 它想如何处理
+   IN 算子的机制。
 
-2.
+`sqlite3_vtab_in(P,N,F)` 接口可在同一次 xBestIndex 方法调用中多次调用。对任何给定的 P,N 对，
+`sqlite3_vtab_in(P,N,F)` 在同一次 xBestIndex 调用内返回值总是相同。若接口返回真（非零），表示
+该约束是能一次性处理的 IN 算子。若约束不是 IN 算子、或不能一次性处理，则接口返回假。
 
-A call to sqlite3_vtab_in(P,N,F) with F==1 or F==0 indicates
-to SQLite that the virtual table does or does not want to process
-the IN operator all-at-once, respectively.  Thus when the third
-parameter (F) is non-negative, this interface is the mechanism by
-which the virtual table tells SQLite how it wants to process the
-IN operator.
+满足以下两个条件时选择 IN 算子的一次性处理：
 
-The sqlite3_vtab_in(P,N,F) interface can be invoked multiple times
-within the same xBestIndex method call.  For any given P,N pair,
-the return value from sqlite3_vtab_in(P,N,F) will always be the same
-within the same xBestIndex call.  If the interface returns true
-(non-zero), that means that the constraint is an IN operator
-that can be processed all-at-once.  If the constraint is not an IN
-operator or cannot be processed all-at-once, then the interface returns
-false.
+1. P->aConstraintUsage[N].argvIndex 值被设为正整数。这是虚拟表告诉 SQLite 它想使用第 N 个
+   约束的方式。
+2. 对 F 非负的 `sqlite3_vtab_in(P,N,F)` 的最后一次调用有 F>=1。
 
-All-at-once processing of the IN operator is selected if both of the
-following conditions are met:
-
-1.
- The P->aConstraintUsage[N].argvIndex value is set to a positive
-integer.  This is how the virtual table tells SQLite that it wants to
-use the N-th constraint.
-
-2.
- The last call to sqlite3_vtab_in(P,N,F) for which F was
-non-negative had F>=1.
-
-If either or both of the conditions above are false, then SQLite uses
-the traditional one-at-a-time processing strategy for the IN constraint.
-If both conditions are true, then the argvIndex-th parameter to the
-xFilter method will be an sqlite3_value that appears to be NULL,
-but which can be passed to sqlite3_vtab_in_first() and
-sqlite3_vtab_in_next() to find all values on the right-hand side
-of the IN constraint.
+若上述条件有一个或两个为假，则 SQLite 对该 IN 约束使用传统的一次处理一个值策略。若两个条件都
+为真，则传给 xFilter 方法的第 argvIndex 个参数将是一个看似 NULL 的 sqlite3_value，但可传给
+`sqlite3_vtab_in_first()` 和 `sqlite3_vtab_in_next()` 找出 IN 约束右侧的所有值。
 
 ---
 
-## Determine If Virtual Table Column Access Is For UPDATE
+## 判断虚拟表列访问是否用于 UPDATE（Determine If Virtual Table Column Access Is For UPDATE）
 
 ```
-
 int sqlite3_vtab_nochange(sqlite3_context*);
-
 ```
 
-If the sqlite3_vtab_nochange(X) routine is called within the xColumn
-method of a virtual table, then it might return true if the
-column is being fetched as part of an UPDATE operation during which the
-column value will not change.  The virtual table implementation can use
-this hint as permission to substitute a return value that is less
-expensive to compute and that the corresponding
-xUpdate method understands as a "no-change" value.
+若在虚拟表的 xColumn 方法内调用 `sqlite3_vtab_nochange(X)` 例程，则若列作为 UPDATE 操作的一部分
+被获取、且该列值不会改变，它可能返回真。虚拟表实现可把此提示视为允许：用一个计算更便宜、且相应
+的 xUpdate 方法能理解为"无变更"值的返回值来替代。
 
-If the xColumn method calls sqlite3_vtab_nochange() and finds that
-the column is not changed by the UPDATE statement, then the xColumn
-method can optionally return without setting a result, without calling
-any of the sqlite3_result_xxxxx() interfaces.
-In that case, sqlite3_value_nochange(X) will return true for the
-same column in the xUpdate method.
+若 xColumn 方法调用 `sqlite3_vtab_nochange()`、发现列未被 UPDATE 语句改变，则 xColumn 方法可以
+不设置结果、不调用任何 `sqlite3_result_xxxxx()` 接口就返回。此时，xUpdate 方法中同一列的
+`sqlite3_value_nochange(X)` 将返回真。
 
-The sqlite3_vtab_nochange() routine is an optimization.  Virtual table
-implementations should continue to give a correct answer even if the
-sqlite3_vtab_nochange() interface were to always return false.  In the
-current implementation, the sqlite3_vtab_nochange() interface does always
-returns false for the enhanced UPDATE FROM statement.
+`sqlite3_vtab_nochange()` 例程是一个优化。即使 `sqlite3_vtab_nochange()` 接口总是返回假，虚拟表
+实现也应继续给出正确答案。在当前实现中，对于增强的 UPDATE FROM 语句，`sqlite3_vtab_nochange()`
+接口确实总是返回假。
 
 ---
 
-## Determine The Virtual Table Conflict Policy
+## 确定虚拟表冲突策略（Determine The Virtual Table Conflict Policy）
 
 ```
-
 int sqlite3_vtab_on_conflict(sqlite3 *);
-
 ```
 
-This function may only be called from within a call to the xUpdate method
-of a virtual table implementation for an INSERT or UPDATE operation. The
-value returned is one of SQLITE_ROLLBACK, SQLITE_IGNORE, SQLITE_FAIL,
-SQLITE_ABORT, or SQLITE_REPLACE, according to the ON CONFLICT mode
-of the SQL statement that triggered the call to the xUpdate method of the
-virtual table.
+此函数只能从虚拟表实现的 xUpdate 方法内部、为 INSERT 或 UPDATE 操作调用。根据触发调用虚拟表
+xUpdate 方法的 SQL 语句的 ON CONFLICT 模式，返回值为 `SQLITE_ROLLBACK`、`SQLITE_IGNORE`、
+`SQLITE_FAIL`、`SQLITE_ABORT` 或 `SQLITE_REPLACE` 之一。
 
----
-
-## Constraint values in xBestIndex()
+## xBestIndex() 中的约束值（Constraint values in xBestIndex()）
 
 ```
-
 int sqlite3_vtab_rhs_value(sqlite3_index_info*, int, sqlite3_value **ppVal);
-
 ```
 
-This API may only be used from within the xBestIndex method
-of a virtual table implementation. The result of calling this interface
-from outside of an xBestIndex method are undefined and probably harmful.
+此 API 只能从虚拟表实现的 xBestIndex 方法内部使用。从 xBestIndex 方法之外调用此接口的结果
+未定义、且多半有害。
 
-When the sqlite3_vtab_rhs_value(P,J,V) interface is invoked from within
-the xBestIndex method of a virtual table implementation, with P being
-a copy of the sqlite3_index_info object pointer passed into xBestIndex and
-J being a 0-based index into P->aConstraint[], then this routine
-attempts to set *V to the value of the right-hand operand of
-that constraint if the right-hand operand is known.  If the
-right-hand operand is not known, then *V is set to a NULL pointer.
-The sqlite3_vtab_rhs_value(P,J,V) interface returns SQLITE_OK if
-and only if *V is set to a value.  The sqlite3_vtab_rhs_value(P,J,V)
-inteface returns SQLITE_NOTFOUND if the right-hand side of the J-th
-constraint is not available.  The sqlite3_vtab_rhs_value() interface
-can return a result code other than SQLITE_OK or SQLITE_NOTFOUND if
-something goes wrong.
+当从虚拟表实现的 xBestIndex 方法内部调用 `sqlite3_vtab_rhs_value(P,J,V)` 接口时，P 是传入
+xBestIndex 的 `sqlite3_index_info` 对象指针的副本，J 是 P->aConstraint[] 的基于 0 的索引，
+若该约束的右侧操作数已知，则此例程尝试把 *V 设为该操作数的值。若右侧操作数未知，则把 *V 设为
+NULL 指针。当且仅当 *V 被设为某个值时，`sqlite3_vtab_rhs_value(P,J,V)` 接口返回 `SQLITE_OK`。
+若第 J 个约束的右侧不可用，则 `sqlite3_vtab_rhs_value(P,J,V)` 接口返回 `SQLITE_NOTFOUND`。
+若发生问题，`sqlite3_vtab_rhs_value()` 接口可返回 `SQLITE_OK` 或 `SQLITE_NOTFOUND` 之外的
+结果码。
 
-The sqlite3_vtab_rhs_value() interface is usually only successful if
-the right-hand operand of a constraint is a literal value in the original
-SQL statement.  If the right-hand operand is an expression or a reference
-to some other column or a host parameter, then sqlite3_vtab_rhs_value()
-will probably return SQLITE_NOTFOUND.
+`sqlite3_vtab_rhs_value()` 接口通常只在约束的右侧操作数是原始 SQL 语句中的字面量值时成功。若
+右侧操作数是表达式、对其它列的引用或宿主参数，则 `sqlite3_vtab_rhs_value()` 很可能返回
+`SQLITE_NOTFOUND`。
 
-Some constraints, such as SQLITE_INDEX_CONSTRAINT_ISNULL and
-SQLITE_INDEX_CONSTRAINT_ISNOTNULL, have no right-hand operand.  For such
-constraints, sqlite3_vtab_rhs_value() always returns SQLITE_NOTFOUND.
+某些约束（如 `SQLITE_INDEX_CONSTRAINT_ISNULL` 和 `SQLITE_INDEX_CONSTRAINT_ISNOTNULL`）没有
+右侧操作数。对这类约束，`sqlite3_vtab_rhs_value()` 总是返回 `SQLITE_NOTFOUND`。
 
-The sqlite3_value object returned in *V is a protected sqlite3_value
-and remains valid for the duration of the xBestIndex method call.
-When xBestIndex returns, the sqlite3_value object returned by
-sqlite3_vtab_rhs_value() is automatically deallocated.
+在 *V 中返回的 sqlite3_value 对象是受保护的 sqlite3_value，在 xBestIndex 方法调用期间保持有效。
+xBestIndex 返回时，`sqlite3_vtab_rhs_value()` 返回的 sqlite3_value 对象被自动释放。
 
-The "_rhs_" in the name of this routine is an abbreviation for
-"Right-Hand Side".
+此例程名字里的 "_rhs_" 是 "Right-Hand Side"（右侧）的缩写。
 
 ---
 
-## Configure an auto-checkpoint
+## 配置自动检查点（Configure an auto-checkpoint）
 
 ```
-
 int sqlite3_wal_autocheckpoint(sqlite3 *db, int N);
-
 ```
 
-The sqlite3_wal_autocheckpoint(D,N) is a wrapper around
-sqlite3_wal_hook() that causes any database on database connection D
-to automatically checkpoint
-after committing a transaction if there are N or
-more frames in the write-ahead log file.  Passing zero or
-a negative value as the N parameter disables automatic
-checkpoints entirely.
+`sqlite3_wal_autocheckpoint(D,N)` 是 `sqlite3_wal_hook()` 的包装，它使数据库连接 D 上任何
+数据库在提交事务后，若预写日志文件中有 N 个或更多帧，则自动检查点。把 N 参数传零或负值会完全
+禁用自动检查点。
 
-The callback registered by this function replaces any existing callback
-registered using sqlite3_wal_hook().  Likewise, registering a callback
-using sqlite3_wal_hook() disables the automatic checkpoint mechanism
-configured by this function.
+此函数注册的回调会替换任何用 `sqlite3_wal_hook()` 注册的现有回调。同样，用 `sqlite3_wal_hook()`
+注册回调会禁用此函数配置的自动检查点机制。
 
-The wal_autocheckpoint pragma can be used to invoke this interface
-from SQL.
+wal_autocheckpoint pragma 可用于从 SQL 调用此接口。
 
-Checkpoints initiated by this mechanism are
-PASSIVE.
+此机制发起的检查点是 PASSIVE（被动）的。
 
-Every new database connection defaults to having the auto-checkpoint
-enabled with a threshold of 1000 or SQLITE_DEFAULT_WAL_AUTOCHECKPOINT
-pages.
+每个新数据库连接默认启用自动检查点，阈值是 1000 页或 `SQLITE_DEFAULT_WAL_AUTOCHECKPOINT`。
 
-The use of this interface is only necessary if the default setting
-is found to be suboptimal for a particular application.
+仅当默认设置对特定应用被发现不够理想时，才有必要使用此接口。
 
 ---
 
-## Checkpoint a database
+## 检查点数据库（Checkpoint a database）
 
 ```
-
 int sqlite3_wal_checkpoint(sqlite3 *db, const char *zDb);
-
 ```
 
-The sqlite3_wal_checkpoint(D,X) is equivalent to
-sqlite3_wal_checkpoint_v2(D,X,SQLITE_CHECKPOINT_PASSIVE,0,0).
+`sqlite3_wal_checkpoint(D,X)` 等价于 `sqlite3_wal_checkpoint_v2(D,X,SQLITE_CHECKPOINT_PASSIVE,0,0)`。
 
-In brief, sqlite3_wal_checkpoint(D,X) causes the content in the
-write-ahead log for database X on database connection D to be
-transferred into the database file and for the write-ahead log to
-be reset.  See the checkpointing documentation for addition
-information.
+简言之，`sqlite3_wal_checkpoint(D,X)` 使数据库连接 D 上数据库 X 的预写日志中的内容被转移进
+数据库文件，并重置预写日志。更多信息见检查点文档。
 
-This interface used to be the only way to cause a checkpoint to
-occur.  But then the newer and more powerful sqlite3_wal_checkpoint_v2()
-interface was added.  This interface is retained for backwards
-compatibility and as a convenience for applications that need to manually
-start a callback but which do not need the full power (and corresponding
-complication) of sqlite3_wal_checkpoint_v2().
+此接口曾经是引起检查点发生的唯一方式。但后来加入了更新、更强大的 `sqlite3_wal_checkpoint_v2()`
+接口。保留此接口是为了向后兼容，并方便需要手动开始检查点、但不需要 `sqlite3_wal_checkpoint_v2()`
+全部能力（及相应复杂性）的应用。
 
 ---
 
-## Checkpoint a database
+## 检查点数据库（Checkpoint a database）
 
 ```
-
 int sqlite3_wal_checkpoint_v2(
-  sqlite3 *db,                    /* Database handle */
-  const char *zDb,                /* Name of attached database (or NULL) */
-  int eMode,                      /* SQLITE_CHECKPOINT_* value */
-  int *pnLog,                     /* OUT: Size of WAL log in frames */
-  int *pnCkpt                     /* OUT: Total number of frames checkpointed */
+  sqlite3 *db,                    /* 数据库句柄 */
+  const char *zDb,                /* 附加数据库名（或 NULL） */
+  int eMode,                      /* SQLITE_CHECKPOINT_* 值 */
+  int *pnLog,                     /* 输出：WAL 日志的帧数 */
+  int *pnCkpt                     /* 输出：已检查点的帧总数 */
 );
-
 ```
 
-The sqlite3_wal_checkpoint_v2(D,X,M,L,C) interface runs a checkpoint
-operation on database X of database connection D in mode M.  Status
-information is written back into integers pointed to by L and C.
-The M parameter must be a valid checkpoint mode:
+`sqlite3_wal_checkpoint_v2(D,X,M,L,C)` 接口对数据库连接 D 的数据库 X 以模式 M 运行检查点操作。
+状态信息写回 L 和 C 指向的整数。M 参数必须是有效的检查点模式：
 
-SQLITE_CHECKPOINT_PASSIVE
-Checkpoint as many frames as possible without waiting for any database
-readers or writers to finish, then sync the database file if all frames
-in the log were checkpointed. The busy-handler callback
-is never invoked in the SQLITE_CHECKPOINT_PASSIVE mode.
-On the other hand, passive mode might leave the checkpoint unfinished
-if there are concurrent readers or writers.
+`SQLITE_CHECKPOINT_PASSIVE`：不等待任何数据库读者或写者完成，尽可能多地检查点帧，若日志中所有
+帧都被检查点则同步数据库文件。在 `SQLITE_CHECKPOINT_PASSIVE` 模式下从不调用忙处理器回调。另一
+方面，若有并发的读者或写者，被动模式可能使检查点未完成。
 
-SQLITE_CHECKPOINT_FULL
-This mode blocks (it invokes the
-busy-handler callback) until there is no
-database writer and all readers are reading from the most recent database
-snapshot. It then checkpoints all frames in the log file and syncs the
-database file. This mode blocks new database writers while it is pending,
-but new database readers are allowed to continue unimpeded.
+`SQLITE_CHECKPOINT_FULL`：此模式阻塞（调用忙处理器回调），直到没有数据库写者、且所有读者都从
+最新的数据库快照读取。然后检查点日志文件中的所有帧并同步数据库文件。此模式在挂起时阻塞新的数据库
+写者，但允许新的数据库读者无阻碍地继续。
 
-SQLITE_CHECKPOINT_RESTART
-This mode works the same way as SQLITE_CHECKPOINT_FULL with the addition
-that after checkpointing the log file it blocks (calls the
-busy-handler callback)
-until all readers are reading from the database file only. This ensures
-that the next writer will restart the log file from the beginning.
-Like SQLITE_CHECKPOINT_FULL, this mode blocks new
-database writer attempts while it is pending, but does not impede readers.
+`SQLITE_CHECKPOINT_RESTART`：此模式与 `SQLITE_CHECKPOINT_FULL` 相同，额外之处是检查点日志文件
+后阻塞（调用忙处理器回调），直到所有读者都只从数据库文件读取。这确保下一个写者将从日志文件的开头
+重新开始。与 `SQLITE_CHECKPOINT_FULL` 一样，此模式在挂起时阻塞新的数据库写者尝试，但不妨碍读者。
 
-SQLITE_CHECKPOINT_TRUNCATE
-This mode works the same way as SQLITE_CHECKPOINT_RESTART with the
-addition that it also truncates the log file to zero bytes just prior
-to a successful return.
+`SQLITE_CHECKPOINT_TRUNCATE`：此模式与 `SQLITE_CHECKPOINT_RESTART` 相同，额外之处是在成功返回
+前把日志文件截断为零字节。
 
-SQLITE_CHECKPOINT_NOOP
-This mode always checkpoints zero frames. The only reason to invoke
-a NOOP checkpoint is to access the values returned by
-sqlite3_wal_checkpoint_v2() via output parameters *pnLog and *pnCkpt.
+`SQLITE_CHECKPOINT_NOOP`：此模式总是检查点零帧。调用 NOOP 检查点的唯一理由是访问
+`sqlite3_wal_checkpoint_v2()` 通过输出参数 *pnLog 和 *pnCkpt 返回的值。
 
-If pnLog is not NULL, then *pnLog is set to the total number of frames in
-the log file or to -1 if the checkpoint could not run because
-of an error or because the database is not in WAL mode. If pnCkpt is not
-NULL,then *pnCkpt is set to the total number of checkpointed frames in the
-log file (including any that were already checkpointed before the function
-was called) or to -1 if the checkpoint could not run due to an error or
-because the database is not in WAL mode. Note that upon successful
-completion of an SQLITE_CHECKPOINT_TRUNCATE, the log file will have been
-truncated to zero bytes and so both *pnLog and *pnCkpt will be set to zero.
+若 pnLog 非 NULL，则把 *pnLog 设为日志文件中的帧总数；若因错误或数据库不在 WAL 模式而无法运行
+检查点，则设为 -1。若 pnCkpt 非 NULL，则把 *pnCkpt 设为日志文件中已检查点的帧总数（包括函数被
+调用前已经检查点的帧）；若因错误或数据库不在 WAL 模式而无法运行检查点，则设为 -1。注意：
+`SQLITE_CHECKPOINT_TRUNCATE` 成功完成后，日志文件已被截断为零字节，因此 *pnLog 和 *pnCkpt
+都会设为零。
 
-All calls obtain an exclusive "checkpoint" lock on the database file. If
-any other process is running a checkpoint operation at the same time, the
-lock cannot be obtained and SQLITE_BUSY is returned. Even if there is a
-busy-handler configured, it will not be invoked in this case.
+所有调用都会获得数据库文件的排他 "checkpoint" 锁。若其它进程同时正在运行检查点操作，则无法取得
+该锁，返回 `SQLITE_BUSY`。即使配置了忙处理器，在这种情况下也不会调用它。
 
-The SQLITE_CHECKPOINT_FULL, RESTART and TRUNCATE modes also obtain the
-exclusive "writer" lock on the database file. If the writer lock cannot be
-obtained immediately, and a busy-handler is configured, it is invoked and
-the writer lock retried until either the busy-handler returns 0 or the lock
-is successfully obtained. The busy-handler is also invoked while waiting for
-database readers as described above. If the busy-handler returns 0 before
-the writer lock is obtained or while waiting for database readers, the
-checkpoint operation proceeds from that point in the same way as
-SQLITE_CHECKPOINT_PASSIVE - checkpointing as many frames as possible
-without blocking any further. SQLITE_BUSY is returned in this case.
+`SQLITE_CHECKPOINT_FULL`、RESTART 和 TRUNCATE 模式还获得数据库文件的排他 "writer" 锁。若无法
+立即取得写者锁、且配置了忙处理器，则调用它并重试写者锁，直到忙处理器返回 0 或锁被成功取得。在
+等待数据库读者期间也调用忙处理器，如上所述。若忙处理器在取得写者锁之前、或在等待数据库读者期间
+返回 0，则检查点操作从该点起以与 `SQLITE_CHECKPOINT_PASSIVE` 相同的方式继续——不进一步阻塞，
+尽可能多地检查点帧。此时返回 `SQLITE_BUSY`。
 
-If parameter zDb is NULL or points to a zero length string, then the
-specified operation is attempted on all WAL databases attached to
-database connection db.  In this case the
-values written to output parameters *pnLog and *pnCkpt are undefined. If
-an SQLITE_BUSY error is encountered when processing one or more of the
-attached WAL databases, the operation is still attempted on any remaining
-attached databases and SQLITE_BUSY is returned at the end. If any other
-error occurs while processing an attached database, processing is abandoned
-and the error code is returned to the caller immediately. If no error
-(SQLITE_BUSY or otherwise) is encountered while processing the attached
-databases, SQLITE_OK is returned.
+若参数 zDb 是 NULL 或指向零长度字符串，则对数据库连接 db 附加的所有 WAL 数据库尝试指定操作。
+此时写入输出参数 *pnLog 和 *pnCkpt 的值未定义。若处理一个或多个附加 WAL 数据库时遇到
+`SQLITE_BUSY` 错误，仍会对任何剩余附加数据库尝试操作，最后返回 `SQLITE_BUSY`。若处理附加数据库
+时发生任何其它错误，则放弃处理、立即把错误码返回给调用者。若处理附加数据库时没有遇到错误
+（`SQLITE_BUSY` 或其它），则返回 `SQLITE_OK`。
 
-If database zDb is the name of an attached database that is not in WAL
-mode, SQLITE_OK is returned and both *pnLog and *pnCkpt set to -1. If
-zDb is not NULL (or a zero length string) and is not the name of any
-attached database, SQLITE_ERROR is returned to the caller.
+若数据库 zDb 是不在 WAL 模式的附加数据库的名字，则返回 `SQLITE_OK`，*pnLog 和 *pnCkpt 都设为
+-1。若 zDb 非 NULL（或非零长度字符串）、且不是任何附加数据库的名字，则向调用者返回 `SQLITE_ERROR`。
 
-Unless it returns SQLITE_MISUSE,
-the sqlite3_wal_checkpoint_v2() interface
-sets the error information that is queried by
-sqlite3_errcode() and sqlite3_errmsg().
+除非返回 `SQLITE_MISUSE`，`sqlite3_wal_checkpoint_v2()` 接口都会设置由 `sqlite3_errcode()`
+和 `sqlite3_errmsg()` 查询的错误信息。
 
-The PRAGMA wal_checkpoint command can be used to invoke this interface
-from SQL.
+PRAGMA wal_checkpoint 命令可用于从 SQL 调用此接口。
 
 ---
 
-## Write-Ahead Log Commit Hook
+## 预写日志提交钩子（Write-Ahead Log Commit Hook）
 
 ```
-
 void *sqlite3_wal_hook(
   sqlite3*,
   int(*)(void *,sqlite3*,const char*,int),
   void*
 );
-
 ```
 
-The sqlite3_wal_hook() function is used to register a callback that
-is invoked each time data is committed to a database in wal mode.
+`sqlite3_wal_hook()` 函数用于注册回调，每当数据提交到 wal 模式数据库时调用。
 
-The callback is invoked by SQLite after the commit has taken place and
-the associated write-lock on the database released, so the implementation
-may read, write or checkpoint the database as required.
+回调由 SQLite 在提交发生之后、数据库上关联的写锁释放之后调用，因此实现可按需读取、写入或检查点
+数据库。
 
-The first parameter passed to the callback function when it is invoked
-is a copy of the third parameter passed to sqlite3_wal_hook() when
-registering the callback. The second is a copy of the database handle.
-The third parameter is the name of the database that was written to -
-either "main" or the name of an ATTACH-ed database. The fourth parameter
-is the number of pages currently in the write-ahead log file,
-including those that were just committed.
+调用回调函数时传给它的第一个参数是注册回调时传给 `sqlite3_wal_hook()` 的第三个参数的副本。
+第二个参数是数据库句柄的副本。第三个参数是被写入的数据库名——"main" 或 ATTACH 的数据库名。
+第四个参数是当前在预写日志文件中的页数，包括刚提交的页。
 
-The callback function should normally return SQLITE_OK.  If an error
-code is returned, that error will propagate back up through the
-SQLite code base to cause the statement that provoked the callback
-to report an error, though the commit will have still occurred. If the
-callback returns SQLITE_ROW or SQLITE_DONE, or if it returns a value
-that does not correspond to any valid SQLite error code, the results
-are undefined.
+回调函数通常应返回 `SQLITE_OK`。若返回错误码，该错误会通过 SQLite 代码库传播回去，使引发回调的
+语句报告错误，不过提交仍会发生。若回调返回 `SQLITE_ROW` 或 `SQLITE_DONE`，或返回不对应任何有效
+SQLite 错误码的值，则结果未定义。
 
-A single database handle may have at most a single write-ahead log
-callback registered at one time. Calling sqlite3_wal_hook()
-replaces the default behavior or previously registered write-ahead
-log callback.
+一个数据库句柄一次最多注册一个预写日志回调。调用 `sqlite3_wal_hook()` 会替换默认行为或先前注册
+的预写日志回调。
 
-The return value is a copy of the third parameter from the
-previous call, if any, or 0.
+返回值是先前调用（如果有）的第三个参数的副本，否则为 0。
 
-The sqlite3_wal_autocheckpoint() interface and the
-wal_autocheckpoint pragma both invoke sqlite3_wal_hook() and
-will overwrite any prior sqlite3_wal_hook() settings.
+`sqlite3_wal_autocheckpoint()` 接口和 wal_autocheckpoint pragma 都调用 `sqlite3_wal_hook()`，
+会覆盖任何先前的 `sqlite3_wal_hook()` 设置。
 
-If a write-ahead log callback is set using this function then
-sqlite3_wal_checkpoint_v2() or PRAGMA wal_checkpoint
-should be invoked periodically to keep the write-ahead log file
-from growing without bound.
+若用此函数设置了预写日志回调，则应定期调用 `sqlite3_wal_checkpoint_v2()` 或 PRAGMA
+wal_checkpoint，防止预写日志文件无界增长。
 
-Passing a NULL pointer for the callback disables automatic
-checkpointing entirely. To re-enable the default behavior, call
-sqlite3_wal_autocheckpoint(db,1000) or use PRAGMA wal_checkpoint.
+为回调传 NULL 指针会完全禁用自动检查点。要重新启用默认行为，调用
+`sqlite3_wal_autocheckpoint(db,1000)` 或使用 PRAGMA wal_checkpoint。
 
 ---
 
-## Result Codes
+## 结果码（Result Codes）
 
 ```
-
-#define SQLITE_OK           0   /* Successful result */
+#define SQLITE_OK           0   /* 成功 */
 /* beginning-of-error-codes */
-#define SQLITE_ERROR        1   /* Generic error */
-#define SQLITE_INTERNAL     2   /* Internal logic error in SQLite */
-#define SQLITE_PERM         3   /* Access permission denied */
-#define SQLITE_ABORT        4   /* Callback routine requested an abort */
-#define SQLITE_BUSY         5   /* The database file is locked */
-#define SQLITE_LOCKED       6   /* A table in the database is locked */
-#define SQLITE_NOMEM        7   /* A malloc() failed */
-#define SQLITE_READONLY     8   /* Attempt to write a readonly database */
-#define SQLITE_INTERRUPT    9   /* Operation terminated by sqlite3_interrupt()*/
-#define SQLITE_IOERR       10   /* Some kind of disk I/O error occurred */
-#define SQLITE_CORRUPT     11   /* The database disk image is malformed */
-#define SQLITE_NOTFOUND    12   /* Unknown opcode in sqlite3_file_control() */
-#define SQLITE_FULL        13   /* Insertion failed because database is full */
-#define SQLITE_CANTOPEN    14   /* Unable to open the database file */
-#define SQLITE_PROTOCOL    15   /* Database lock protocol error */
-#define SQLITE_EMPTY       16   /* Internal use only */
-#define SQLITE_SCHEMA      17   /* The database schema changed */
-#define SQLITE_TOOBIG      18   /* String or BLOB exceeds size limit */
-#define SQLITE_CONSTRAINT  19   /* Abort due to constraint violation */
-#define SQLITE_MISMATCH    20   /* Data type mismatch */
-#define SQLITE_MISUSE      21   /* Library used incorrectly */
-#define SQLITE_NOLFS       22   /* Uses OS features not supported on host */
-#define SQLITE_AUTH        23   /* Authorization denied */
-#define SQLITE_FORMAT      24   /* Not used */
-#define SQLITE_RANGE       25   /* 2nd parameter to sqlite3_bind out of range */
-#define SQLITE_NOTADB      26   /* File opened that is not a database file */
-#define SQLITE_NOTICE      27   /* Notifications from sqlite3_log() */
-#define SQLITE_WARNING     28   /* Warnings from sqlite3_log() */
-#define SQLITE_ROW         100  /* sqlite3_step() has another row ready */
-#define SQLITE_DONE        101  /* sqlite3_step() has finished executing */
-/* end-of-error-codes */
+#define SQLITE_ERROR        1   /* 一般错误 */
+#define SQLITE_INTERNAL     2   /* SQLite 内部逻辑错误 */
+#define SQLITE_PERM         3   /* 拒绝访问权限 */
+#define SQLITE_ABORT        4   /* 回调例程请求中止 */
+#define SQLITE_BUSY         5   /* 数据库文件被锁定 */
+#define SQLITE_LOCKED       6   /* 数据库中的表被锁定 */
+#define SQLITE_NOMEM        7   /* 一次 malloc() 失败 */
+#define SQLITE_READONLY     8   /* 尝试写入只读数据库 */
+#define SQLITE_INTERRUPT    9   /* 操作被 sqlite3_interrupt() 终止 */
+#define SQLITE_IOERR       10   /* 发生某种磁盘 I/O 错误 */
+#define SQLITE_CORRUPT     11   /* 数据库磁盘映像畸形 */
+#define SQLITE_NOTFOUND    12   /* sqlite3_file_control() 中的未知操作码 */
+#define SQLITE_FULL        13   /* 因数据库已满而插入失败 */
+#define SQLITE_CANTOPEN    14   /* 无法打开数据库文件 */
+#define SQLITE_PROTOCOL    15   /* 数据库锁协议错误 */
+#define SQLITE_EMPTY       16   /* 仅供内部使用 */
+#define SQLITE_SCHEMA      17   /* 数据库 schema 已改变 */
+#define SQLITE_TOOBIG      18   /* 字符串或 BLOB 超过大小限制 */
+#define SQLITE_CONSTRAINT  19   /* 因约束冲突而中止 */
+#define SQLITE_MISMATCH    20   /* 数据类型不匹配 */
 
+
+#define SQLITE_MISUSE      21   /* 库使用不正确 */
+#define SQLITE_NOLFS       22   /* 使用宿主不支持的操作系统特性 */
+#define SQLITE_AUTH        23   /* 授权被拒绝 */
+#define SQLITE_FORMAT      24   /* 未使用 */
+#define SQLITE_RANGE       25   /* sqlite3_bind 的第 2 个参数越界 */
+#define SQLITE_NOTADB      26   /* 打开的不是数据库文件 */
+#define SQLITE_NOTICE      27   /* 来自 sqlite3_log() 的通知 */
+#define SQLITE_WARNING     28   /* 来自 sqlite3_log() 的警告 */
+#define SQLITE_ROW         100  /* sqlite3_step() 还有一行就绪 */
+#define SQLITE_DONE        101  /* sqlite3_step() 已完成执行 */
+/* end-of-error-codes */
 ```
 
-Many SQLite functions return an integer result code from the set shown
-here in order to indicate success or failure.
+许多 SQLite 函数返回这里所示集合中的一个整数结果码，以指示成功或失败。
 
-New error codes may be added in future versions of SQLite.
+未来版本的 SQLite 可能加入新的错误码。
 
-See also: extended result code definitions
+另见：扩展结果码定义
 
 ---
 
-## Extended Result Codes
+## 扩展结果码（Extended Result Codes）
 
 ```
-
 #define SQLITE_ERROR_MISSING_COLLSEQ   (SQLITE_ERROR | (1<<8))
 #define SQLITE_ERROR_RETRY             (SQLITE_ERROR | (2<<8))
 #define SQLITE_ERROR_SNAPSHOT          (SQLITE_ERROR | (3<<8))
@@ -6287,7 +3946,7 @@ See also: extended result code definitions
 #define SQLITE_CANTOPEN_ISDIR          (SQLITE_CANTOPEN | (2<<8))
 #define SQLITE_CANTOPEN_FULLPATH       (SQLITE_CANTOPEN | (3<<8))
 #define SQLITE_CANTOPEN_CONVPATH       (SQLITE_CANTOPEN | (4<<8))
-#define SQLITE_CANTOPEN_DIRTYWAL       (SQLITE_CANTOPEN | (5<<8)) /* Not Used */
+#define SQLITE_CANTOPEN_DIRTYWAL       (SQLITE_CANTOPEN | (5<<8)) /* 未使用 */
 #define SQLITE_CANTOPEN_SYMLINK        (SQLITE_CANTOPEN | (6<<8))
 #define SQLITE_CORRUPT_VTAB            (SQLITE_CORRUPT | (1<<8))
 #define SQLITE_CORRUPT_SEQUENCE        (SQLITE_CORRUPT | (2<<8))
@@ -6317,181 +3976,128 @@ See also: extended result code definitions
 #define SQLITE_WARNING_AUTOINDEX       (SQLITE_WARNING | (1<<8))
 #define SQLITE_AUTH_USER               (SQLITE_AUTH | (1<<8))
 #define SQLITE_OK_LOAD_PERMANENTLY     (SQLITE_OK | (1<<8))
-#define SQLITE_OK_SYMLINK              (SQLITE_OK | (2<<8)) /* internal only */
-
+#define SQLITE_OK_SYMLINK              (SQLITE_OK | (2<<8)) /* 仅供内部使用 */
 ```
 
-In its default configuration, SQLite API routines return one of 30 integer
-result codes.  However, experience has shown that many of
-these result codes are too coarse-grained.  They do not provide as
-much information about problems as programmers might like.  In an effort to
-address this, newer versions of SQLite (version 3.3.8 2006-10-09
-and later) include
-support for additional result codes that provide more detailed information
-about errors. These extended result codes are enabled or disabled
-on a per database connection basis using the
-sqlite3_extended_result_codes() API.  Or, the extended code for
-the most recent error can be obtained using
-sqlite3_extended_errcode().
+在其默认配置下，SQLite API 例程返回 30 个整数结果码之一。但经验表明，其中许多结果码过于粗略，
+不能像程序员希望的那样提供关于问题的足够信息。为解决这个问题，较新的 SQLite 版本（3.3.8
+2006-10-09 及以后）包含对提供更详细错误信息的额外结果码的支持。这些扩展结果码用
+`sqlite3_extended_result_codes()` API 按数据库连接逐个启用或禁用。或者，最近一次错误的扩展码可用
+`sqlite3_extended_errcode()` 获得。
 
 ---
 
-## Flags for the xAccess VFS method
+## xAccess VFS 方法的标志（Flags for the xAccess VFS method）
 
 ```
-
 #define SQLITE_ACCESS_EXISTS    0
-#define SQLITE_ACCESS_READWRITE 1   /* Used by PRAGMA temp_store_directory */
-#define SQLITE_ACCESS_READ      2   /* Unused */
-
+#define SQLITE_ACCESS_READWRITE 1   /* 供 PRAGMA temp_store_directory 使用 */
+#define SQLITE_ACCESS_READ      2   /* 未使用 */
 ```
 
-These integer constants can be used as the third parameter to
-the xAccess method of an sqlite3_vfs object.  They determine
-what kind of permissions the xAccess method is looking for.
-With SQLITE_ACCESS_EXISTS, the xAccess method
-simply checks whether the file exists.
-With SQLITE_ACCESS_READWRITE, the xAccess method
-checks whether the named directory is both readable and writable
-(in other words, if files can be added, removed, and renamed within
-the directory).
-The SQLITE_ACCESS_READWRITE constant is currently used only by the
-temp_store_directory pragma, though this could change in a future
-release of SQLite.
-With SQLITE_ACCESS_READ, the xAccess method
-checks whether the file is readable.  The SQLITE_ACCESS_READ constant is
-currently unused, though it might be used in a future release of
-SQLite.
+这些整数常量可用作 sqlite3_vfs 对象的 xAccess 方法的第三个参数。它们决定 xAccess 方法在寻找
+什么类型的权限。用 `SQLITE_ACCESS_EXISTS`，xAccess 方法只检查文件是否存在。用
+`SQLITE_ACCESS_READWRITE`，xAccess 方法检查指定目录是否既可读又可写（换句话说，目录内是否可
+添加、移除和重命名文件）。`SQLITE_ACCESS_READWRITE` 常量目前只被 temp_store_directory pragma
+使用，不过这在 SQLite 未来版本中可能改变。用 `SQLITE_ACCESS_READ`，xAccess 方法检查文件是否
+可读。`SQLITE_ACCESS_READ` 常量当前未使用，不过可能用于 SQLite 未来版本。
 
 ---
 
-## Authorizer Action Codes
+## 授权器动作码（Authorizer Action Codes）
 
 ```
-
 /******************************************* 3rd ************ 4th ***********/
-#define SQLITE_CREATE_INDEX          1   /* Index Name      Table Name      */
-#define SQLITE_CREATE_TABLE          2   /* Table Name      NULL            */
-#define SQLITE_CREATE_TEMP_INDEX     3   /* Index Name      Table Name      */
-#define SQLITE_CREATE_TEMP_TABLE     4   /* Table Name      NULL            */
-#define SQLITE_CREATE_TEMP_TRIGGER   5   /* Trigger Name    Table Name      */
-#define SQLITE_CREATE_TEMP_VIEW      6   /* View Name       NULL            */
-#define SQLITE_CREATE_TRIGGER        7   /* Trigger Name    Table Name      */
-#define SQLITE_CREATE_VIEW           8   /* View Name       NULL            */
-#define SQLITE_DELETE                9   /* Table Name      NULL            */
-#define SQLITE_DROP_INDEX           10   /* Index Name      Table Name      */
-#define SQLITE_DROP_TABLE           11   /* Table Name      NULL            */
-#define SQLITE_DROP_TEMP_INDEX      12   /* Index Name      Table Name      */
-#define SQLITE_DROP_TEMP_TABLE      13   /* Table Name      NULL            */
-#define SQLITE_DROP_TEMP_TRIGGER    14   /* Trigger Name    Table Name      */
-#define SQLITE_DROP_TEMP_VIEW       15   /* View Name       NULL            */
-#define SQLITE_DROP_TRIGGER         16   /* Trigger Name    Table Name      */
-#define SQLITE_DROP_VIEW            17   /* View Name       NULL            */
-#define SQLITE_INSERT               18   /* Table Name      NULL            */
-#define SQLITE_PRAGMA               19   /* Pragma Name     1st arg or NULL */
-#define SQLITE_READ                 20   /* Table Name      Column Name     */
-#define SQLITE_SELECT               21   /* NULL            NULL            */
-#define SQLITE_TRANSACTION          22   /* Operation       NULL            */
-#define SQLITE_UPDATE               23   /* Table Name      Column Name     */
-#define SQLITE_ATTACH               24   /* Filename        NULL            */
-#define SQLITE_DETACH               25   /* Database Name   NULL            */
-#define SQLITE_ALTER_TABLE          26   /* Database Name   Table Name      */
-#define SQLITE_REINDEX              27   /* Index Name      NULL            */
-#define SQLITE_ANALYZE              28   /* Table Name      NULL            */
-#define SQLITE_CREATE_VTABLE        29   /* Table Name      Module Name     */
-#define SQLITE_DROP_VTABLE          30   /* Table Name      Module Name     */
-#define SQLITE_FUNCTION             31   /* NULL            Function Name   */
-#define SQLITE_SAVEPOINT            32   /* Operation       Savepoint Name  */
-#define SQLITE_COPY                  0   /* No longer used */
-#define SQLITE_RECURSIVE            33   /* NULL            NULL            */
-
+#define SQLITE_CREATE_INDEX          1   /* 索引名        表名             */
+#define SQLITE_CREATE_TABLE          2   /* 表名          NULL             */
+#define SQLITE_CREATE_TEMP_INDEX     3   /* 索引名        表名             */
+#define SQLITE_CREATE_TEMP_TABLE     4   /* 表名          NULL             */
+#define SQLITE_CREATE_TEMP_TRIGGER   5   /* 触发器名      表名             */
+#define SQLITE_CREATE_TEMP_VIEW      6   /* 视图名        NULL             */
+#define SQLITE_CREATE_TRIGGER        7   /* 触发器名      表名             */
+#define SQLITE_CREATE_VIEW           8   /* 视图名        NULL             */
+#define SQLITE_DELETE                9   /* 表名          NULL             */
+#define SQLITE_DROP_INDEX           10   /* 索引名        表名             */
+#define SQLITE_DROP_TABLE           11   /* 表名          NULL             */
+#define SQLITE_DROP_TEMP_INDEX      12   /* 索引名        表名             */
+#define SQLITE_DROP_TEMP_TABLE      13   /* 表名          NULL             */
+#define SQLITE_DROP_TEMP_TRIGGER    14   /* 触发器名      表名             */
+#define SQLITE_DROP_TEMP_VIEW       15   /* 视图名        NULL             */
+#define SQLITE_DROP_TRIGGER         16   /* 触发器名      表名             */
+#define SQLITE_DROP_VIEW            17   /* 视图名        NULL             */
+#define SQLITE_INSERT               18   /* 表名          NULL             */
+#define SQLITE_PRAGMA               19   /* Pragma 名     第 1 参数或 NULL  */
+#define SQLITE_READ                 20   /* 表名          列名             */
+#define SQLITE_SELECT               21   /* NULL          NULL             */
+#define SQLITE_TRANSACTION          22   /* 操作          NULL             */
+#define SQLITE_UPDATE               23   /* 表名          列名             */
+#define SQLITE_ATTACH               24   /* 文件名        NULL             */
+#define SQLITE_DETACH               25   /* 数据库名      NULL             */
+#define SQLITE_ALTER_TABLE          26   /* 数据库名      表名             */
+#define SQLITE_REINDEX              27   /* 索引名        NULL             */
+#define SQLITE_ANALYZE              28   /* 表名          NULL             */
+#define SQLITE_CREATE_VTABLE        29   /* 表名          模块名           */
+#define SQLITE_DROP_VTABLE          30   /* 表名          模块名           */
+#define SQLITE_FUNCTION             31   /* NULL          函数名           */
+#define SQLITE_SAVEPOINT            32   /* 操作          保存点名称       */
+#define SQLITE_COPY                  0   /* 不再使用 */
+#define SQLITE_RECURSIVE            33   /* NULL          NULL             */
 ```
 
-The sqlite3_set_authorizer() interface registers a callback function
-that is invoked to authorize certain SQL statement actions.  The
-second parameter to the callback is an integer code that specifies
-what action is being authorized.  These are the integer action codes that
-the authorizer callback may be passed.
+`sqlite3_set_authorizer()` 接口注册一个回调函数，用于授权某些 SQL 语句动作。回调的第二个参数是
+一个整数代码，指定正在被授权什么动作。授权器回调可能被传的就是这些整数动作码。
 
-These action code values signify what kind of operation is to be
-authorized.  The 3rd and 4th parameters to the authorization
-callback function will be parameters or NULL depending on which of these
-codes is used as the second parameter.  The 5th parameter to the
-authorizer callback is the name of the database ("main", "temp",
-etc.) if applicable.  The 6th parameter to the authorizer callback
-is the name of the inner-most trigger or view that is responsible for
-the access attempt or NULL if this access attempt is directly from
-top-level SQL code.
+这些动作码值指示要授权哪种操作。授权回调函数的第 3 和第 4 个参数将是参数或 NULL，取决于哪个码
+被用作第二个参数。授权器回调的第 5 个参数是数据库名（"main"、"temp" 等），如适用。授权器回调的
+第 6 个参数是对访问尝试负责的最内层触发器或视图的名字；若访问尝试直接来自顶层 SQL 代码，则为
+NULL。
 
 ---
 
-## Text Encodings
+## 文本编码（Text Encodings）
 
 ```
-
 #define SQLITE_UTF8           1    /* IMP: R-37514-35566 */
 #define SQLITE_UTF16LE        2    /* IMP: R-03371-37637 */
 #define SQLITE_UTF16BE        3    /* IMP: R-51971-34154 */
-#define SQLITE_UTF16          4    /* Use native byte order */
-#define SQLITE_ANY            5    /* Deprecated */
-#define SQLITE_UTF16_ALIGNED  8    /* sqlite3_create_collation only */
-#define SQLITE_UTF8_ZT       16    /* Zero-terminated UTF8 */
-
+#define SQLITE_UTF16          4    /* 使用本机字节序 */
+#define SQLITE_ANY            5    /* 已废弃 */
+#define SQLITE_UTF16_ALIGNED  8    /* 仅 sqlite3_create_collation 用 */
+#define SQLITE_UTF8_ZT       16    /* 零结尾 UTF-8 */
 ```
 
-These constants define integer codes that represent the various
-text encodings supported by SQLite.
+这些常量定义表示 SQLite 支持的各种文本编码的整数代码。
 
- SQLITE_UTF8Text is encoding as UTF-8
+`SQLITE_UTF8` 文本编码为 UTF-8。
 
- SQLITE_UTF16LEText is encoding as UTF-16
-with each code point being expressed "little endian" - the least significant
-byte first.  This is the usual encoding, for example on Windows.
+`SQLITE_UTF16LE` 文本编码为 UTF-16，每个码点以"小端"表示——最低有效字节在前。这是通常的编码，
+例如在 Windows 上。
 
- SQLITE_UTF16BEText is encoding as UTF-16
-with each code point being expressed "big endian" - the most significant
-byte first.  This encoding is less common, but is still sometimes seen,
-specially on older systems.
+`SQLITE_UTF16BE` 文本编码为 UTF-16，每个码点以"大端"表示——最高有效字节在前。这种编码不太常见，
+但有时仍能见到，尤其是在较旧的系统上。
 
- SQLITE_UTF16Text is encoding as UTF-16
-with each code point being expressed either little endian or as big
-endian, according to the native endianness of the host computer.
+`SQLITE_UTF16` 文本编码为 UTF-16，每个码点根据宿主计算机的本机字节序以小端或大端表示。
 
- SQLITE_ANYThis encoding value may only be used
-to declare the preferred text for application-defined SQL functions
-created using sqlite3_create_function() and similar.  If the preferred
-encoding (the 4th parameter to sqlite3_create_function() - the eTextRep
-parameter) is SQLITE_ANY, that indicates that the function does not have
-a preference regarding the text encoding of its parameters and can take
-any text encoding that the SQLite core find convenient to supply.  This
-option is deprecated.  Please do not use it in new applications.
+`SQLITE_ANY` 此编码值只能用于声明用 `sqlite3_create_function()` 等创建的应用自定义 SQL 函数的
+首选文本。若首选编码（`sqlite3_create_function()` 的第 4 个参数，即 eTextRep 参数）是
+`SQLITE_ANY`，表示该函数对其参数文本编码没有偏好，可以接受 SQLite 核心觉得方便的任意文本编码。
+此选项已废弃，新应用请勿使用。
 
- SQLITE_UTF16_ALIGNEDThis encoding
-value may be used as the 3rd parameter (the eTextRep parameter) to
-sqlite3_create_collation() and similar.  This encoding value means
-that the application-defined collating sequence created expects its
-input strings to be in UTF16 in native byte order, and that the start
-of the strings must be aligned to a 2-byte boundary.
+`SQLITE_UTF16_ALIGNED` 此编码值可用作 `sqlite3_create_collation()` 等的第 3 个参数（eTextRep
+参数）。此编码值表示：创建的应用自定义排序规则期望其输入字符串为本机字节序的 UTF-16，且字符串
+起始必须对齐到 2 字节边界。
 
- SQLITE_UTF8_ZTThis option can only be
-used to specify the text encoding to strings input to
-sqlite3_result_text64() and sqlite3_bind_text64().
-The SQLITE_UTF8_ZT encoding means that the input string (call it "z")
-is UTF-8 encoded and that it is zero-terminated.  If the length parameter
-(call it "n") is non-negative, this encoding option means that the caller
-guarantees that z array contains at least n+1 bytes and that the z[n]
-byte has a value of zero.
-This option gives the same output as SQLITE_UTF8, but can be more efficient
-by avoiding the need to make a copy of the input string, in some cases.
-However, if z is allocated to hold fewer than n+1 bytes or if the
-z[n] byte is not zero, undefined behavior may result.
+`SQLITE_UTF8_ZT` 此选项只能用于指定传给 `sqlite3_result_text64()` 和 `sqlite3_bind_text64()`
+的字符串的文本编码。`SQLITE_UTF8_ZT` 编码表示输入字符串（称为 "z"）是 UTF-8 编码、且是零结尾
+的。若长度参数（称为 "n"）非负，此编码选项表示调用者保证 z 数组至少包含 n+1 字节、且 z[n] 字节
+的值为零。此选项与 `SQLITE_UTF8` 给出相同输出，但在某些情况下可避免复制输入字符串的需要、从而
+更高效。但若 z 被分配的字节少于 n+1、或 z[n] 字节不是零，则可能导致未定义行为。
 
 ---
 
-## Fundamental Datatypes
+## 基本数据类型（Fundamental Datatypes）
 
 ```
-
 #define SQLITE_INTEGER  1
 #define SQLITE_FLOAT    2
 #define SQLITE_BLOB     4
@@ -6502,83 +4108,75 @@ z[n] byte is not zero, undefined behavior may result.
 # define SQLITE_TEXT     3
 #endif
 #define SQLITE3_TEXT     3
-
 ```
 
-Every value in SQLite has one of five fundamental datatypes:
+SQLite 中的每个值都有五种基本数据类型之一：
 
--  64-bit signed integer
+- 64 位有符号整数
+- 64 位 IEEE 浮点数
+- 字符串
+- BLOB
+- NULL
 
--  64-bit IEEE floating point number
+## 基本数据类型
 
--  string
+- 64 位 IEEE 浮点数
+- 字符串
+- BLOB
+- NULL
 
--  BLOB
+这些常量是每种类型的代码。
 
--  NULL
-
-These constants are codes for each of those types.
-
-Note that the SQLITE_TEXT constant was also used in SQLite version 2
-for a completely different meaning.  Software that links against both
-SQLite version 2 and SQLite version 3 should use SQLITE3_TEXT, not
-SQLITE_TEXT.
+注意：`SQLITE_TEXT` 常量在 SQLite 版本 2 中也被使用，但含义完全不同。同时链接 SQLite 版本 2
+和版本 3 的软件应使用 `SQLITE3_TEXT`，而非 `SQLITE_TEXT`。
 
 ---
 
-## Datatypes for the CARRAY table-valued function
+## CARRAY 表值函数的数据类型（Datatypes for the CARRAY table-valued function）
 
 ```
-
-#define SQLITE_CARRAY_INT32     0    /* Data is 32-bit signed integers */
-#define SQLITE_CARRAY_INT64     1    /* Data is 64-bit signed integers */
-#define SQLITE_CARRAY_DOUBLE    2    /* Data is doubles */
-#define SQLITE_CARRAY_TEXT      3    /* Data is char* */
-#define SQLITE_CARRAY_BLOB      4    /* Data is struct iovec */
-
+#define SQLITE_CARRAY_INT32     0    /* 数据是 32 位有符号整数 */
+#define SQLITE_CARRAY_INT64     1    /* 数据是 64 位有符号整数 */
+#define SQLITE_CARRAY_DOUBLE    2    /* 数据是双精度浮点数 */
+#define SQLITE_CARRAY_TEXT      3    /* 数据是 char* */
+#define SQLITE_CARRAY_BLOB      4    /* 数据是 struct iovec */
 ```
 
-The fifth argument to the sqlite3_carray_bind() interface musts be
-one of the following constants, to specify the datatype of the array
-that is being bound into the carray table-valued function.
+`sqlite3_carray_bind()` 接口的第五个参数必须是以下常量之一，指定被绑定到 carray 表值函数中的
+数组的数据类型。
 
 ---
 
-## Checkpoint Mode Values
+## 检查点模式值（Checkpoint Mode Values）
 
 ```
-
-#define SQLITE_CHECKPOINT_NOOP    -1  /* Do no work at all */
-#define SQLITE_CHECKPOINT_PASSIVE  0  /* Do as much as possible w/o blocking */
-#define SQLITE_CHECKPOINT_FULL     1  /* Wait for writers, then checkpoint */
-#define SQLITE_CHECKPOINT_RESTART  2  /* Like FULL but wait for readers */
-#define SQLITE_CHECKPOINT_TRUNCATE 3  /* Like RESTART but also truncate WAL */
-
+#define SQLITE_CHECKPOINT_NOOP    -1  /* 完全不做任何工作 */
+#define SQLITE_CHECKPOINT_PASSIVE  0  /* 尽量多做而不阻塞 */
+#define SQLITE_CHECKPOINT_FULL     1  /* 等待写者，然后检查点 */
+#define SQLITE_CHECKPOINT_RESTART  2  /* 同 FULL，但等待读者 */
+#define SQLITE_CHECKPOINT_TRUNCATE 3  /* 同 RESTART，但也截断 WAL */
 ```
 
-These constants define all valid values for the "checkpoint mode" passed
-as the third parameter to the sqlite3_wal_checkpoint_v2() interface.
-See the sqlite3_wal_checkpoint_v2() documentation for details on the
-meaning of each of these checkpoint modes.
+这些常量定义传给 `sqlite3_wal_checkpoint_v2()` 接口的第三个参数"检查点模式"的所有有效值。每种
+检查点模式含义的细节见 `sqlite3_wal_checkpoint_v2()` 文档。
 
 ---
 
-## Configuration Options
+## 配置选项（Configuration Options）
 
 ```
-
 #define SQLITE_CONFIG_SINGLETHREAD         1  /* nil */
 #define SQLITE_CONFIG_MULTITHREAD          2  /* nil */
 #define SQLITE_CONFIG_SERIALIZED           3  /* nil */
 #define SQLITE_CONFIG_MALLOC               4  /* sqlite3_mem_methods* */
 #define SQLITE_CONFIG_GETMALLOC            5  /* sqlite3_mem_methods* */
-#define SQLITE_CONFIG_SCRATCH              6  /* No longer used */
+#define SQLITE_CONFIG_SCRATCH              6  /* 不再使用 */
 #define SQLITE_CONFIG_PAGECACHE            7  /* void*, int sz, int N */
 #define SQLITE_CONFIG_HEAP                 8  /* void*, int nByte, int min */
 #define SQLITE_CONFIG_MEMSTATUS            9  /* boolean */
 #define SQLITE_CONFIG_MUTEX               10  /* sqlite3_mutex_methods* */
 #define SQLITE_CONFIG_GETMUTEX            11  /* sqlite3_mutex_methods* */
-/* previously SQLITE_CONFIG_CHUNKALLOC    12 which is now unused. */
+/* 之前的 SQLITE_CONFIG_CHUNKALLOC        12 现已不使用。 */
 #define SQLITE_CONFIG_LOOKASIDE           13  /* int int */
 #define SQLITE_CONFIG_PCACHE              14  /* no-op */
 #define SQLITE_CONFIG_GETPCACHE           15  /* no-op */
@@ -6597,387 +4195,201 @@ meaning of each of these checkpoint modes.
 #define SQLITE_CONFIG_SORTERREF_SIZE      28  /* int nByte */
 #define SQLITE_CONFIG_MEMDB_MAXSIZE       29  /* sqlite3_int64 */
 #define SQLITE_CONFIG_ROWID_IN_VIEW       30  /* int* */
-
 ```
 
-These constants are the available integer configuration options that
-can be passed as the first argument to the sqlite3_config() interface.
+这些常量是可作为 `sqlite3_config()` 接口第一个参数传入的可用整数配置选项。
 
-Most of the configuration options for sqlite3_config()
-will only work if invoked prior to sqlite3_initialize() or after
-sqlite3_shutdown().  The few exceptions to this rule are called
-"anytime configuration options".
-Calling sqlite3_config() with a first argument that is not an
-anytime configuration option in between calls to sqlite3_initialize() and
-sqlite3_shutdown() is a no-op that returns SQLITE_MISUSE.
+`sqlite3_config()` 的大多数配置选项只在调用 `sqlite3_initialize()` 之前、或调用
+`sqlite3_shutdown()` 之后起作用。此规则的少数例外称为"随时配置选项"。在 `sqlite3_initialize()`
+和 `sqlite3_shutdown()` 调用之间、用非随时配置选项的首参数调用 `sqlite3_config()`，是返回
+`SQLITE_MISUSE` 的空操作。
 
-The set of anytime configuration options can change (by insertions
-and/or deletions) from one release of SQLite to the next.
-As of SQLite version 3.42.0, the complete set of anytime configuration
-options is:
+随时配置选项的集合可能随 SQLite 版本而变（通过插入和/或删除）。截至 SQLite 版本 3.42.0，完整的
+随时配置选项集合是：
 
--  SQLITE_CONFIG_LOG
+- `SQLITE_CONFIG_LOG`
+- `SQLITE_CONFIG_PCACHE_HDRSZ`
 
--  SQLITE_CONFIG_PCACHE_HDRSZ
+未来版本的 SQLite 可能加入新的配置选项，现有配置选项可能停用。应用应检查 `sqlite3_config()`
+的返回码，以确保调用生效。若调用了已停用或不支持的配置选项，`sqlite3_config()` 接口将返回非零
+错误码。
 
-New configuration options may be added in future releases of SQLite.
-Existing configuration options might be discontinued.  Applications
-should check the return code from sqlite3_config() to make sure that
-the call worked.  The sqlite3_config() interface will return a
-non-zero error code if a discontinued or unsupported configuration option
-is invoked.
+**SQLITE_CONFIG_SINGLETHREAD**：此选项无参数。此选项把线程模式设置为 Single-thread（单线程）。
+换句话说，它禁用所有互斥锁，使 SQLite 只能被单个线程使用。若 SQLite 用 `SQLITE_THREADSAFE=0`
+编译期选项编译，则无法把线程模式从默认的 Single-thread 改变，因此用 `SQLITE_CONFIG_SINGLETHREAD`
+配置选项调用 `sqlite3_config()` 会返回 `SQLITE_ERROR`。
 
- SQLITE_CONFIG_SINGLETHREAD
-There are no arguments to this option.  This option sets the
-threading mode to Single-thread.  In other words, it disables
-all mutexing and puts SQLite into a mode where it can only be used
-by a single thread.   If SQLite is compiled with
-the SQLITE_THREADSAFE=0 compile-time option then
-it is not possible to change the threading mode from its default
-value of Single-thread and so sqlite3_config() will return
-SQLITE_ERROR if called with the SQLITE_CONFIG_SINGLETHREAD
-configuration option.
+**SQLITE_CONFIG_MULTITHREAD**：此选项无参数。此选项把线程模式设置为 Multi-thread（多线程）。
+换句话说，它禁用数据库连接和预编译语句对象上的互斥锁。应用负责对数据库连接和预编译语句的访问
+做串行化。但其它互斥锁被启用，因此只要没有两个线程同时使用同一个数据库连接，SQLite 在多线程
+环境中使用就是安全的。若 SQLite 用 `SQLITE_THREADSAFE=0` 编译期选项编译，则无法设置
+Multi-thread 线程模式，用 `SQLITE_CONFIG_MULTITHREAD` 配置选项调用 `sqlite3_config()` 会返回
+`SQLITE_ERROR`。
 
- SQLITE_CONFIG_MULTITHREAD
-There are no arguments to this option.  This option sets the
-threading mode to Multi-thread.  In other words, it disables
-mutexing on database connection and prepared statement objects.
-The application is responsible for serializing access to
-database connections and prepared statements.  But other mutexes
-are enabled so that SQLite will be safe to use in a multi-threaded
-environment as long as no two threads attempt to use the same
-database connection at the same time.  If SQLite is compiled with
-the SQLITE_THREADSAFE=0 compile-time option then
-it is not possible to set the Multi-thread threading mode and
-sqlite3_config() will return SQLITE_ERROR if called with the
-SQLITE_CONFIG_MULTITHREAD configuration option.
+**SQLITE_CONFIG_SERIALIZED**：此选项无参数。此选项把线程模式设置为 Serialized（串行化）。
+换句话说，此选项启用所有互斥锁，包括数据库连接和预编译语句对象上的递归互斥锁。在此模式（当
+SQLite 用 `SQLITE_THREADSAFE=1` 编译时的默认模式）下，SQLite 库自己串行化对数据库连接和预编译
+语句的访问，使应用可以在不同线程中同时使用同一个数据库连接或同一个预编译语句。若 SQLite 用
+`SQLITE_THREADSAFE=0` 编译期选项编译，则无法设置 Serialized 线程模式，用
+`SQLITE_CONFIG_SERIALIZED` 配置选项调用 `sqlite3_config()` 会返回 `SQLITE_ERROR`。
 
- SQLITE_CONFIG_SERIALIZED
-There are no arguments to this option.  This option sets the
-threading mode to Serialized. In other words, this option enables
-all mutexes including the recursive
-mutexes on database connection and prepared statement objects.
-In this mode (which is the default when SQLite is compiled with
-SQLITE_THREADSAFE=1) the SQLite library will itself serialize access
-to database connections and prepared statements so that the
-application is free to use the same database connection or the
-same prepared statement in different threads at the same time.
-If SQLite is compiled with
-the SQLITE_THREADSAFE=0 compile-time option then
-it is not possible to set the Serialized threading mode and
-sqlite3_config() will return SQLITE_ERROR if called with the
-SQLITE_CONFIG_SERIALIZED configuration option.
+**SQLITE_CONFIG_MALLOC**：此选项接受单个参数，即指向 `sqlite3_mem_methods` 结构实例的指针。
+该参数指定替代低层内存分配例程，用于取代 SQLite 内建的内存分配例程。SQLite 在 `sqlite3_config()`
+调用返回前，会制作 `sqlite3_mem_methods` 结构内容的私有副本。
 
- SQLITE_CONFIG_MALLOC
- The SQLITE_CONFIG_MALLOC option takes a single argument which is
-a pointer to an instance of the sqlite3_mem_methods structure.
-The argument specifies
-alternative low-level memory allocation routines to be used in place of
-the memory allocation routines built into SQLite. SQLite makes
-its own private copy of the content of the sqlite3_mem_methods structure
-before the sqlite3_config() call returns.
+**SQLITE_CONFIG_GETMALLOC**：此选项接受单个参数，即指向 `sqlite3_mem_methods` 结构实例的指针。
+`sqlite3_mem_methods` 结构被填上当前定义的内存分配例程。此选项可用于用包装器重载默认内存分配
+例程，例如模拟内存分配失败或跟踪内存使用。
 
- SQLITE_CONFIG_GETMALLOC
- The SQLITE_CONFIG_GETMALLOC option takes a single argument which
-is a pointer to an instance of the sqlite3_mem_methods structure.
-The sqlite3_mem_methods
-structure is filled with the currently defined memory allocation routines.
-This option can be used to overload the default memory allocation
-routines with a wrapper that simulates memory allocation failure or
-tracks memory usage, for example.
+**SQLITE_CONFIG_SMALL_MALLOC**：此选项接受单个 int 类型参数，解释为布尔值；若为真，则向
+SQLite 提供提示：应尽量避免大的内存分配。若 SQLite 可自由做大内存分配，它会运行得更快；但某些
+应用可能宁可运行慢些，以换取避免大分配才可能获得的内存碎片保证。此提示通常关闭。
 
- SQLITE_CONFIG_SMALL_MALLOC
- The SQLITE_CONFIG_SMALL_MALLOC option takes a single argument of
-type int, interpreted as a boolean, which if true provides a hint to
-SQLite that it should avoid large memory allocations if possible.
-SQLite will run faster if it is free to make large memory allocations,
-but some applications might prefer to run slower in exchange for
-guarantees about memory fragmentation that are possible if large
-allocations are avoided.  This hint is normally off.
+**SQLITE_CONFIG_MEMSTATUS**：此选项接受单个 int 类型参数，解释为布尔值，用于启用或禁用内存
+分配统计的收集。当内存分配统计被禁用时，以下 SQLite 接口变为非工作状态：
 
- SQLITE_CONFIG_MEMSTATUS
- The SQLITE_CONFIG_MEMSTATUS option takes a single argument of type int,
-interpreted as a boolean, which enables or disables the collection of
-memory allocation statistics. When memory allocation statistics are
-disabled, the following SQLite interfaces become non-operational:
+- sqlite3_hard_heap_limit64()
+- sqlite3_memory_used()
+- sqlite3_memory_highwater()
+- sqlite3_soft_heap_limit64()
+- sqlite3_status64()
 
--  sqlite3_hard_heap_limit64()
+内存分配统计默认启用，除非 SQLite 用 `SQLITE_DEFAULT_MEMSTATUS=0` 编译，此时内存分配统计默认
+禁用。
 
--  sqlite3_memory_used()
+**SQLITE_CONFIG_SCRATCH**：此选项不再使用。
 
--  sqlite3_memory_highwater()
+**SQLITE_CONFIG_PAGECACHE**：此选项指定一个内存池，SQLite 可将其用于默认页缓存实现下的数据库
+页缓存。若用 `SQLITE_CONFIG_PCACHE2` 加载了应用自定义的页缓存实现，此配置选项是空操作。
+`SQLITE_CONFIG_PAGECACHE` 有三个参数：指向 8 字节对齐内存的指针（pMem）、每个页缓存行的大小
+（sz）、以及缓存行数量（N）。sz 参数应是最大数据库页的大小（512 到 65536 之间的 2 的幂）加上
+每个页头所需的额外字节。页头所需的额外字节数可用 `SQLITE_CONFIG_PCACHE_HDRSZ` 确定。sz 参数
+大于必要值除了浪费内存外没有坏处。pMem 参数必须是 NULL 指针，或指向至少 sz*N 字节的 8 字节对齐
+内存块的指针，否则后续行为未定义。当 pMem 非 NULL 时，SQLite 将尽量用所提供的内存满足页缓存
+需求，若页缓存行大于 sz 字节、或 pMem 缓冲区耗尽，则回退到 `sqlite3_malloc()`。若 pMem 为 NULL
+且 N 非零，则每个数据库连接从 `sqlite3_malloc()` 做一次初始批量分配：若 N 为正，足够 N 个缓存行；
+若 N 为负，为 -1024*N 字节。若初始分配之外还需要更多页缓存内存，则 SQLite 对每个额外缓存行
+分别向 `sqlite3_malloc()` 申请。
 
--  sqlite3_soft_heap_limit64()
+**SQLITE_CONFIG_HEAP**：此选项指定一个静态内存缓冲区，SQLite 将用它满足 `SQLITE_CONFIG_PAGECACHE`
+提供之外的所有动态内存分配需求。`SQLITE_CONFIG_HEAP` 选项仅在 SQLite 用 `SQLITE_ENABLE_MEMSYS3`
+或 `SQLITE_ENABLE_MEMSYS5` 编译时可用，否则返回 `SQLITE_ERROR`。`SQLITE_CONFIG_HEAP` 有三个
+参数：指向内存的 8 字节对齐指针、内存缓冲区中的字节数、最小分配大小。若第一个指针（内存指针）
+为 NULL，则 SQLite 恢复使用其默认内存分配器（系统 malloc() 实现），撤销任何先前对
+`SQLITE_CONFIG_MALLOC` 的调用。若内存指针非 NULL，则启用替代内存分配器处理 SQLite 的所有内存
+分配需求。第一个指针（内存指针）必须对齐到 8 字节边界，否则 SQLite 后续行为未定义。最小分配大小
+上限为 2**12；最小分配大小的合理值在 2**5 到 2**8 之间。
 
--  sqlite3_status64()
+**SQLITE_CONFIG_MUTEX**：此选项接受单个参数，即指向 `sqlite3_mutex_methods` 结构实例的指针。
+该参数指定替代低层互斥锁例程，用于取代 SQLite 内建的互斥锁例程。SQLite 在 `sqlite3_config()`
+调用返回前复制 `sqlite3_mutex_methods` 结构的内容。若 SQLite 用 `SQLITE_THREADSAFE=0` 编译期
+选项编译，则整个互斥锁子系统从构建中省略，因此用 `SQLITE_CONFIG_MUTEX` 配置选项调用
+`sqlite3_config()` 会返回 `SQLITE_ERROR`。
 
-Memory allocation statistics are enabled by default unless SQLite is
-compiled with SQLITE_DEFAULT_MEMSTATUS=0 in which case memory
-allocation statistics are disabled by default.
+**SQLITE_CONFIG_GETMUTEX**：此选项接受单个参数，即指向 `sqlite3_mutex_methods` 结构实例的指针。
+`sqlite3_mutex_methods` 结构被填上当前定义的互斥锁例程。此选项可用于用包装器重载默认互斥锁分配
+例程，例如用于性能分析或测试的互斥锁使用跟踪。若 SQLite 用 `SQLITE_THREADSAFE=0` 编译期选项
+编译，则整个互斥锁子系统从构建中省略，因此用 `SQLITE_CONFIG_GETMUTEX` 配置选项调用
+`sqlite3_config()` 会返回 `SQLITE_ERROR`。
 
- SQLITE_CONFIG_SCRATCH
- The SQLITE_CONFIG_SCRATCH option is no longer used.
+**SQLITE_CONFIG_LOOKASIDE**：此选项接受两个参数，决定每个数据库连接上 lookaside 内存的默认
+大小。第一个参数是每个 lookaside 缓冲区槽的大小（"sz"），第二个参数是分配给每个数据库连接的
+槽数（"cnt"）。`SQLITE_CONFIG_LOOKASIDE` 设置默认 lookaside 大小。`sqlite3_db_config()` 的
+`SQLITE_DBCONFIG_LOOKASIDE` 选项可用于改变单个连接的 lookaside 配置。`-DSQLITE_DEFAULT_LOOKASIDE`
+选项可在编译期改变默认 lookaside 配置。
 
- SQLITE_CONFIG_PAGECACHE
- The SQLITE_CONFIG_PAGECACHE option specifies a memory pool
-that SQLite can use for the database page cache with the default page
-cache implementation.
-This configuration option is a no-op if an application-defined page
-cache implementation is loaded using the SQLITE_CONFIG_PCACHE2.
-There are three arguments to SQLITE_CONFIG_PAGECACHE: A pointer to
-8-byte aligned memory (pMem), the size of each page cache line (sz),
-and the number of cache lines (N).
-The sz argument should be the size of the largest database page
-(a power of two between 512 and 65536) plus some extra bytes for each
-page header.  The number of extra bytes needed by the page header
-can be determined using SQLITE_CONFIG_PCACHE_HDRSZ.
-It is harmless, apart from the wasted memory,
-for the sz parameter to be larger than necessary.  The pMem
-argument must be either a NULL pointer or a pointer to an 8-byte
-aligned block of memory of at least sz*N bytes, otherwise
-subsequent behavior is undefined.
-When pMem is not NULL, SQLite will strive to use the memory provided
-to satisfy page cache needs, falling back to sqlite3_malloc() if
-a page cache line is larger than sz bytes or if all of the pMem buffer
-is exhausted.
-If pMem is NULL and N is non-zero, then each database connection
-does an initial bulk allocation for page cache memory
-from sqlite3_malloc() sufficient for N cache lines if N is positive or
-of -1024*N bytes if N is negative. If additional
-page cache memory is needed beyond what is provided by the initial
-allocation, then SQLite goes to sqlite3_malloc() separately for each
-additional cache line.
+**SQLITE_CONFIG_PCACHE2**：此选项接受单个参数，即指向 sqlite3_pcache_methods2 对象的指针。此
+对象指定自定义页缓存实现的接口。SQLite 复制 sqlite3_pcache_methods2 对象。
 
- SQLITE_CONFIG_HEAP
- The SQLITE_CONFIG_HEAP option specifies a static memory buffer
-that SQLite will use for all of its dynamic memory allocation needs
-beyond those provided for by SQLITE_CONFIG_PAGECACHE.
-The SQLITE_CONFIG_HEAP option is only available if SQLite is compiled
-with either SQLITE_ENABLE_MEMSYS3 or SQLITE_ENABLE_MEMSYS5 and returns
-SQLITE_ERROR if invoked otherwise.
-There are three arguments to SQLITE_CONFIG_HEAP:
-An 8-byte aligned pointer to the memory,
-the number of bytes in the memory buffer, and the minimum allocation size.
-If the first pointer (the memory pointer) is NULL, then SQLite reverts
-to using its default memory allocator (the system malloc() implementation),
-undoing any prior invocation of SQLITE_CONFIG_MALLOC.  If the
-memory pointer is not NULL then the alternative memory
-allocator is engaged to handle all of SQLites memory allocation needs.
-The first pointer (the memory pointer) must be aligned to an 8-byte
-boundary or subsequent behavior of SQLite will be undefined.
-The minimum allocation size is capped at 2**12. Reasonable values
-for the minimum allocation size are 2**5 through 2**8.
+## 配置选项
 
- SQLITE_CONFIG_MUTEX
- The SQLITE_CONFIG_MUTEX option takes a single argument which is a
-pointer to an instance of the sqlite3_mutex_methods structure.
-The argument specifies alternative low-level mutex routines to be used
-in place of the mutex routines built into SQLite.  SQLite makes a copy of
-the content of the sqlite3_mutex_methods structure before the call to
-sqlite3_config() returns. If SQLite is compiled with
-the SQLITE_THREADSAFE=0 compile-time option then
-the entire mutexing subsystem is omitted from the build and hence calls to
-sqlite3_config() with the SQLITE_CONFIG_MUTEX configuration option will
-return SQLITE_ERROR.
+**SQLITE_CONFIG_PCACHE2**：此选项接受单个参数，即指向 sqlite3_pcache_methods2 对象的指针。
+此对象指定自定义页缓存实现的接口。SQLite 复制 sqlite3_pcache_methods2 对象。
 
- SQLITE_CONFIG_GETMUTEX
- The SQLITE_CONFIG_GETMUTEX option takes a single argument which
-is a pointer to an instance of the sqlite3_mutex_methods structure.  The
-sqlite3_mutex_methods
-structure is filled with the currently defined mutex routines.
-This option can be used to overload the default mutex allocation
-routines with a wrapper used to track mutex usage for performance
-profiling or testing, for example.   If SQLite is compiled with
-the SQLITE_THREADSAFE=0 compile-time option then
-the entire mutexing subsystem is omitted from the build and hence calls to
-sqlite3_config() with the SQLITE_CONFIG_GETMUTEX configuration option will
-return SQLITE_ERROR.
+**SQLITE_CONFIG_GETPCACHE2**：此选项接受单个参数，即指向 sqlite3_pcache_methods2 对象的指针。
+SQLite 把当前页缓存实现复制到该对象中。
 
- SQLITE_CONFIG_LOOKASIDE
- The SQLITE_CONFIG_LOOKASIDE option takes two arguments that determine
-the default size of lookaside memory on each database connection.
-The first argument is the
-size of each lookaside buffer slot ("sz") and the second is the number of
-slots allocated to each database connection ("cnt").
-SQLITE_CONFIG_LOOKASIDE sets the default lookaside size.
-The SQLITE_DBCONFIG_LOOKASIDE option to sqlite3_db_config() can
-be used to change the lookaside configuration on individual connections.
-The -DSQLITE_DEFAULT_LOOKASIDE option can be used to change the
-default lookaside configuration at compile-time.
+**SQLITE_CONFIG_LOG**：此选项用于配置 SQLite 全局错误日志。（`SQLITE_CONFIG_LOG` 选项接受两个
+参数：指向调用签名为 void(*)(void*,int,const char*) 的函数的指针，以及指向 void 的指针。若函数
+指针非 NULL，则由 `sqlite3_log()` 调用它处理每个日志事件。若函数指针为 NULL，则 `sqlite3_log()`
+接口变为空操作。传给 `SQLITE_CONFIG_LOG` 的第二个参数 void 指针，在应用自定义日志函数每次被调用
+时作为其第一个参数传入。日志函数的第二个参数是对应 `sqlite3_log()` 调用第一个参数的副本，用于
+表示结果码或扩展结果码。传给日志函数的第三个参数是经 `sqlite3_snprintf()` 格式化后的日志消息。
+SQLite 日志接口不可重入；应用提供的日志函数不得调用任何 SQLite 接口。在多线程应用中，应用自定义
+日志函数必须线程安全。
 
- SQLITE_CONFIG_PCACHE2
- The SQLITE_CONFIG_PCACHE2 option takes a single argument which is
-a pointer to an sqlite3_pcache_methods2 object.  This object specifies
-the interface to a custom page cache implementation.
-SQLite makes a copy of the sqlite3_pcache_methods2 object.
+**SQLITE_CONFIG_URI**：此选项接受单个 int 类型参数。若非零，则全局启用 URI 处理。若参数为零，
+则全局禁用 URI 处理。若 URI 处理被全局启用，则传给 `sqlite3_open()`、`sqlite3_open_v2()`、
+`sqlite3_open16()` 或作为 ATTACH 命令一部分指定的所有文件名都被解释为 URI，无论打开数据库连接
+时是否设置 `SQLITE_OPEN_URI` 标志。若被全局禁用，则只有打开数据库连接时设置了 `SQLITE_OPEN_URI`
+标志，文件名才被解释为 URI。默认情况下 URI 处理被全局禁用。可通过用 `SQLITE_USE_URI` 符号定义
+编译来改变默认值。
 
- SQLITE_CONFIG_GETPCACHE2
- The SQLITE_CONFIG_GETPCACHE2 option takes a single argument which
-is a pointer to an sqlite3_pcache_methods2 object.  SQLite copies off
-the current page cache implementation into that object.
+**SQLITE_CONFIG_COVERING_INDEX_SCAN**：此选项接受单个整数参数，解释为布尔值，用于启用或禁用
+查询优化器中全表扫描使用覆盖索引。默认设置由 `SQLITE_ALLOW_COVERING_INDEX_SCAN` 编译期选项决定；
+若省略该编译期选项，则默认"开启"。能够禁用全表扫描使用覆盖索引，是因为某些编码不正确的旧应用在
+该优化启用时可能出故障。提供禁用该优化的能力，可以让旧的、有 bug 的应用代码即使配合更新版本的
+SQLite 也能不加修改地工作。
 
- SQLITE_CONFIG_LOG
- The SQLITE_CONFIG_LOG option is used to configure the SQLite
-global error log.
-(The SQLITE_CONFIG_LOG option takes two arguments: a pointer to a
-function with a call signature of void(*)(void*,int,const char*),
-and a pointer to void. If the function pointer is not NULL, it is
-invoked by sqlite3_log() to process each logging event.  If the
-function pointer is NULL, the sqlite3_log() interface becomes a no-op.
-The void pointer that is the second argument to SQLITE_CONFIG_LOG is
-passed through as the first parameter to the application-defined logger
-function whenever that function is invoked.  The second parameter to
-the logger function is a copy of the first parameter to the corresponding
-sqlite3_log() call and is intended to be a result code or an
-extended result code.  The third parameter passed to the logger is
-a log message after formatting via sqlite3_snprintf().
-The SQLite logging interface is not reentrant; the logger function
-supplied by the application must not invoke any SQLite interface.
-In a multi-threaded application, the application-defined logger
-function must be threadsafe.
+**SQLITE_CONFIG_PCACHE 和 SQLITE_CONFIG_GETPCACHE**：这些选项已废弃，新代码不应使用。它们为
+向后兼容而保留，但现在都是空操作。
 
- SQLITE_CONFIG_URI
-The SQLITE_CONFIG_URI option takes a single argument of type int.
-If non-zero, then URI handling is globally enabled. If the parameter is zero,
-then URI handling is globally disabled. If URI handling is globally
-enabled, all filenames passed to sqlite3_open(), sqlite3_open_v2(),
-sqlite3_open16() or
-specified as part of ATTACH commands are interpreted as URIs, regardless
-of whether or not the SQLITE_OPEN_URI flag is set when the database
-connection is opened. If it is globally disabled, filenames are
-only interpreted as URIs if the SQLITE_OPEN_URI flag is set when the
-database connection is opened. By default, URI handling is globally
-disabled. The default value may be changed by compiling with the
-SQLITE_USE_URI symbol defined.
+**SQLITE_CONFIG_SQLLOG**：此选项仅在 sqlite 用 `SQLITE_ENABLE_SQLLOG` 预处理宏定义编译时可用。
+第一个参数应是指向类型为 void(*)(void*,sqlite3*,const char*, int) 的函数的指针。第二个参数类型
+应为 (void*)。库在三种不同情形下调用该回调，由第四个参数的值标识。若第四个参数为 0，则作为第二
+个参数传入的数据库连接刚刚被打开；第三个参数指向包含主数据库文件名的缓冲区。若第四个参数为 1，
+则第三个参数指向的 SQL 语句刚刚被执行。若第四个参数为 2，则作为第二个参数传入的连接正在被关闭；
+此时第三个参数传 NULL。在规范 SQLite 源代码树中的 "test_sqllog.c" 源文件里可以看到使用此配置
+选项的示例。
 
- SQLITE_CONFIG_COVERING_INDEX_SCAN
-The SQLITE_CONFIG_COVERING_INDEX_SCAN option takes a single integer
-argument which is interpreted as a boolean in order to enable or disable
-the use of covering indices for full table scans in the query optimizer.
-The default setting is determined
-by the SQLITE_ALLOW_COVERING_INDEX_SCAN compile-time option, or is "on"
-if that compile-time option is omitted.
-The ability to disable the use of covering indices for full table scans
-is because some incorrectly coded legacy applications might malfunction
-when the optimization is enabled.  Providing the ability to
-disable the optimization allows the older, buggy application code to work
-without change even with newer versions of SQLite.
+**SQLITE_CONFIG_MMAP_SIZE**：`SQLITE_CONFIG_MMAP_SIZE` 接受两个 64 位整数（sqlite3_int64）值，
+即默认 mmap 大小限制（PRAGMA mmap_size 的默认设置）和允许的最大 mmap 大小限制。默认设置可由每个
+数据库连接用 PRAGMA mmap_size 命令或 `SQLITE_FCNTL_MMAP_SIZE` 文件控制覆盖。若必要，允许的最大
+mmap 大小会被静默截断，使其不超过 `SQLITE_MAX_MMAP_SIZE` 编译期选项设置的编译期最大 mmap 大小。
+若此选项的任一参数为负，则该参数被改为其编译期默认值。
 
-SQLITE_CONFIG_PCACHE and SQLITE_CONFIG_GETPCACHE
- These options are obsolete and should not be used by new code.
-They are retained for backwards compatibility but are now no-ops.
+**SQLITE_CONFIG_WIN32_HEAPSIZE**：此选项仅在 SQLite 为 Windows 编译且定义了
+`SQLITE_WIN32_MALLOC` 预处理宏时可用。`SQLITE_CONFIG_WIN32_HEAPSIZE` 接受一个 32 位无符号整数
+值，指定所创建堆的最大大小。
 
-SQLITE_CONFIG_SQLLOG
-This option is only available if sqlite is compiled with the
-SQLITE_ENABLE_SQLLOG pre-processor macro defined. The first argument should
-be a pointer to a function of type void(*)(void*,sqlite3*,const char*, int).
-The second should be of type (void*). The callback is invoked by the library
-in three separate circumstances, identified by the value passed as the
-fourth parameter. If the fourth parameter is 0, then the database connection
-passed as the second argument has just been opened. The third argument
-points to a buffer containing the name of the main database file. If the
-fourth parameter is 1, then the SQL statement that the third parameter
-points to has just been executed. Or, if the fourth parameter is 2, then
-the connection being passed as the second parameter is being closed. The
-third parameter is passed NULL In this case.  An example of using this
-configuration option can be seen in the "test_sqllog.c" source file in
-the canonical SQLite source tree.
+**SQLITE_CONFIG_PCACHE_HDRSZ**：此选项接受单个参数，即指向整数的指针，并把
+`SQLITE_CONFIG_PAGECACHE` 中每页所需的额外字节数写入该整数。所需额外空间量可能随编译器、目标平台
+和 SQLite 版本而变化。
 
-SQLITE_CONFIG_MMAP_SIZE
-SQLITE_CONFIG_MMAP_SIZE takes two 64-bit integer (sqlite3_int64) values
-that are the default mmap size limit (the default setting for
-PRAGMA mmap_size) and the maximum allowed mmap size limit.
-The default setting can be overridden by each database connection using
-either the PRAGMA mmap_size command, or by using the
-SQLITE_FCNTL_MMAP_SIZE file control.  The maximum allowed mmap size
-will be silently truncated if necessary so that it does not exceed the
-compile-time maximum mmap size set by the
-SQLITE_MAX_MMAP_SIZE compile-time option.
-If either argument to this option is negative, then that argument is
-changed to its compile-time default.
+**SQLITE_CONFIG_PMASZ**：此选项接受单个参数，即无符号整数，并把多线程排序器的 "Minimum PMA Size"
+（最小 PMA 大小）设置为该整数。默认的最小 PMA 大小由 `SQLITE_SORTER_PMASZ` 编译期选项设置。当
+启用多线程排序（用 PRAGMA threads 命令）、且要排序的内容量超过页大小乘以 PRAGMA cache_size 设置
+与该值中较小者时，会启动新线程协助排序操作。
 
-SQLITE_CONFIG_WIN32_HEAPSIZE
-The SQLITE_CONFIG_WIN32_HEAPSIZE option is only available if SQLite is
-compiled for Windows with the SQLITE_WIN32_MALLOC pre-processor macro
-defined. SQLITE_CONFIG_WIN32_HEAPSIZE takes a 32-bit unsigned integer value
-that specifies the maximum size of the created heap.
+**SQLITE_CONFIG_STMTJRNL_SPILL**：此选项接受单个参数，成为语句日志 spill 到磁盘的阈值。语句日志
+保存在内存中，直到其大小（以字节计）超过此阈值，此时它们被写入磁盘。若阈值是 -1，则语句日志总是
+完全保存在内存中。由于许多语句日志从不变得很大，把 spill 阈值设置为 64KiB 之类的值可大幅减少支持
+语句回滚所需的 I/O。此设置的默认值由 `SQLITE_STMTJRNL_SPILL` 编译期选项控制。
 
-SQLITE_CONFIG_PCACHE_HDRSZ
-The SQLITE_CONFIG_PCACHE_HDRSZ option takes a single parameter which
-is a pointer to an integer and writes into that integer the number of extra
-bytes per page required for each page in SQLITE_CONFIG_PAGECACHE.
-The amount of extra space required can change depending on the compiler,
-target platform, and SQLite version.
+**SQLITE_CONFIG_SORTERREF_SIZE**：此选项接受单个 (int) 类型参数——排序引用大小阈值的新值。通常，
+当 SQLite 使用外部排序按 ORDER BY 子句给记录排序时，调用者所需的全部字段都存在于排序后的记录中。
+但若 SQLite 根据表列的声明类型判断其值可能非常大——大于配置的排序引用大小阈值——则每条排序记录
+中存储一个引用，在按排序顺序返回记录时再从数据库加载所需的列值。此选项的默认值是永不用此优化。
+为此选项指定负值会恢复默认行为。此选项仅在 SQLite 用 `SQLITE_ENABLE_SORTER_REFERENCES` 编译期
+选项编译时可用。
 
-SQLITE_CONFIG_PMASZ
-The SQLITE_CONFIG_PMASZ option takes a single parameter which
-is an unsigned integer and sets the "Minimum PMA Size" for the multithreaded
-sorter to that integer.  The default minimum PMA Size is set by the
-SQLITE_SORTER_PMASZ compile-time option.  New threads are launched
-to help with sort operations when multithreaded sorting
-is enabled (using the PRAGMA threads command) and the amount of content
-to be sorted exceeds the page size times the minimum of the
-PRAGMA cache_size setting and this value.
+**SQLITE_CONFIG_MEMDB_MAXSIZE**：此选项接受单个 sqlite3_int64 参数，即用 `sqlite3_deserialize()`
+创建的内存数据库的默认最大大小。此默认最大大小可用 `SQLITE_FCNTL_SIZE_LIMIT` 文件控制对单个数据库
+上调或下调。若从不使用此配置设置，则默认最大值由 `SQLITE_MEMDB_DEFAULT_MAXSIZE` 编译期选项决定。
+若未设置该编译期选项，则默认最大值为 1073741824。
 
-SQLITE_CONFIG_STMTJRNL_SPILL
-The SQLITE_CONFIG_STMTJRNL_SPILL option takes a single parameter which
-becomes the statement journal spill-to-disk threshold.
-Statement journals are held in memory until their size (in bytes)
-exceeds this threshold, at which point they are written to disk.
-Or if the threshold is -1, statement journals are always held
-exclusively in memory.
-Since many statement journals never become large, setting the spill
-threshold to a value such as 64KiB can greatly reduce the amount of
-I/O required to support statement rollback.
-The default value for this setting is controlled by the
-SQLITE_STMTJRNL_SPILL compile-time option.
-
-SQLITE_CONFIG_SORTERREF_SIZE
-The SQLITE_CONFIG_SORTERREF_SIZE option accepts a single parameter
-of type (int) - the new value of the sorter-reference size threshold.
-Usually, when SQLite uses an external sort to order records according
-to an ORDER BY clause, all fields required by the caller are present in the
-sorted records. However, if SQLite determines based on the declared type
-of a table column that its values are likely to be very large - larger
-than the configured sorter-reference size threshold - then a reference
-is stored in each sorted record and the required column values loaded
-from the database as records are returned in sorted order. The default
-value for this option is to never use this optimization. Specifying a
-negative value for this option restores the default behavior.
-This option is only available if SQLite is compiled with the
-SQLITE_ENABLE_SORTER_REFERENCES compile-time option.
-
-SQLITE_CONFIG_MEMDB_MAXSIZE
-The SQLITE_CONFIG_MEMDB_MAXSIZE option accepts a single parameter
-sqlite3_int64 parameter which is the default maximum size for an in-memory
-database created using sqlite3_deserialize().  This default maximum
-size can be adjusted up or down for individual databases using the
-SQLITE_FCNTL_SIZE_LIMIT file-control.  If this
-configuration setting is never used, then the default maximum is determined
-by the SQLITE_MEMDB_DEFAULT_MAXSIZE compile-time option.  If that
-compile-time option is not set, then the default maximum is 1073741824.
-
-SQLITE_CONFIG_ROWID_IN_VIEW
-The SQLITE_CONFIG_ROWID_IN_VIEW option enables or disables the ability
-for VIEWs to have a ROWID.  The capability can only be enabled if SQLite is
-compiled with -DSQLITE_ALLOW_ROWID_IN_VIEW, in which case the capability
-defaults to on.  This configuration option queries the current setting or
-changes the setting to off or on.  The argument is a pointer to an integer.
-If that integer initially holds a value of 1, then the ability for VIEWs to
-have ROWIDs is activated.  If the integer initially holds zero, then the
-ability is deactivated.  Any other initial value for the integer leaves the
-setting unchanged.  After changes, if any, the integer is written with
-a 1 or 0, if the ability for VIEWs to have ROWIDs is on or off.  If SQLite
-is compiled without -DSQLITE_ALLOW_ROWID_IN_VIEW (which is the usual and
-recommended case) then the integer is always filled with zero, regardless
-if its initial value.
+**SQLITE_CONFIG_ROWID_IN_VIEW**：此选项启用或禁用 VIEW 拥有 ROWID 的能力。只有 SQLite 用
+`-DSQLITE_ALLOW_ROWID_IN_VIEW` 编译时才能启用该能力，此时该能力默认开启。此配置选项查询当前设置、
+或把设置改为关闭或开启。参数是指向整数的指针。若该整数初始值为 1，则激活 VIEW 拥有 ROWID 的能力；
+若初始值为零，则停用该能力；任何其它初始值都使设置保持不变。更改（如有）后，若 VIEW 拥有 ROWID
+的能力开启或关闭，则向该整数写入 1 或 0。若 SQLite 未用 `-DSQLITE_ALLOW_ROWID_IN_VIEW` 编译
+（这是通常且推荐的情况），则无论其初始值如何，该整数总是被填零。
 
 ---
 
-## Database Connection Configuration Options
+## 数据库连接配置选项（Database Connection Configuration Options）
 
 ```
-
 #define SQLITE_DBCONFIG_MAINDBNAME            1000 /* const char* */
 #define SQLITE_DBCONFIG_LOOKASIDE             1001 /* void* int int */
 #define SQLITE_DBCONFIG_ENABLE_FKEY           1002 /* int int* */
@@ -7002,623 +4414,346 @@ if its initial value.
 #define SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE   1021 /* int int* */
 #define SQLITE_DBCONFIG_ENABLE_COMMENTS       1022 /* int int* */
 #define SQLITE_DBCONFIG_FP_DIGITS             1023 /* int int* */
-#define SQLITE_DBCONFIG_MAX                   1023 /* Largest DBCONFIG */
-
+#define SQLITE_DBCONFIG_MAX                   1023 /* 最大的 DBCONFIG */
 ```
 
-These constants are the available integer configuration options that
-can be passed as the second parameter to the sqlite3_db_config() interface.
+这些常量是作为 `sqlite3_db_config()` 接口第二参数传入的可用整数配置选项。
 
-The sqlite3_db_config() interface is a var-args function.  It takes a
-variable number of parameters, though always at least two.  The number of
-parameters passed into sqlite3_db_config() depends on which of these
-constants is given as the second parameter.  This documentation page
-refers to parameters beyond the second as "arguments".  Thus, when this
-page says "the N-th argument" it means "the N-th parameter past the
-configuration option" or "the (N+2)-th parameter to sqlite3_db_config()".
+`sqlite3_db_config()` 接口是可变参数函数。它接受可变数量的参数，但总是至少两个。传入
+`sqlite3_db_config()` 的参数数量取决于哪个常量被用作第二个参数。本文档页把第二参数之后的参数称为
+"arguments"。因此，当本页说"第 N 个 argument"时，意思是"配置选项之后的第 N 个参数"或
+"`sqlite3_db_config()` 的第 (N+2) 个参数"。
 
-New configuration options may be added in future releases of SQLite.
-Existing configuration options might be discontinued.  Applications
-should check the return code from sqlite3_db_config() to make sure that
-the call worked.  The sqlite3_db_config() interface will return a
-non-zero error code if a discontinued or unsupported configuration option
-is invoked.
+未来版本的 SQLite 可能加入新的配置选项，现有配置选项可能停用。应用应检查 `sqlite3_db_config()`
+的返回码，以确保调用生效。若调用了已停用或不支持的配置选项，`sqlite3_db_config()` 接口将返回非零
+错误码。
 
-SQLITE_DBCONFIG_LOOKASIDE
- The SQLITE_DBCONFIG_LOOKASIDE option is used to adjust the
-configuration of the lookaside memory allocator within a database
-connection.
-The arguments to the SQLITE_DBCONFIG_LOOKASIDE option are not
-in the usual format.
-The SQLITE_DBCONFIG_LOOKASIDE option takes three arguments, not two,
-so that a call to sqlite3_db_config() that uses SQLITE_DBCONFIG_LOOKASIDE
-should have a total of five parameters.
+**SQLITE_DBCONFIG_LOOKASIDE**：此选项用于调整数据库连接内 lookaside 内存分配器的配置。
+`SQLITE_DBCONFIG_LOOKASIDE` 选项的参数不是通常的格式。它接受三个参数而非两个，因此使用
+`SQLITE_DBCONFIG_LOOKASIDE` 的 `sqlite3_db_config()` 调用总共应有五个参数。
 
-1.
-The first argument ("buf") is a
-pointer to a memory buffer to use for lookaside memory.
-The first argument may be NULL in which case SQLite will allocate the
-lookaside buffer itself using sqlite3_malloc().
+1. 第一个参数（"buf"）是指向用于 lookaside 内存的内存缓冲区的指针。第一个参数可以为 NULL，此时
+   SQLite 会用 `sqlite3_malloc()` 自己分配 lookaside 缓冲区。
+2. 第二个参数（"sz"）是每个 lookaside 缓冲区槽的大小。若 "sz" 小于 8，则禁用 lookaside。"sz"
+   参数应是小于 65536 的 8 的倍数。若 "sz" 不满足此约束，则其大小被减小直到满足。
+3. 第三个参数（"cnt"）是槽的数量。若 "cnt" 小于 1，则禁用 lookaside。要确保 "sz" 和 "cnt" 的
+   乘积不超过 2,147,418,112。"cnt" 参数通常选择使 "sz" 和 "cnt" 的乘积小于 1,000,000。
 
-2.
-The second argument ("sz") is the
-size of each lookaside buffer slot.  Lookaside is disabled if "sz"
-is less than 8.  The "sz" argument should be a multiple of 8 less than
-65536.  If "sz" does not meet this constraint, it is reduced in size until
-it does.
+若 "buf" 参数非 NULL，则它必须指向大小大于或等于 "sz" 和 "cnt" 乘积的内存缓冲区。缓冲区必须对齐
+到 8 字节边界。数据库连接的 lookaside 内存配置只能在连接当前不使用 lookaside 内存时改变，换句话说，
+当 `SQLITE_DBSTATUS_LOOKASIDE_USED` 返回的值为零时。在 lookaside 内存使用中试图改变其配置，会使
+配置保持不变并返回 `SQLITE_BUSY`。若 "buf" 参数为 NULL 且基于 "sz" 和 "cnt" 分配内存的尝试失败，
+则静默禁用 lookaside。
 
-3.
-The third argument ("cnt") is the number of slots.
-Lookaside is disabled if "cnt"is less than 1.
-that the product of "sz" and "cnt" does not exceed 2,147,418,112. The "cnt"
-parameter is usually chosen so that the product of "sz" and "cnt" is less
-than 1,000,000.
+`SQLITE_CONFIG_LOOKASIDE` 配置选项可用于在初始化时设置默认 lookaside 配置。`-DSQLITE_DEFAULT_LOOKASIDE`
+选项可在编译期设置默认 lookaside 配置。lookaside 的典型值是 "sz" 为 1200、"cnt" 为 40 到 100。
 
-If the "buf" argument is not NULL, then it must
-point to a memory buffer with a size that is greater than
-or equal to the product of "sz" and "cnt".
-The buffer must be aligned to an 8-byte boundary.
-The lookaside memory
-configuration for a database connection can only be changed when that
-connection is not currently using lookaside memory, or in other words
-when the value returned by SQLITE_DBSTATUS_LOOKASIDE_USED is zero.
-Any attempt to change the lookaside memory configuration when lookaside
-memory is in use leaves the configuration unchanged and returns
-SQLITE_BUSY.
-If the "buf" argument is NULL and an attempt
-to allocate memory based on "sz" and "cnt" fails, then
-lookaside is silently disabled.
+**SQLITE_DBCONFIG_ENABLE_FKEY**：此选项用于启用或禁用外键约束的强制。这与 PRAGMA foreign_keys
+语句启用或禁用的设置相同。第一个参数是一个整数：0 禁用外键强制、正数启用、负数保持外键强制不变。
+第二个参数是指向整数的指针，本次调用后向该整数写入 0 或 1，指示外键强制是关闭还是开启。第二个参数
+可以为 NULL 指针，此时不报告外键强制设置。
 
-The SQLITE_CONFIG_LOOKASIDE configuration option can be used to set the
-default lookaside configuration at initialization.  The
--DSQLITE_DEFAULT_LOOKASIDE option can be used to set the default lookaside
-configuration at compile-time.  Typical values for lookaside are 1200 for
-"sz" and 40 to 100 for "cnt".
+**SQLITE_DBCONFIG_ENABLE_TRIGGER**：此选项用于启用或禁用触发器。应有两个额外参数。第一个参数是
+一个整数：0 禁用触发器、正数启用、负数保持设置不变。第二个参数是指向整数的指针，本次调用后向该
+整数写入 0 或 1，指示触发器是禁用还是启用。第二个参数可以为 NULL 指针，此时不报告触发器设置。
 
-SQLITE_DBCONFIG_ENABLE_FKEY
- This option is used to enable or disable the enforcement of
-foreign key constraints.  This is the same setting that is
-enabled or disabled by the PRAGMA foreign_keys statement.
-The first argument is an integer which is 0 to disable FK enforcement,
-positive to enable FK enforcement or negative to leave FK enforcement
-unchanged.  The second parameter is a pointer to an integer into which
-is written 0 or 1 to indicate whether FK enforcement is off or on
-following this call.  The second parameter may be a NULL pointer, in
-which case the FK enforcement setting is not reported back.
+最初此选项禁用所有触发器。但从 SQLite 版本 3.35.0 起，即使此选项关闭，TEMP 触发器仍被允许。
+换句话说，此选项现在只禁用主数据库 schema 或 ATTACH 数据库 schema 中的触发器。
 
-SQLITE_DBCONFIG_ENABLE_TRIGGER
- This option is used to enable or disable triggers.
-There should be two additional arguments.
-The first argument is an integer which is 0 to disable triggers,
-positive to enable triggers or negative to leave the setting unchanged.
-The second parameter is a pointer to an integer into which
-is written 0 or 1 to indicate whether triggers are disabled or enabled
-following this call.  The second parameter may be a NULL pointer, in
-which case the trigger setting is not reported back.
+**SQLITE_DBCONFIG_ENABLE_VIEW**：此选项用于启用或禁用视图。必须有两个额外参数。第一个参数是一个
+整数：0 禁用视图、正数启用、负数保持设置不变。第二个参数是指向整数的指针，本次调用后向该整数写入
+0 或 1，指示视图是禁用还是启用。第二个参数可以为 NULL 指针，此时不报告视图设置。
 
-Originally this option disabled all triggers.  However, since
-SQLite version 3.35.0, TEMP triggers are still allowed even if
-this option is off.  So, in other words, this option now only disables
-triggers in the main database schema or in the schemas of ATTACH-ed
-databases.
+## 数据库连接配置选项
 
-SQLITE_DBCONFIG_ENABLE_VIEW
- This option is used to enable or disable views.
-There must be two additional arguments.
-The first argument is an integer which is 0 to disable views,
-positive to enable views or negative to leave the setting unchanged.
-The second parameter is a pointer to an integer into which
-is written 0 or 1 to indicate whether views are disabled or enabled
-following this call.  The second parameter may be a NULL pointer, in
-which case the view setting is not reported back.
+**SQLITE_DBCONFIG_ENABLE_VIEW**（续）：第一个参数是一个整数：正数启用视图、零禁用、负数保持设置
+不变。第二个参数是指向整数的指针，本次调用后向该整数写入 0 或 1，指示视图是禁用还是启用。第二个
+参数可以为 NULL 指针，此时不报告视图设置。
 
-Originally this option disabled all views.  However, since
-SQLite version 3.35.0, TEMP views are still allowed even if
-this option is off.  So, in other words, this option now only disables
-views in the main database schema or in the schemas of ATTACH-ed
-databases.
+最初此选项禁用所有视图。但从 SQLite 版本 3.35.0 起，即使此选项关闭，TEMP 视图仍被允许。换句
+话说，此选项现在只禁用主数据库 schema 或 ATTACH 数据库 schema 中的视图。
 
-SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER
- This option is used to enable or disable using the
-fts3_tokenizer() function - part of the FTS3 full-text search engine
-extension - without using bound parameters as the parameters. Doing so
-is disabled by default. There must be two additional arguments. The first
-argument is an integer. If it is passed 0, then using fts3_tokenizer()
-without bound parameters is disabled. If it is passed a positive value,
-then calling fts3_tokenizer without bound parameters is enabled. If it
-is passed a negative value, this setting is not modified - this can be
-used to query for the current setting. The second parameter is a pointer
-to an integer into which is written 0 or 1 to indicate the current value
-of this setting (after it is modified, if applicable).  The second
-parameter may be a NULL pointer, in which case the value of the setting
-is not reported back. Refer to FTS3 documentation for further details.
+**SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER**：此选项用于启用或禁用把 fts3_tokenizer() 函数——
+FTS3 全文搜索引擎扩展的一部分——用于非绑定参数作为参数。默认禁用这样做。必须有两个额外参数。
+第一个参数是一个整数：若传 0，则禁用把 fts3_tokenizer() 用于非绑定参数；若传正值，则启用；若传
+负值，则不修改此设置——可用于查询当前设置。第二个参数是指向整数的指针，向该整数写入 0 或 1，
+指示此设置的当前值（若适用，在修改之后）。第二个参数可以为 NULL 指针，此时不报告设置值。更多细节
+见 FTS3 文档。
 
-SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION
- This option is used to enable or disable the sqlite3_load_extension()
-interface independently of the load_extension() SQL function.
-The sqlite3_enable_load_extension() API enables or disables both the
-C-API sqlite3_load_extension() and the SQL function load_extension().
-There must be two additional arguments.
-When the first argument to this interface is 1, then only the C-API is
-enabled and the SQL function remains disabled.  If the first argument to
-this interface is 0, then both the C-API and the SQL function are disabled.
-If the first argument is -1, then no changes are made to the state of either
-the C-API or the SQL function.
-The second parameter is a pointer to an integer into which
-is written 0 or 1 to indicate whether sqlite3_load_extension() interface
-is disabled or enabled following this call.  The second parameter may
-be a NULL pointer, in which case the new setting is not reported back.
+**SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION**：此选项用于独立于 load_extension() SQL 函数启用或
+禁用 `sqlite3_load_extension()` 接口。`sqlite3_enable_load_extension()` API 同时启用或禁用
+C-API `sqlite3_load_extension()` 和 SQL 函数 load_extension()。必须有两个额外参数。当此接口的
+第一个参数为 1 时，只启用 C-API，SQL 函数保持禁用。若第一个参数为 0，则 C-API 和 SQL 函数都被
+禁用。若第一个参数为 -1，则 C-API 或 SQL 函数的状态都不做更改。第二个参数是指向整数的指针，本次
+调用后向该整数写入 0 或 1，指示 `sqlite3_load_extension()` 接口是禁用还是启用。第二个参数可以为
+NULL 指针，此时不报告新设置。
 
- SQLITE_DBCONFIG_MAINDBNAME
- This option is used to change the name of the "main" database
-schema.  This option does not follow the
-usual SQLITE_DBCONFIG argument format.
-This option takes exactly one additional argument so that the
-sqlite3_db_config() call has a total of three parameters.  The
-extra argument must be a pointer to a constant UTF8 string which
-will become the new schema name in place of "main".  SQLite does
-not make a copy of the new main schema name string, so the application
-must ensure that the argument passed into SQLITE_DBCONFIG MAINDBNAME
-is unchanged until after the database connection closes.
+**SQLITE_DBCONFIG_MAINDBNAME**：此选项用于改变 "main" 数据库 schema 的名字。此选项不遵循通常的
+`SQLITE_DBCONFIG` 参数格式。它恰好接受一个额外参数，使 `sqlite3_db_config()` 调用总共有三个参数。
+额外参数必须是指向常量 UTF8 字符串的指针，该字符串将成为取代 "main" 的新 schema 名。SQLite 不
+复制新主 schema 名字符串，因此应用必须确保传入 `SQLITE_DBCONFIG_MAINDBNAME` 的参数在数据库连接
+关闭之前保持不变。
 
-SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE
- Usually, when a database in WAL mode is closed or detached from a
-database handle, SQLite checks if if there are other connections to the
-same database, and if there are no other database connection (if the
-connection being closed is the last open connection to the database),
-then SQLite performs a checkpoint before closing the connection and
-deletes the WAL file.  The SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE option can
-be used to override that behavior. The first argument passed to this
-operation (the third parameter to sqlite3_db_config()) is an integer
-which is positive to disable checkpoints-on-close, or zero (the default)
-to enable them, and negative to leave the setting unchanged.
-The second argument (the fourth parameter) is a pointer to an integer
-into which is written 0 or 1 to indicate whether checkpoints-on-close
-have been disabled - 0 if they are not disabled, 1 if they are.
+**SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE**：通常，当 WAL 模式数据库从数据库句柄关闭或分离时，SQLite
+检查是否有其它连接到同一数据库；若没有其它数据库连接（被关闭的连接是该数据库最后一个打开的连接），
+则 SQLite 在关闭连接前执行检查点、并删除 WAL 文件。`SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE` 选项可用于
+覆盖该行为。传给此操作的第一个参数（`sqlite3_db_config()` 的第三个参数）是一个整数：正数禁用关闭时
+检查点，零（默认）启用，负数保持设置不变。第二个参数（第四个参数）是指向整数的指针，向该整数写入
+0 或 1，指示关闭时检查点是否已被禁用——0 表示未被禁用，1 表示已禁用。
 
- SQLITE_DBCONFIG_ENABLE_QPSG
-The SQLITE_DBCONFIG_ENABLE_QPSG option activates or deactivates
-the query planner stability guarantee (QPSG).  When the QPSG is active,
-a single SQL query statement will always use the same algorithm regardless
-of values of bound parameters. The QPSG disables some query optimizations
-that look at the values of bound parameters, which can make some queries
-slower.  But the QPSG has the advantage of more predictable behavior.  With
-the QPSG active, SQLite will always use the same query plan in the field as
-was used during testing in the lab.
-The first argument to this setting is an integer which is 0 to disable
-the QPSG, positive to enable QPSG, or negative to leave the setting
-unchanged. The second parameter is a pointer to an integer into which
-is written 0 or 1 to indicate whether the QPSG is disabled or enabled
-following this call.
+**SQLITE_DBCONFIG_ENABLE_QPSG**：此选项激活或停用查询规划器稳定性保证（QPSG）。QPSG 激活时，
+单个 SQL 查询语句无论绑定参数的值如何，总是使用相同的算法。QPSG 禁用某些查看绑定参数值的查询优化，
+这可能使某些查询变慢。但 QPSG 具有行为更可预测的优点。QPSG 激活时，SQLite 在现场总是使用实验室
+测试时所用的相同查询计划。此设置的第一个参数是一个整数：0 禁用 QPSG、正数启用、负数保持设置不变。
+第二个参数是指向整数的指针，本次调用后向该整数写入 0 或 1，指示 QPSG 是禁用还是启用。
 
- SQLITE_DBCONFIG_TRIGGER_EQP
- By default, the output of EXPLAIN QUERY PLAN commands does not
-include output for any operations performed by trigger programs. This
-option is used to set or clear (the default) a flag that governs this
-behavior. The first parameter passed to this operation is an integer -
-positive to enable output for trigger programs, or zero to disable it,
-or negative to leave the setting unchanged.
-The second parameter is a pointer to an integer into which is written
-0 or 1 to indicate whether output-for-triggers has been disabled - 0 if
-it is not disabled, 1 if it is.
+**SQLITE_DBCONFIG_TRIGGER_EQP**：默认情况下，EXPLAIN QUERY PLAN 命令的输出不包含触发器程序执行
+的任何操作的输出。此选项用于设置或清除（默认）控制此行为的标志。传给此操作的第一个参数是一个整数
+——正数启用触发器程序的输出、零禁用、负数保持设置不变。第二个参数是指向整数的指针，向该整数写入
+0 或 1，指示触发器输出是否已被禁用——0 表示未被禁用，1 表示已禁用。
 
- SQLITE_DBCONFIG_RESET_DATABASE
- Set the SQLITE_DBCONFIG_RESET_DATABASE flag and then run
-VACUUM in order to reset a database back to an empty database
-with no schema and no content. The following process works even for
-a badly corrupted database file:
+**SQLITE_DBCONFIG_RESET_DATABASE**：设置 `SQLITE_DBCONFIG_RESET_DATABASE` 标志，然后运行 VACUUM，
+以把数据库重置回没有 schema、没有内容的空数据库。即使对严重损坏的数据库文件，以下过程也有效：
 
-1.  If the database connection is newly opened, make sure it has read the
-database schema by preparing then discarding some query against the
-database, or calling sqlite3_table_column_metadata(), ignoring any
-errors.  This step is only necessary if the application desires to keep
-the database in WAL mode after the reset if it was in WAL mode before
-the reset.
+1. 若数据库连接是新打开的，通过准备然后丢弃某些针对数据库的查询、或调用
+   `sqlite3_table_column_metadata()`（忽略任何错误）来确保它已读取数据库 schema。仅当应用希望
+   重置后数据库保持 WAL 模式（若重置前处于 WAL 模式）时才需要此步骤。
+2. `sqlite3_db_config(db, SQLITE_DBCONFIG_RESET_DATABASE, 1, 0);`
+3. `sqlite3_exec(db, "VACUUM", 0, 0, 0);`
+4. `sqlite3_db_config(db, SQLITE_DBCONFIG_RESET_DATABASE, 0, 0);`
 
-2.  sqlite3_db_config(db, SQLITE_DBCONFIG_RESET_DATABASE, 1, 0);
+由于重置数据库是破坏性且不可逆的，该过程要求使用此晦涩的 API 和多个步骤，以帮助确保它不会意外发生。
+由于此功能必须能重置损坏的数据库，而关闭虚拟表可能需要访问该损坏的存储，库必须放弃任何已安装的虚拟
+表而不调用它们的 xDestroy() 方法。
 
-3.  sqlite3_exec(db, "VACUUM", 0, 0, 0);
+**SQLITE_DBCONFIG_DEFENSIVE**：此选项激活或停用数据库连接的 "defensive"（防御）标志。当防御标志
+启用时，允许普通 SQL 故意破坏数据库文件的语言特性被禁用。被禁用的特性包括但不限于以下：
 
-4.  sqlite3_db_config(db, SQLITE_DBCONFIG_RESET_DATABASE, 0, 0);
+- PRAGMA writable_schema=ON 语句。
+- PRAGMA journal_mode=OFF 语句。
+- PRAGMA schema_version=N 语句。
+- 对 sqlite_dbpage 虚拟表的写入。
+- 对影子表的直接写入。
 
-Because resetting a database is destructive and irreversible, the
-process requires the use of this obscure API and multiple steps to
-help ensure that it does not happen by accident. Because this
-feature must be capable of resetting corrupt databases, and
-shutting down virtual tables may require access to that corrupt
-storage, the library must abandon any installed virtual tables
-without calling their xDestroy() methods.
+**SQLITE_DBCONFIG_WRITABLE_SCHEMA**：此选项激活或停用 "writable_schema" 标志。这与设置 PRAGMA
+writable_schema=ON 或 PRAGMA writable_schema=OFF 有相同的效果、逻辑上等价。此设置的第一个参数是
+一个整数：0 禁用 writable_schema、正数启用、负数保持设置不变。第二个参数是指向整数的指针，本次
+调用后向该整数写入 0 或 1，指示 writable_schema 是启用还是禁用。
 
- SQLITE_DBCONFIG_DEFENSIVE
-The SQLITE_DBCONFIG_DEFENSIVE option activates or deactivates the
-"defensive" flag for a database connection.  When the defensive
-flag is enabled, language features that allow ordinary SQL to
-deliberately corrupt the database file are disabled.  The disabled
-features include but are not limited to the following:
+**SQLITE_DBCONFIG_LEGACY_ALTER_TABLE**：此选项激活或停用 ALTER TABLE RENAME 命令的传统行为，
+使其表现得如同 3.24.0（2018-06-04）之前。更多信息见 ALTER TABLE RENAME 文档上的 "Compatibility
+Notice"。此特性也可用 PRAGMA legacy_alter_table 语句开关。
 
--  The PRAGMA writable_schema=ON statement.
+**SQLITE_DBCONFIG_DQS_DML**：此选项只对 DML 语句——即 DELETE、INSERT、SELECT 和 UPDATE 语句——
+激活或停用传统的双引号字符串字面量缺陷。此设置的默认值由 `-DSQLITE_DQS` 编译期选项决定。
 
--  The PRAGMA journal_mode=OFF statement.
+**SQLITE_DBCONFIG_DQS_DDL**：此选项对 DDL 语句（如 CREATE TABLE 和 CREATE INDEX）激活或停用传统
+的双引号字符串字面量缺陷。此设置的默认值由 `-DSQLITE_DQS` 编译期选项决定。
 
--  The PRAGMA schema_version=N statement.
+**SQLITE_DBCONFIG_TRUSTED_SCHEMA**：此选项告诉 SQLite 假定数据库 schema 未被恶意内容污染。当
+`SQLITE_DBCONFIG_TRUSTED_SCHEMA` 选项被禁用时，SQLite 采取额外的防御措施保护应用免受危害，包括：
 
--  Writes to the sqlite_dbpage virtual table.
+- 禁止在触发器、视图、CHECK 约束、DEFAULT 子句、表达式索引、部分索引或生成列中使用 SQL 函数，
+  除非这些函数被标记为 `SQLITE_INNOCUOUS`。
+- 禁止在触发器或视图中使用虚拟表，除非这些虚拟表被标记为 `SQLITE_VTAB_INNOCUOUS`。
 
--  Direct writes to shadow tables.
+此设置默认为 "on"（开启）以保持传统兼容，但建议所有应用尽可能关闭它。此设置也可用 PRAGMA
+trusted_schema 语句控制。
 
- SQLITE_DBCONFIG_WRITABLE_SCHEMA
-The SQLITE_DBCONFIG_WRITABLE_SCHEMA option activates or deactivates the
-"writable_schema" flag. This has the same effect and is logically equivalent
-to setting PRAGMA writable_schema=ON or PRAGMA writable_schema=OFF.
-The first argument to this setting is an integer which is 0 to disable
-the writable_schema, positive to enable writable_schema, or negative to
-leave the setting unchanged. The second parameter is a pointer to an
-integer into which is written 0 or 1 to indicate whether the writable_schema
-is enabled or disabled following this call.
+**SQLITE_DBCONFIG_LEGACY_FILE_FORMAT**：此选项激活或停用传统文件格式标志。激活时，此标志使所有
+新建的数据库文件的 schema 格式版本号（数据库头中偏移量 44 处的 4 字节整数）为 1。这反过来意味着
+生成的数据库文件可被任何回溯到 3.0.0（2004-06-18）的 SQLite 版本读写。没有此设置，新建的数据库
+通常无法被 3.3.0（2006-01-11）之前的 SQLite 版本理解。写这些文字时，几乎不再需要生成完全回溯到
+3.0.0 兼容的数据库文件，因此此设置几乎没有实际用途，但提供它是为了让 SQLite 能继续声称能生成兼容
+3.0.0 的新数据库文件。
 
-SQLITE_DBCONFIG_LEGACY_ALTER_TABLE
-The SQLITE_DBCONFIG_LEGACY_ALTER_TABLE option activates or deactivates
-the legacy behavior of the ALTER TABLE RENAME command such that it
-behaves as it did prior to version 3.24.0 (2018-06-04).  See the
-"Compatibility Notice" on the ALTER TABLE RENAME documentation for
-additional information. This feature can also be turned on and off
-using the PRAGMA legacy_alter_table statement.
+注意：当 `SQLITE_DBCONFIG_LEGACY_FILE_FORMAT` 设置开启时，VACUUM 命令在处理带生成列和降序索引的
+表时会以晦涩的错误失败。这不被视为 bug，因为 SQLite 3.3.0 及更早版本既不支持生成列、也不支持降序
+索引。
 
-SQLITE_DBCONFIG_DQS_DML
-The SQLITE_DBCONFIG_DQS_DML option activates or deactivates
-the legacy double-quoted string literal misfeature for DML statements
-only, that is DELETE, INSERT, SELECT, and UPDATE statements. The
-default value of this setting is determined by the -DSQLITE_DQS
-compile-time option.
+**SQLITE_DBCONFIG_STMT_SCANSTATUS**：此选项仅在 `SQLITE_ENABLE_STMT_SCANSTATUS` 构建中有用。此时，
+它设置或清除一个标志，启用 `sqlite3_stmt_scanstatus_v2()` 和字节码虚拟表的 nexec、ncycle 列使用
+的运行时性能统计的收集。要收集统计，该标志必须在 SQL 语句被准备和被 step 时都已在数据库句柄上设置。
+该标志默认设置（启用统计收集）。
 
-SQLITE_DBCONFIG_DQS_DDL
-The SQLITE_DBCONFIG_DQS option activates or deactivates
-the legacy double-quoted string literal misfeature for DDL statements,
-such as CREATE TABLE and CREATE INDEX. The
-default value of this setting is determined by the -DSQLITE_DQS
-compile-time option.
+此选项接受两个参数：一个整数和一个指向整数的指针。第一个参数是 1、0 或 -1，分别启用、禁用或保持
+不变语句 scanstatus 选项。若第二个参数非 NULL，则把处理第一个参数后的语句 scanstatus 设置值写入
+第二个参数指向的整数。
 
-SQLITE_DBCONFIG_TRUSTED_SCHEMA
-The SQLITE_DBCONFIG_TRUSTED_SCHEMA option tells SQLite to
-assume that database schemas are untainted by malicious content.
-When the SQLITE_DBCONFIG_TRUSTED_SCHEMA option is disabled, SQLite
-takes additional defensive steps to protect the application from harm
-including:
+**SQLITE_DBCONFIG_REVERSE_SCANORDER**：此选项改变表和索引被扫描的默认顺序，使扫描从末尾开始向
+开头进行，而非从开头向末尾。设置 `SQLITE_DBCONFIG_REVERSE_SCANORDER` 与设置 PRAGMA
+reverse_unordered_selects 相同。此选项接受两个参数：一个整数和一个指向整数的指针。第一个参数是
+1、0 或 -1，分别启用、禁用或保持不变反向扫描顺序标志。若第二个参数非 NULL，则根据处理第一个参数后
+反向扫描顺序标志是否被设置，向第二个参数指向的整数写入 0 或 1。
 
--  Prohibit the use of SQL functions inside triggers, views,
-CHECK constraints, DEFAULT clauses, expression indexes,
-partial indexes, or generated columns
-unless those functions are tagged with SQLITE_INNOCUOUS.
+**SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE**：此选项启用或禁用 ATTACH DATABASE SQL 命令在 ATTACH
+命令命名的数据库文件尚不存在时创建新数据库文件的能力。ATTACH 创建新数据库的能力默认启用。应用可用
+此 DBCONFIG 选项禁用或重新启用 ATTACH 创建新数据库文件的能力。
 
--  Prohibit the use of virtual tables inside of triggers or views
-unless those virtual tables are tagged with SQLITE_VTAB_INNOCUOUS.
+此选项接受两个参数：一个整数和一个指向整数的指针。第一个参数是 1、0 或 -1，分别启用、禁用或保持
+不变 attach-create 标志。若第二个参数非 NULL，则根据处理第一个参数后 attach-create 标志是否被设置，
+向第二个参数指向的整数写入 0 或 1。
 
-This setting defaults to "on" for legacy compatibility, however
-all applications are advised to turn it off if possible. This setting
-can also be controlled using the PRAGMA trusted_schema statement.
+**SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE**：此选项启用或禁用 ATTACH DATABASE SQL 命令以写入方式打开
+数据库的能力。此能力默认启用。应用可用当前 DBCONFIG 选项禁用或重新启用此能力。若此能力被禁用，
+ATTACH 命令仍会工作，但数据库将以只读方式打开。若此选项被禁用，则用 ATTACH 创建新数据库的能力也
+被禁用，无论 `SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE` 选项的值如何。
 
-SQLITE_DBCONFIG_LEGACY_FILE_FORMAT
-The SQLITE_DBCONFIG_LEGACY_FILE_FORMAT option activates or deactivates
-the legacy file format flag.  When activated, this flag causes all newly
-created database files to have a schema format version number (the 4-byte
-integer found at offset 44 into the database header) of 1.  This in turn
-means that the resulting database file will be readable and writable by
-any SQLite version back to 3.0.0 (2004-06-18).  Without this setting,
-newly created databases are generally not understandable by SQLite versions
-prior to 3.3.0 (2006-01-11).  As these words are written, there
-is now scarcely any need to generate database files that are compatible
-all the way back to version 3.0.0, and so this setting is of little
-practical use, but is provided so that SQLite can continue to claim the
-ability to generate new database files that are compatible with  version
-3.0.0.
+此选项接受两个参数：一个整数和一个指向整数的指针。第一个参数是 1、0 或 -1，分别启用、禁用或保持
+不变以写入方式 ATTACH 另一数据库的能力。若第二个参数非 NULL，则根据处理第一个参数后读写数据库
+ATTACH 能力是启用还是禁用，向第二个参数指向的整数写入 0 或 1。
 
-Note that when the SQLITE_DBCONFIG_LEGACY_FILE_FORMAT setting is on,
-the VACUUM command will fail with an obscure error when attempting to
-process a table with generated columns and a descending index.  This is
-not considered a bug since SQLite versions 3.3.0 and earlier do not support
-either generated columns or descending indexes.
+**SQLITE_DBCONFIG_ENABLE_COMMENTS**：此选项启用或禁用 SQL 文本中包含注释的能力。注释默认启用。
+应用可用此 DBCONFIG 选项禁用或重新启用 SQL 文本中的注释。
 
-SQLITE_DBCONFIG_STMT_SCANSTATUS
-The SQLITE_DBCONFIG_STMT_SCANSTATUS option is only useful in
-SQLITE_ENABLE_STMT_SCANSTATUS builds. In this case, it sets or clears
-a flag that enables collection of run-time performance statistics
-used by sqlite3_stmt_scanstatus_v2() and the nexec and ncycle
-columns of the bytecode virtual table.
-For statistics to be collected, the flag must be set on
-the database handle both when the SQL statement is
-prepared and when it is stepped.
-The flag is set (collection of statistics is enabled) by default.
+此选项接受两个参数：一个整数和一个指向整数的指针。第一个参数是 1、0 或 -1，分别启用、禁用或保持
+不变 SQL 文本中使用注释的能力。若第二个参数非 NULL，则根据处理第一个参数后 SQL 文本中是否允许
+注释，向第二个参数指向的整数写入 0 或 1。
 
-This option takes two arguments: an integer and a pointer to
-an integer.  The first argument is 1, 0, or -1 to enable, disable, or
-leave unchanged the statement scanstatus option.  If the second argument
-is not NULL, then the value of the statement scanstatus setting after
-processing the first argument is written into the integer that the second
-argument points to.
+**SQLITE_DBCONFIG_FP_DIGITS**：`SQLITE_DBCONFIG_FP_DIGITS` 设置是一个小整数，决定 SQLite 在把
+浮点数（IEEE 754 "doubles"）转换为文本时尝试保留的有效数字位数。默认值 17（自 SQLite 版本 3.52.0
+起）。此前的所有版本值为 15。
 
-SQLITE_DBCONFIG_REVERSE_SCANORDER
-The SQLITE_DBCONFIG_REVERSE_SCANORDER option changes the default order
-in which tables and indexes are scanned so that the scans start at the end
-and work toward the beginning rather than starting at the beginning and
-working toward the end. Setting SQLITE_DBCONFIG_REVERSE_SCANORDER is the
-same as setting PRAGMA reverse_unordered_selects.
-This option takes
-two arguments which are an integer and a pointer to an integer.  The first
-argument is 1, 0, or -1 to enable, disable, or leave unchanged the
-reverse scan order flag, respectively.  If the second argument is not NULL,
-then 0 or 1 is written into the integer that the second argument points to
-depending on if the reverse scan order flag is set after processing the
-first argument.
+此选项接受两个参数：一个整数和一个指向整数的指针。第一个参数是 3 到 23 之间的小整数、或零。
+`FP_DIGITS` 设置被改为该小整数；若第一个参数为零或越界，则保持不变。第二个参数是指向整数的指针。
+若该指针非 NULL，则把（可能经第一个参数修改后的）`FP_DIGITS` 设置值写入第二个参数指向的整数。
 
-SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE
-The SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE option enables or disables
-the ability of the ATTACH DATABASE SQL command to create a new database
-file if the database filed named in the ATTACH command does not already
-exist.  This ability of ATTACH to create a new database is enabled by
-default.  Applications can disable or reenable the ability for ATTACH to
-create new database files using this DBCONFIG option.
+## 数据库连接配置选项
 
-This option takes two arguments which are an integer and a pointer
-to an integer.  The first argument is 1, 0, or -1 to enable, disable, or
-leave unchanged the attach-create flag, respectively.  If the second
-argument is not NULL, then 0 or 1 is written into the integer that the
-second argument points to depending on if the attach-create flag is set
-after processing the first argument.
+（`SQLITE_DBCONFIG_FP_DIGITS` 第一个参数是 3 到 23 之间的小整数、或零。`FP_DIGITS` 设置被改为
+该小整数；若第一个参数为零或越界，则保持不变。第二个参数是指向整数的指针。若该指针非 NULL，则把
+（可能经第一个参数修改后的）`FP_DIGITS` 设置值写入第二个参数指向的整数。）
 
-SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE
-The SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE option enables or disables the
-ability of the ATTACH DATABASE SQL command to open a database for writing.
-This capability is enabled by default.  Applications can disable or
-reenable this capability using the current DBCONFIG option.  If
-this capability is disabled, the ATTACH command will still work,
-but the database will be opened read-only.  If this option is disabled,
-then the ability to create a new database using ATTACH is also disabled,
-regardless of the value of the SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE
-option.
+### SQLITE_DBCONFIG 选项的参数（Arguments To SQLITE_DBCONFIG Options）
 
-This option takes two arguments which are an integer and a pointer
-to an integer.  The first argument is 1, 0, or -1 to enable, disable, or
-leave unchanged the ability to ATTACH another database for writing,
-respectively.  If the second argument is not NULL, then 0 or 1 is written
-into the integer to which the second argument points, depending on whether
-the ability to ATTACH a read/write database is enabled or disabled
-after processing the first argument.
+大多数 `SQLITE_DBCONFIG` 选项接受两个参数，因此对 `sqlite3_db_config()` 的完整调用总共有四个
+参数。第一个参数（`sqlite3_db_config()` 的第三个参数）是一个整数。第二个参数是指向整数的指针。
+若第一个参数为 1，则选项被启用；若第一个整数参数为 0，则选项被禁用；若第一个参数为 -1，则选项
+设置不变。第二个参数（指向整数的指针）可以为 NULL。若第二个参数非 NULL，则根据应用第一个参数
+指定的任何更改后该设置是禁用还是启用，向第二个参数指向的整数写入 0 或 1。
 
-SQLITE_DBCONFIG_ENABLE_COMMENTS
-The SQLITE_DBCONFIG_ENABLE_COMMENTS option enables or disables the
-ability to include comments in SQL text.  Comments are enabled by default.
-An application can disable or reenable comments in SQL text using this
-DBCONFIG option.
-
-This option takes two arguments which are an integer and a pointer
-to an integer.  The first argument is 1, 0, or -1 to enable, disable, or
-leave unchanged the ability to use comments in SQL text,
-respectively.  If the second argument is not NULL, then 0 or 1 is written
-into the integer that the second argument points to depending on if
-comments are allowed in SQL text after processing the first argument.
-
-SQLITE_DBCONFIG_FP_DIGITS
-The SQLITE_DBCONFIG_FP_DIGITS setting is a small integer that determines
-the number of significant digits that SQLite will attempt to preserve when
-converting floating point numbers (IEEE 754 "doubles") into text.  The
-default value 17, as of SQLite version 3.52.0.  The value was 15 in all
-prior versions.
-
-This option takes two arguments which are an integer and a pointer
-to an integer.  The first argument is a small integer, between 3 and 23, or
-zero.  The FP_DIGITS setting is changed to that small integer, or left
-unaltered if the first argument is zero or out of range. The second argument
-is a pointer to an integer.  If the pointer is not NULL, then the value of
-the FP_DIGITS setting, after possibly being modified by the first
-arguments, is written into the integer to which the second argument points.
-
-### Arguments To SQLITE_DBCONFIG Options
-
-Most of the SQLITE_DBCONFIG options take two arguments, so that the
-overall call to sqlite3_db_config() has a total of four parameters.
-The first argument (the third parameter to sqlite3_db_config()) is
-an integer.
-The second argument is a pointer to an integer. If the first argument is 1,
-then the option becomes enabled.  If the first integer argument is 0,
-then the option is disabled.
-If the first argument is -1, then the option setting
-is unchanged.  The second argument, the pointer to an integer, may be NULL.
-If the second argument is not NULL, then a value of 0 or 1 is written into
-the integer to which the second argument points, depending on whether the
-setting is disabled or enabled after applying any changes specified by
-the first argument.
-
-While most SQLITE_DBCONFIG options use the argument format
-described in the previous paragraph, the SQLITE_DBCONFIG_MAINDBNAME,
-SQLITE_DBCONFIG_LOOKASIDE, and SQLITE_DBCONFIG_FP_DIGITS options
-are different.  See the documentation of those exceptional options for
-details.
+虽然大多数 `SQLITE_DBCONFIG` 选项使用上一段描述的参数格式，但 `SQLITE_DBCONFIG_MAINDBNAME`、
+`SQLITE_DBCONFIG_LOOKASIDE` 和 `SQLITE_DBCONFIG_FP_DIGITS` 选项不同。细节见那些例外选项的文档。
 
 ---
 
-## Authorizer Return Codes
+## 授权器返回码（Authorizer Return Codes）
 
 ```
-
-#define SQLITE_DENY   1   /* Abort the SQL statement with an error */
-#define SQLITE_IGNORE 2   /* Don't allow access, but don't generate an error */
-
+#define SQLITE_DENY   1   /* 以错误中止 SQL 语句 */
+#define SQLITE_IGNORE 2   /* 不允许访问，但不生成错误 */
 ```
 
-The authorizer callback function must
-return either SQLITE_OK or one of these two constants in order
-to signal SQLite whether or not the action is permitted.  See the
-authorizer documentation for additional
-information.
+授权器回调函数必须返回 `SQLITE_OK` 或这两个常量之一，以向 SQLite 指示该动作是否被允许。更多信息
+见授权器文档。
 
-Note that SQLITE_IGNORE is also used as a conflict resolution mode
-returned from the sqlite3_vtab_on_conflict() interface.
+注意：`SQLITE_IGNORE` 也被用作 `sqlite3_vtab_on_conflict()` 接口返回的冲突解决模式之一。
 
 ---
 
-## Flags for sqlite3_deserialize()
+## sqlite3_deserialize() 的标志（Flags for sqlite3_deserialize()）
 
 ```
-
-#define SQLITE_DESERIALIZE_FREEONCLOSE 1 /* Call sqlite3_free() on close */
-#define SQLITE_DESERIALIZE_RESIZEABLE  2 /* Resize using sqlite3_realloc64() */
-#define SQLITE_DESERIALIZE_READONLY    4 /* Database is read-only */
-
+#define SQLITE_DESERIALIZE_FREEONCLOSE 1 /* 关闭时调用 sqlite3_free() */
+#define SQLITE_DESERIALIZE_RESIZEABLE  2 /* 用 sqlite3_realloc64() 调整大小 */
+#define SQLITE_DESERIALIZE_READONLY    4 /* 数据库只读 */
 ```
 
-The following are allowed values for the 6th argument (the F argument) to
-the sqlite3_deserialize(D,S,P,N,M,F) interface.
+以下是 `sqlite3_deserialize(D,S,P,N,M,F)` 接口第 6 个参数（F 参数）的允许值。
 
-The SQLITE_DESERIALIZE_FREEONCLOSE means that the database serialization
-in the P argument is held in memory obtained from sqlite3_malloc64()
-and that SQLite should take ownership of this memory and automatically
-free it when it has finished using it.  Without this flag, the caller
-is responsible for freeing any dynamically allocated memory.
+`SQLITE_DESERIALIZE_FREEONCLOSE` 表示 P 参数中的数据库序列化存放在从 `sqlite3_malloc64()`
+获得的内存中，SQLite 应接管这块内存的所有权，并在用完时自动释放它。没有此标志，调用者负责释放
+任何动态分配的内存。
 
-The SQLITE_DESERIALIZE_RESIZEABLE flag means that SQLite is allowed to
-grow the size of the database using calls to sqlite3_realloc64().  This
-flag should only be used if SQLITE_DESERIALIZE_FREEONCLOSE is also used.
-Without this flag, the deserialized database cannot increase in size beyond
-the number of bytes specified by the M parameter.
+`SQLITE_DESERIALIZE_RESIZEABLE` 标志表示允许 SQLite 用对 `sqlite3_realloc64()` 的调用增大
+数据库的大小。此标志只应在同时使用 `SQLITE_DESERIALIZE_FREEONCLOSE` 时使用。没有此标志，反序列化
+后的数据库不能增长到超过 M 参数指定的字节数。
 
-The SQLITE_DESERIALIZE_READONLY flag means that the deserialized database
-should be treated as read-only.
+`SQLITE_DESERIALIZE_READONLY` 标志表示反序列化后的数据库应被视为只读。
 
 ---
 
-## Function Flags
+## 函数标志（Function Flags）
 
 ```
-
 #define SQLITE_DETERMINISTIC    0x000000800
 #define SQLITE_DIRECTONLY       0x000080000
 #define SQLITE_SUBTYPE          0x000100000
 #define SQLITE_INNOCUOUS        0x000200000
 #define SQLITE_RESULT_SUBTYPE   0x001000000
 #define SQLITE_SELFORDER1       0x002000000
-
 ```
 
-These constants may be ORed together with the
-preferred text encoding as the fourth argument
-to sqlite3_create_function(), sqlite3_create_function16(), or
-sqlite3_create_function_v2().
+这些常量可随首选文本编码 OR 起来，作为 `sqlite3_create_function()`、
+`sqlite3_create_function16()` 或 `sqlite3_create_function_v2()` 的第四个参数。
 
- SQLITE_DETERMINISTIC
-The SQLITE_DETERMINISTIC flag means that the new function always gives
-the same output when the input parameters are the same.
-The abs() function is deterministic, for example, but
-randomblob() is not.  Functions must
-be deterministic in order to be used in certain contexts such as
-with the WHERE clause of partial indexes or in generated columns.
-SQLite might also optimize deterministic functions by factoring them
-out of inner loops.
+**SQLITE_DETERMINISTIC**：此标志表示新函数在输入参数相同时总是给出相同的输出。例如 abs() 函数是
+确定性的，但 randomblob() 不是。函数必须确定性才能用于某些上下文，例如部分索引的 WHERE 子句或
+生成列中。SQLite 也可能通过把确定性函数从内循环中提取出来来优化它们。
 
- SQLITE_DIRECTONLY
-The SQLITE_DIRECTONLY flag means that the function may only be invoked
-from top-level SQL, and cannot be used in VIEWs or TRIGGERs nor in
-schema structures such as CHECK constraints, DEFAULT clauses,
-expression indexes, partial indexes, or generated columns.
+**SQLITE_DIRECTONLY**：此标志表示该函数只能从顶层 SQL 调用，不能在视图或触发器中使用，也不能用于
+CHECK 约束、DEFAULT 子句、表达式索引、部分索引或生成列等 schema 结构中。
 
-The SQLITE_DIRECTONLY flag is recommended for any
-application-defined SQL function
-that has side-effects or that could potentially leak sensitive information.
-This will prevent attacks in which an application is tricked
-into using a database file that has had its schema surreptitiously
-modified to invoke the application-defined function in ways that are
-harmful.
+推荐为任何有副作用、或可能泄露敏感信息的应用自定义 SQL 函数设置 `SQLITE_DIRECTONLY` 标志。这将
+防止以下攻击：应用被骗使用一个 schema 被秘密修改、以有害方式调用应用自定义函数的数据库文件。
 
-Some people say it is good practice to set SQLITE_DIRECTONLY on all
-application-defined SQL functions, regardless of whether or not they
-are security sensitive, as doing so prevents those functions from being used
-inside of the database schema, and thus ensures that the database
-can be inspected and modified using generic tools (such as the CLI)
-that do not have access to the application-defined functions.
+有些人说，无论是否涉及安全敏感，对所有应用自定义 SQL 函数设置 `SQLITE_DIRECTONLY` 都是良好实践，
+因为这样做能防止这些函数被用在数据库 schema 内，从而确保数据库可用不访问应用自定义函数的通用工具
+（如 CLI）检查和修改。
 
- SQLITE_INNOCUOUS
-The SQLITE_INNOCUOUS flag means that the function is unlikely
-to cause problems even if misused.  An innocuous function should have
-no side effects and should not depend on any values other than its
-input parameters. The abs() function is an example of an
-innocuous function.
-The load_extension() SQL function is not innocuous because of its
-side effects.
+**SQLITE_INNOCUOUS**：此标志表示该函数即使被误用也不大可能引起问题。无害函数应无副作用、且除了
+输入参数外不依赖任何值。abs() 函数是无害函数的一个例子。load_extension() SQL 函数因其副作用而
+非无害。
 
- SQLITE_INNOCUOUS is similar to SQLITE_DETERMINISTIC, but is not
-exactly the same.  The random() function is an example of a
-function that is innocuous but not deterministic.
+`SQLITE_INNOCUOUS` 与 `SQLITE_DETERMINISTIC` 类似，但不完全相同。random() 函数是无害但不确定的
+函数的一个例子。
 
-Some heightened security settings
-(SQLITE_DBCONFIG_TRUSTED_SCHEMA and PRAGMA trusted_schema=OFF)
-disable the use of SQL functions inside views and triggers and in
-schema structures such as CHECK constraints, DEFAULT clauses,
-expression indexes, partial indexes, and generated columns unless
-the function is tagged with SQLITE_INNOCUOUS.  Most built-in functions
-are innocuous.  Developers are advised to avoid using the
-SQLITE_INNOCUOUS flag for application-defined functions unless the
-function has been carefully audited and found to be free of potentially
-security-adverse side-effects and information-leaks.
+某些加强的安全设置（`SQLITE_DBCONFIG_TRUSTED_SCHEMA` 和 PRAGMA trusted_schema=OFF）禁用视图和
+触发器内、以及 CHECK 约束、DEFAULT 子句、表达式索引、部分索引和生成列等 schema 结构中的 SQL
+函数，除非函数被标记为 `SQLITE_INNOCUOUS`。大多数内建函数都是无害的。建议开发者对应用自定义函数
+避免使用 `SQLITE_INNOCUOUS` 标志，除非该函数经过仔细审计、确认没有潜在危害安全性的副作用和信息
+泄漏。
 
- SQLITE_SUBTYPE
-The SQLITE_SUBTYPE flag indicates to SQLite that a function might call
-sqlite3_value_subtype() to inspect the sub-types of its arguments.
-This flag instructs SQLite to omit some corner-case optimizations that
-might disrupt the operation of the sqlite3_value_subtype() function,
-causing it to return zero rather than the correct subtype().
-All SQL functions that invoke sqlite3_value_subtype() should have this
-property.  If the SQLITE_SUBTYPE property is omitted, then the return
-value from sqlite3_value_subtype() might sometimes be zero even though
-a non-zero subtype was specified by the function argument expression.
+**SQLITE_SUBTYPE**：此标志向 SQLite 表示：函数可能调用 `sqlite3_value_subtype()` 来检查其参数的
+子类型。此标志指示 SQLite 省略某些可能干扰 `sqlite3_value_subtype()` 函数的边角优化，这些优化会
+使其返回零而非正确的子类型。所有调用 `sqlite3_value_subtype()` 的 SQL 函数都应有此属性。若省略
+`SQLITE_SUBTYPE` 属性，则 `sqlite3_value_subtype()` 的返回值有时可能为零，即使函数参数表达式指定
+了非零子类型。
 
- SQLITE_RESULT_SUBTYPE
-The SQLITE_RESULT_SUBTYPE flag indicates to SQLite that a function might call
-sqlite3_result_subtype() to cause a sub-type to be associated with its
-result.
-Every function that invokes sqlite3_result_subtype() should have this
-property.  If it does not, then the call to sqlite3_result_subtype()
-might become a no-op if the function is used as a term in an
-expression index.  On the other hand, SQL functions that never invoke
-sqlite3_result_subtype() should avoid setting this property, as the
-purpose of this property is to disable certain optimizations that are
-incompatible with subtypes.
+**SQLITE_RESULT_SUBTYPE**：此标志向 SQLite 表示：函数可能调用 `sqlite3_result_subtype()` 使其
+结果关联一个子类型。每个调用 `sqlite3_result_subtype()` 的函数都应有此属性。若没有，则当函数用作
+表达式索引中的项时，对 `sqlite3_result_subtype()` 的调用可能变成空操作。另一方面，从不调用
+`sqlite3_result_subtype()` 的 SQL 函数应避免设置此属性，因为此属性的目的是禁用某些与子类型不兼容
+的优化。
 
- SQLITE_SELFORDER1
-The SQLITE_SELFORDER1 flag indicates that the function is an aggregate
-that internally orders the values provided to the first argument.  The
-ordered-set aggregate SQL notation with a single ORDER BY term can be
-used to invoke this function.  If the ordered-set aggregate notation is
-used on a function that lacks this flag, then an error is raised. Note
-that the ordered-set aggregate syntax is only available if SQLite is
-built using the -DSQLITE_ENABLE_ORDERED_SET_AGGREGATES compile-time option.
+**SQLITE_SELFORDER1**：此标志表示该函数是聚合函数，内部对提供给第一个参数的值排序。带单个 ORDER
+BY 项的有序集合聚合 SQL 记法可用于调用此函数。若对缺少此标志的函数使用有序集合聚合记法，则报错。
+注意：有序集合聚合语法仅在 SQLite 用 `-DSQLITE_ENABLE_ORDERED_SET_AGGREGATES` 编译期选项构建时
+可用。
 
 ---
 
-## Conflict resolution modes
+## 冲突解决模式（Conflict resolution modes）
 
 ```
-
 #define SQLITE_ROLLBACK 1
-/* #define SQLITE_IGNORE 2 // Also used by sqlite3_authorizer() callback */
+/* #define SQLITE_IGNORE 2 // 也供 sqlite3_authorizer() 回调使用 */
 #define SQLITE_FAIL     3
-/* #define SQLITE_ABORT 4  // Also an error code */
+/* #define SQLITE_ABORT 4  // 也是错误码 */
 #define SQLITE_REPLACE  5
-
 ```
 
-These constants are returned by sqlite3_vtab_on_conflict() to
-inform a virtual table implementation of the ON CONFLICT mode
-for the SQL statement being evaluated.
+这些常量由 `sqlite3_vtab_on_conflict()` 返回，告知虚拟表实现正在求值的 SQL 语句的 ON CONFLICT
+模式。
 
-Note that the SQLITE_IGNORE constant is also used as a potential
-return value from the sqlite3_set_authorizer() callback and that
-SQLITE_ABORT is also a result code.
+注意：`SQLITE_IGNORE` 常量也被用作 `sqlite3_set_authorizer()` 回调的潜在返回值，`SQLITE_ABORT`
+也是结果码。
 
 ---
 
-## Standard File Control Opcodes
+## 标准文件控制操作码（Standard File Control Opcodes）
 
 ```
-
 #define SQLITE_FCNTL_LOCKSTATE               1
 #define SQLITE_FCNTL_GET_LOCKPROXYFILE       2
 #define SQLITE_FCNTL_SET_LOCKPROXYFILE       3
@@ -7663,411 +4798,200 @@ SQLITE_ABORT is also a result code.
 #define SQLITE_FCNTL_NULL_IO                43
 #define SQLITE_FCNTL_BLOCK_ON_CONNECT       44
 #define SQLITE_FCNTL_FILESTAT               45
-
 ```
 
-These integer constants are opcodes for the xFileControl method
-of the sqlite3_io_methods object and for the sqlite3_file_control()
-interface.
-
--
-
-The SQLITE_FCNTL_LOCKSTATE opcode is used for debugging.  This
-opcode causes the xFileControl method to write the current state of
-the lock (one of SQLITE_LOCK_NONE, SQLITE_LOCK_SHARED,
-SQLITE_LOCK_RESERVED, SQLITE_LOCK_PENDING, or SQLITE_LOCK_EXCLUSIVE)
-into an integer that the pArg argument points to.
-This capability is only available if SQLite is compiled with SQLITE_DEBUG.
-
--
-
-The SQLITE_FCNTL_SIZE_HINT opcode is used by SQLite to give the VFS
-layer a hint of how large the database file will grow to be during the
-current transaction.  This hint is not guaranteed to be accurate but it
-is often close.  The underlying VFS might choose to preallocate database
-file space based on this hint in order to help writes to the database
-file run faster.
-
--
-
-The SQLITE_FCNTL_SIZE_LIMIT opcode is used by in-memory VFS that
-implements sqlite3_deserialize() to set an upper bound on the size
-of the in-memory database.  The argument is a pointer to a sqlite3_int64.
-If the integer pointed to is negative, then it is filled in with the
-current limit.  Otherwise the limit is set to the larger of the value
-of the integer pointed to and the current database size.  The integer
-pointed to is set to the new limit.
-
--
-
-The SQLITE_FCNTL_CHUNK_SIZE opcode is used to request that the VFS
-extends and truncates the database file in chunks of a size specified
-by the user. The fourth argument to sqlite3_file_control() should
-point to an integer (type int) containing the new chunk-size to use
-for the nominated database. Allocating database file space in large
-chunks (say 1MB at a time), may reduce file-system fragmentation and
-improve performance on some systems.
-
--
-
-The SQLITE_FCNTL_FILE_POINTER opcode is used to obtain a pointer
-to the sqlite3_file object associated with a particular database
-connection.  See also SQLITE_FCNTL_JOURNAL_POINTER.
-
--
-
-The SQLITE_FCNTL_JOURNAL_POINTER opcode is used to obtain a pointer
-to the sqlite3_file object associated with the journal file (either
-the rollback journal or the write-ahead log) for a particular database
-connection.  See also SQLITE_FCNTL_FILE_POINTER.
-
--
-
-The SQLITE_FCNTL_SYNC_OMITTED file-control is no longer used.
-
--
-
-The SQLITE_FCNTL_SYNC opcode is generated internally by SQLite and
-sent to the VFS immediately before the xSync method is invoked on a
-database file descriptor. Or, if the xSync method is not invoked
-because the user has configured SQLite with
-PRAGMA synchronous=OFF it is invoked in place
-of the xSync method. In most cases, the pointer argument passed with
-this file-control is NULL. However, if the database file is being synced
-as part of a multi-database commit, the argument points to a nul-terminated
-string containing the transactions super-journal file name. VFSes that
-do not need this signal should silently ignore this opcode. Applications
-should not call sqlite3_file_control() with this opcode as doing so may
-disrupt the operation of the specialized VFSes that do require it.
-
--
-
-The SQLITE_FCNTL_COMMIT_PHASETWO opcode is generated internally by SQLite
-and sent to the VFS after a transaction has been committed immediately
-but before the database is unlocked. VFSes that do not need this signal
-should silently ignore this opcode. Applications should not call
-sqlite3_file_control() with this opcode as doing so may disrupt the
-operation of the specialized VFSes that do require it.
-
--
-
-The SQLITE_FCNTL_WIN32_AV_RETRY opcode is used to configure automatic
-retry counts and intervals for certain disk I/O operations for the
-windows VFS in order to provide robustness in the presence of
-anti-virus programs.  By default, the windows VFS will retry file read,
-file write, and file delete operations up to 10 times, with a delay
-of 25 milliseconds before the first retry and with the delay increasing
-by an additional 25 milliseconds with each subsequent retry.  This
-opcode allows these two values (10 retries and 25 milliseconds of delay)
-to be adjusted.  The values are changed for all database connections
-within the same process.  The argument is a pointer to an array of two
-integers where the first integer is the new retry count and the second
-integer is the delay.  If either integer is negative, then the setting
-is not changed but instead the prior value of that setting is written
-into the array entry, allowing the current retry settings to be
-interrogated.  The zDbName parameter is ignored.
-
--
-
-The SQLITE_FCNTL_PERSIST_WAL opcode is used to set or query the
-persistent Write Ahead Log setting.  By default, the auxiliary
-write ahead log (WAL file) and shared memory
-files used for transaction control
-are automatically deleted when the latest connection to the database
-closes.  Setting persistent WAL mode causes those files to persist after
-close.  Persisting the files is useful when other processes that do not
-have write permission on the directory containing the database file want
-to read the database file, as the WAL and shared memory files must exist
-in order for the database to be readable.  The fourth parameter to
-sqlite3_file_control() for this opcode should be a pointer to an integer.
-That integer is 0 to disable persistent WAL mode or 1 to enable persistent
-WAL mode.  If the integer is -1, then it is overwritten with the current
-WAL persistence setting.
-
--
-
-The SQLITE_FCNTL_POWERSAFE_OVERWRITE opcode is used to set or query the
-persistent "powersafe-overwrite" or "PSOW" setting.  The PSOW setting
-determines the SQLITE_IOCAP_POWERSAFE_OVERWRITE bit of the
-xDeviceCharacteristics methods. The fourth parameter to
-sqlite3_file_control() for this opcode should be a pointer to an integer.
-That integer is 0 to disable zero-damage mode or 1 to enable zero-damage
-mode.  If the integer is -1, then it is overwritten with the current
-zero-damage mode setting.
-
--
-
-The SQLITE_FCNTL_OVERWRITE opcode is invoked by SQLite after opening
-a write transaction to indicate that, unless it is rolled back for some
-reason, the entire database file will be overwritten by the current
-transaction. This is used by VACUUM operations.
-
--
-
-The SQLITE_FCNTL_VFSNAME opcode can be used to obtain the names of
-all VFSes in the VFS stack.  The names of all VFS shims and the
-final bottom-level VFS are written into memory obtained from
-sqlite3_malloc() and the result is stored in the char* variable
-that the fourth parameter of sqlite3_file_control() points to.
-The caller is responsible for freeing the memory when done.  As with
-all file-control actions, there is no guarantee that this will actually
-do anything.  Callers should initialize the char* variable to a NULL
-pointer in case this file-control is not implemented.  This file-control
-is intended for diagnostic use only.
-
--
-
-The SQLITE_FCNTL_VFS_POINTER opcode finds a pointer to the top-level
-VFSes currently in use.  The argument X in
-sqlite3_file_control(db,SQLITE_FCNTL_VFS_POINTER,X) must be
-of type "sqlite3_vfs **".  This opcode will set *X
-to a pointer to the top-level VFS.
-When there are multiple VFS shims in the stack, this opcode finds the
-upper-most shim only.
-
--
-
-Whenever a PRAGMA statement is parsed, an SQLITE_FCNTL_PRAGMA
-file control is sent to the open sqlite3_file object corresponding
-to the database file to which the pragma statement refers. The argument
-to the SQLITE_FCNTL_PRAGMA file control is an array of
-pointers to strings (char**) in which the second element of the array
-is the name of the pragma and the third element is the argument to the
-pragma or NULL if the pragma has no argument.  The handler for an
-SQLITE_FCNTL_PRAGMA file control can optionally make the first element
-of the char** argument point to a string obtained from sqlite3_mprintf()
-or the equivalent and that string will become the result of the pragma or
-the error message if the pragma fails. If the
-SQLITE_FCNTL_PRAGMA file control returns SQLITE_NOTFOUND, then normal
-PRAGMA processing continues.  If the SQLITE_FCNTL_PRAGMA
-file control returns SQLITE_OK, then the parser assumes that the
-VFS has handled the PRAGMA itself and the parser generates a no-op
-prepared statement if result string is NULL, or that returns a copy
-of the result string if the string is non-NULL.
-If the SQLITE_FCNTL_PRAGMA file control returns
-any result code other than SQLITE_OK or SQLITE_NOTFOUND, that means
-that the VFS encountered an error while handling the PRAGMA and the
-compilation of the PRAGMA fails with an error.  The SQLITE_FCNTL_PRAGMA
-file control occurs at the beginning of pragma statement analysis and so
-it is able to override built-in PRAGMA statements.
-
--
-
-The SQLITE_FCNTL_BUSYHANDLER
-file-control may be invoked by SQLite on the database file handle
-shortly after it is opened in order to provide a custom VFS with access
-to the connection's busy-handler callback. The argument is of type (void**)
-- an array of two (void *) values. The first (void *) actually points
-to a function of type (int (*)(void *)). In order to invoke the connection's
-busy-handler, this function should be invoked with the second (void *) in
-the array as the only argument. If it returns non-zero, then the operation
-should be retried. If it returns zero, the custom VFS should abandon the
-current operation.
-
--
-
-Applications can invoke the SQLITE_FCNTL_TEMPFILENAME file-control
-to have SQLite generate a
-temporary filename using the same algorithm that is followed to generate
-temporary filenames for TEMP tables and other internal uses.  The
-argument should be a char** which will be filled with the filename
-written into memory obtained from sqlite3_malloc().  The caller should
-invoke sqlite3_free() on the result to avoid a memory leak.
-
--
-
-The SQLITE_FCNTL_MMAP_SIZE file control is used to query or set the
-maximum number of bytes that will be used for memory-mapped I/O.
-The argument is a pointer to a value of type sqlite3_int64 that
-is an advisory maximum number of bytes in the file to memory map.  The
-pointer is overwritten with the old value.  The limit is not changed if
-the value originally pointed to is negative, and so the current limit
-can be queried by passing in a pointer to a negative number.  This
-file-control is used internally to implement PRAGMA mmap_size.
-
--
-
-The SQLITE_FCNTL_TRACE file control provides advisory information
-to the VFS about what the higher layers of the SQLite stack are doing.
-This file control is used by some VFS activity tracing shims.
-The argument is a zero-terminated string.  Higher layers in the
-SQLite stack may generate instances of this file control if
-the SQLITE_USE_FCNTL_TRACE compile-time option is enabled.
-
--
-
-The SQLITE_FCNTL_HAS_MOVED file control interprets its argument as a
-pointer to an integer and it writes a boolean into that integer depending
-on whether or not the file has been renamed, moved, or deleted since it
-was first opened.
-
--
-
-The SQLITE_FCNTL_WIN32_GET_HANDLE opcode can be used to obtain the
-underlying native file handle associated with a file handle.  This file
-control interprets its argument as a pointer to a native file handle and
-writes the resulting value there.
-
--
-
-The SQLITE_FCNTL_WIN32_SET_HANDLE opcode is used for debugging.  This
-opcode causes the xFileControl method to swap the file handle with the one
-pointed to by the pArg argument.  This capability is used during testing
-and only needs to be supported when SQLITE_TEST is defined.
-
--
-
-The SQLITE_FCNTL_NULL_IO opcode sets the low-level file descriptor
-or file handle for the sqlite3_file object such that it will no longer
-read or write to the database file.
-
--
-
-The SQLITE_FCNTL_WAL_BLOCK is a signal to the VFS layer that it might
-be advantageous to block on the next WAL lock if the lock is not immediately
-available.  The WAL subsystem issues this signal during rare
-circumstances in order to fix a problem with priority inversion.
-Applications should not use this file-control.
-
--
-
-The SQLITE_FCNTL_ZIPVFS opcode is implemented by zipvfs only. All other
-VFS should return SQLITE_NOTFOUND for this opcode.
-
--
-
-The SQLITE_FCNTL_RBU opcode is implemented by the special VFS used by
-the RBU extension only.  All other VFS should return SQLITE_NOTFOUND for
-this opcode.
-
--
-
-If the SQLITE_FCNTL_BEGIN_ATOMIC_WRITE opcode returns SQLITE_OK, then
-the file descriptor is placed in "batch write mode", which
-means all subsequent write operations will be deferred and done
-atomically at the next SQLITE_FCNTL_COMMIT_ATOMIC_WRITE.  Systems
-that do not support batch atomic writes will return SQLITE_NOTFOUND.
-Following a successful SQLITE_FCNTL_BEGIN_ATOMIC_WRITE and prior to
-the closing SQLITE_FCNTL_COMMIT_ATOMIC_WRITE or
-SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE, SQLite will make
-no VFS interface calls on the same sqlite3_file file descriptor
-except for calls to the xWrite method and the xFileControl method
-with SQLITE_FCNTL_SIZE_HINT.
-
--
-
-The SQLITE_FCNTL_COMMIT_ATOMIC_WRITE opcode causes all write
-operations since the previous successful call to
-SQLITE_FCNTL_BEGIN_ATOMIC_WRITE to be performed atomically.
-This file control returns SQLITE_OK if and only if the writes were
-all performed successfully and have been committed to persistent storage.
-Regardless of whether or not it is successful, this file control takes
-the file descriptor out of batch write mode so that all subsequent
-write operations are independent.
-SQLite will never invoke SQLITE_FCNTL_COMMIT_ATOMIC_WRITE without
-a prior successful call to SQLITE_FCNTL_BEGIN_ATOMIC_WRITE.
-
--
-
-The SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE opcode causes all write
-operations since the previous successful call to
-SQLITE_FCNTL_BEGIN_ATOMIC_WRITE to be rolled back.
-This file control takes the file descriptor out of batch write mode
-so that all subsequent write operations are independent.
-SQLite will never invoke SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE without
-a prior successful call to SQLITE_FCNTL_BEGIN_ATOMIC_WRITE.
-
--
-
-The SQLITE_FCNTL_LOCK_TIMEOUT opcode is used to configure a VFS
-to block for up to M milliseconds before failing when attempting to
-obtain a file lock using the xLock or xShmLock methods of the VFS.
-The parameter is a pointer to a 32-bit signed integer that contains
-the value that M is to be set to. Before returning, the 32-bit signed
-integer is overwritten with the previous value of M.
-
--
-
-The SQLITE_FCNTL_BLOCK_ON_CONNECT opcode is used to configure the
-VFS to block when taking a SHARED lock to connect to a wal mode database.
-This is used to implement the functionality associated with
-SQLITE_SETLK_BLOCK_ON_CONNECT.
-
--
-
-The SQLITE_FCNTL_DATA_VERSION opcode is used to detect changes to
-a database file.  The argument is a pointer to a 32-bit unsigned integer.
-The "data version" for the pager is written into the pointer.  The
-"data version" changes whenever any change occurs to the corresponding
-database file, either through SQL statements on the same database
-connection or through transactions committed by separate database
-connections possibly in other processes. The sqlite3_total_changes()
-interface can be used to find if any database on the connection has changed,
-but that interface responds to changes on TEMP as well as MAIN and does
-not provide a mechanism to detect changes to MAIN only.  Also, the
-sqlite3_total_changes() interface responds to internal changes only and
-omits changes made by other database connections.  The
-PRAGMA data_version command provides a mechanism to detect changes to
-a single attached database that occur due to other database connections,
-but omits changes implemented by the database connection on which it is
-called.  This file control is the only mechanism to detect changes that
-happen either internally or externally and that are associated with
-a particular attached database.
-
--
-
-The SQLITE_FCNTL_CKPT_START opcode is invoked from within a checkpoint
-in wal mode before the client starts to copy pages from the wal
-file to the database file.
-
--
-
-The SQLITE_FCNTL_CKPT_DONE opcode is invoked from within a checkpoint
-in wal mode after the client has finished copying pages from the wal
-file to the database file, but before the *-shm file is updated to
-record the fact that the pages have been checkpointed.
-
--
-
-The EXPERIMENTAL SQLITE_FCNTL_EXTERNAL_READER opcode is used to detect
-whether or not there is a database client in another process with a wal-mode
-transaction open on the database or not. It is only available on unix. The
-(void*) argument passed with this file-control should be a pointer to a
-value of type (int). The integer value is set to 1 if the database is a wal
-mode database and there exists at least one client in another process that
-currently has an SQL transaction open on the database. It is set to 0 if
-the database is not a wal-mode db, or if there is no such connection in any
-other process. This opcode cannot be used to detect transactions opened
-by clients within the current process, only within other processes.
-
--
-
-The SQLITE_FCNTL_CKSM_FILE opcode is for use internally by the
-checksum VFS shim only.
-
--
-
-If there is currently no transaction open on the database, and the
-database is not a temp db, then the SQLITE_FCNTL_RESET_CACHE file-control
-purges the contents of the in-memory page cache. If there is an open
-transaction, or if the db is a temp-db, this opcode is a no-op, not an error.
-
--
-
-The SQLITE_FCNTL_FILESTAT opcode returns low-level diagnostic information
-about the sqlite3_file objects used access the database and journal files
-for the given schema.  The fourth parameter to sqlite3_file_control()
-should be an initialized sqlite3_str pointer.  JSON text describing
-various aspects of the sqlite3_file object is appended to the sqlite3_str.
-The SQLITE_FCNTL_FILESTAT opcode is usually a no-op, unless compile-time
-options are used to enable it.
+这些整数常量是 sqlite3_io_methods 对象的 xFileControl 方法和 `sqlite3_file_control()` 接口的
+操作码。
+
+`SQLITE_FCNTL_LOCKSTATE` 操作码用于调试。此操作码使 xFileControl 方法把锁的当前状态
+（`SQLITE_LOCK_NONE`、`SQLITE_LOCK_SHARED`、`SQLITE_LOCK_RESERVED`、`SQLITE_LOCK_PENDING` 或
+`SQLITE_LOCK_EXCLUSIVE` 之一）写入 pArg 参数指向的整数。此能力仅在 SQLite 用 `SQLITE_DEBUG`
+编译时可用。
+
+`SQLITE_FCNTL_SIZE_HINT` 操作码由 SQLite 用来给 VFS 层提示：在当前事务期间数据库文件将增长到
+多大。此提示不保证准确，但通常接近。底层 VFS 可能选择基于此提示预分配数据库文件空间，以帮助对
+数据库文件的写入运行更快。
+
+`SQLITE_FCNTL_SIZE_LIMIT` 操作码由实现 `sqlite3_deserialize()` 的内存 VFS 用来设置内存数据库
+大小的上限。参数是指向 sqlite3_int64 的指针。若指向的整数为负，则用当前限制填充它。否则把限制设置
+为所指向整数的值与当前数据库大小中较大者。所指向的整数被设置为新限制。
+
+`SQLITE_FCNTL_CHUNK_SIZE` 操作码用于请求 VFS 按用户指定大小的块来扩展和截断数据库文件。
+`sqlite3_file_control()` 的第四个参数应指向包含指定数据库要用的新块大小的整数（类型 int）。以大块
+（例如每次 1MB）分配数据库文件空间可能减少文件系统碎片、提高某些系统上的性能。
+
+## 标准文件控制操作码
+
+（`SQLITE_FCNTL_CHUNK_SIZE`：以大块分配数据库文件空间）可能减少文件系统碎片、提高某些系统上的
+性能。
+
+**SQLITE_FCNTL_FILE_POINTER**：此操作码用于获得与特定数据库连接关联的 sqlite3_file 对象的指针。
+另见 `SQLITE_FCNTL_JOURNAL_POINTER`。
+
+**SQLITE_FCNTL_JOURNAL_POINTER**：此操作码用于获得与特定数据库连接的日志文件（回滚日志或预写
+日志）关联的 sqlite3_file 对象的指针。另见 `SQLITE_FCNTL_FILE_POINTER`。
+
+**SQLITE_FCNTL_SYNC_OMITTED**：此文件控制不再使用。
+
+**SQLITE_FCNTL_SYNC**：此操作码由 SQLite 内部生成，在对数据库文件描述符调用 xSync 方法之前立即
+发送给 VFS。或者，若因用户用 PRAGMA synchronous=OFF 配置 SQLite 而不调用 xSync 方法，则它被用来
+代替 xSync 方法。多数情况下，随此文件控制传入的指针参数为 NULL。但若数据库文件正作为多数据库提交
+的一部分被同步，参数指向包含事务超级日志文件名的 NUL 结尾字符串。不需要此信号的 VFS 应静默忽略
+此操作码。应用不应以该操作码调用 `sqlite3_file_control()`，因为这样做可能干扰确实需要它的专用 VFS
+的操作。
+
+**SQLITE_FCNTL_COMMIT_PHASETWO**：此操作码由 SQLite 内部生成，在事务提交后、数据库解锁前立即发送
+给 VFS。不需要此信号的 VFS 应静默忽略此操作码。应用不应以该操作码调用 `sqlite3_file_control()`，
+因为这样做可能干扰确实需要它的专用 VFS 的操作。
+
+**SQLITE_FCNTL_WIN32_AV_RETRY**：此操作码用于配置 windows VFS 某些磁盘 I/O 操作的自动重试次数
+和间隔，以在存在杀毒程序的情况下提供健壮性。默认情况下，windows VFS 最多重试文件读、文件写和文件
+删除操作 10 次，首次重试前延迟 25 毫秒、此后每次重试延迟增加 25 毫秒。此操作码允许调整这两个值
+（10 次重试和 25 毫秒延迟）。这些值对同一进程内所有数据库连接都改变。参数是指向两个整数数组的指针，
+第一个整数是新重试次数，第二个整数是延迟。若任一整数为负，则不改设置、而是把该设置的先前值写入
+数组项，允许查询当前重试设置。zDbName 参数被忽略。
+
+**SQLITE_FCNTL_PERSIST_WAL**：此操作码用于设置或查询持久预写日志设置。默认情况下，辅助预写日志
+（WAL 文件）和用于事务控制的共享内存文件在数据库的最新连接关闭时被自动删除。设置持久 WAL 模式使
+这些文件在关闭后保留。当其它对包含数据库文件的目录没有写权限的进程想读取数据库文件时，保留这些
+文件很有用，因为 WAL 和共享内存文件必须存在数据库才能被读取。此操作码的 `sqlite3_file_control()`
+第四个参数应是指向整数的指针。该整数为 0 禁用持久 WAL 模式，为 1 启用。若该整数为 -1，则用当前
+WAL 持久设置覆盖它。
+
+**SQLITE_FCNTL_POWERSAFE_OVERWRITE**：此操作码用于设置或查询持久 "powersafe-overwrite"（PSOW）
+设置。PSOW 设置决定 xDeviceCharacteristics 方法的 `SQLITE_IOCAP_POWERSAFE_OVERWRITE` 位。此操作码
+的 `sqlite3_file_control()` 第四个参数应是指向整数的指针。该整数为 0 禁用零损坏模式，为 1 启用零
+损坏模式。若该整数为 -1，则用当前零损坏模式设置覆盖它。
+
+**SQLITE_FCNTL_OVERWRITE**：此操作码在打开写事务后由 SQLite 调用，指示：除非事务因某种原因被
+回滚，整个数据库文件将被当前事务覆盖。这被 VACUUM 操作使用。
+
+**SQLITE_FCNTL_VFSNAME**：此操作码可用于获得 VFS 栈中所有 VFS 的名字。所有 VFS shim 和最终底层
+VFS 的名字写入从 `sqlite3_malloc()` 获得的内存，结果存储在 `sqlite3_file_control()` 第四个参数
+指向的 char* 变量中。调用者负责用完时释放内存。与所有文件控制动作一样，不保证它真的会做什么。调用者
+应把 char* 变量初始化为 NULL 指针，以防此文件控制未实现。此文件控制仅供诊断使用。
+
+**SQLITE_FCNTL_VFS_POINTER**：此操作码找到当前使用中的顶层 VFS 的指针。`sqlite3_file_control(db,SQLITE_FCNTL_VFS_POINTER,X)`
+中的参数 X 必须为 "sqlite3_vfs **" 类型。此操作码把 *X 设置为指向顶层 VFS 的指针。当栈中有多个 VFS
+shim 时，此操作码只找到最上层的 shim。
+
+**SQLITE_FCNTL_PRAGMA**：每当解析 PRAGMA 语句时，会把 `SQLITE_FCNTL_PRAGMA` 文件控制发送到与该
+pragma 语句所指数据库文件对应的打开的 sqlite3_file 对象。`SQLITE_FCNTL_PRAGMA` 文件控制的参数是
+一个字符串指针数组（char**），其中数组的第二个元素是 pragma 的名字，第三个元素是 pragma 的参数，
+若 pragma 无参数则为 NULL。`SQLITE_FCNTL_PRAGMA` 文件控制的处理器可选地使 char** 参数的第一个
+元素指向从 `sqlite3_mprintf()` 或等价函数获得的字符串，该字符串将成为 pragma 的结果、或 pragma
+失败时的错误消息。若 `SQLITE_FCNTL_PRAGMA` 文件控制返回 `SQLITE_NOTFOUND`，则继续正常的 PRAGMA
+处理。若返回 `SQLITE_OK`，则解析器假定 VFS 自己处理了该 PRAGMA：若结果字符串为 NULL，解析器生成
+空操作的预编译语句；若字符串非 NULL，则返回结果字符串的副本。若 `SQLITE_FCNTL_PRAGMA` 文件控制
+返回 `SQLITE_OK` 或 `SQLITE_NOTFOUND` 之外的任何结果码，则表示 VFS 在处理 PRAGMA 时遇到错误，
+PRAGMA 的编译以错误失败。`SQLITE_FCNTL_PRAGMA` 文件控制在 pragma 语句分析开始时发生，因此它能够
+覆盖内建 PRAGMA 语句。
+
+**SQLITE_FCNTL_BUSYHANDLER**：此文件控制可能在数据库文件句柄打开后不久由 SQLite 调用，为自定义
+VFS 提供对连接忙处理器回调的访问。参数类型为 (void**)——两个 (void *) 值的数组。第一个 (void *)
+实际指向类型为 (int (*)(void *)) 的函数。要调用连接的忙处理器，应以数组中的第二个 (void *) 作为
+唯一参数调用此函数。若返回非零，则应重试操作；若返回零，自定义 VFS 应放弃当前操作。
+
+**SQLITE_FCNTL_TEMPFILENAME**：应用可调用此文件控制，让 SQLite 用与生成 TEMP 表及其它内部用途
+临时文件名相同的算法生成临时文件名。参数应为 char**，将被填上写入从 `sqlite3_malloc()` 获得的内存
+的文件名。调用者应对结果调用 `sqlite3_free()` 以避免内存泄漏。
+
+**SQLITE_FCNTL_MMAP_SIZE**：此文件控制用于查询或设置将用于内存映射 I/O 的最大字节数。参数是指向
+sqlite3_int64 类型值的指针，该值是要内存映射的文件字节数的建议最大值。指针被旧值覆盖。若原来指向的
+值非负，则不改限制，因此可通过传入指向负数的指针查询当前限制。此文件控制内部用于实现 PRAGMA
+mmap_size。
+
+**SQLITE_FCNTL_TRACE**：此文件控制向 VFS 提供关于 SQLite 栈更高层在做什么的建议信息。此文件控制
+被某些 VFS 活动跟踪 shim 使用。参数是零结尾字符串。若启用 `SQLITE_USE_FCNTL_TRACE` 编译期选项，
+SQLite 栈的更高层可能生成此文件控制的实例。
+
+**SQLITE_FCNTL_HAS_MOVED**：此文件控制把其参数解释为指向整数的指针，并根据文件自首次打开以来是否
+被重命名、移动或删除，向该整数写入一个布尔值。
+
+**SQLITE_FCNTL_WIN32_GET_HANDLE**：此操作码可用于获得与文件句柄关联的底层本机文件句柄。此文件控制
+把其参数解释为指向本机文件句柄的指针，并把结果值写在那里。
+
+**SQLITE_FCNTL_WIN32_SET_HANDLE**：此操作码用于调试。此操作码使 xFileControl 方法把文件句柄与
+pArg 参数指向的句柄交换。此能力在测试期间使用，只需在定义 `SQLITE_TEST` 时支持。
+
+**SQLITE_FCNTL_NULL_IO**：此操作码设置 sqlite3_file 对象的底层文件描述符或文件句柄，使其不再读写
+数据库文件。
+
+**SQLITE_FCNTL_WAL_BLOCK**：这是给 VFS 层的信号：若 WAL 锁不是立即可用，阻塞在下一次 WAL 锁上
+可能有利。WAL 子系统在罕见情况下发出此信号，以修复优先级反转问题。应用不应使用此文件控制。
+
+**SQLITE_FCNTL_ZIPVFS**：此操作码只由 zipvfs 实现。所有其它 VFS 对此操作码应返回
+`SQLITE_NOTFOUND`。
+
+**SQLITE_FCNTL_RBU**：此操作码只由 RBU 扩展使用的特殊 VFS 实现。所有其它 VFS 对此操作码应返回
+`SQLITE_NOTFOUND`。
+
+**SQLITE_FCNTL_BEGIN_ATOMIC_WRITE**：若此操作码返回 `SQLITE_OK`，则文件描述符被置于 "batch write
+mode"（批量写模式），这意味着所有后续写操作将被延迟，在下一次 `SQLITE_FCNTL_COMMIT_ATOMIC_WRITE`
+时原子地完成。不支持批量原子写的系统将返回 `SQLITE_NOTFOUND`。在一次成功的
+`SQLITE_FCNTL_BEGIN_ATOMIC_WRITE` 之后、到闭合的 `SQLITE_FCNTL_COMMIT_ATOMIC_WRITE` 或
+`SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE` 之前，SQLite 不会在同一个 sqlite3_file 文件描述符上调用任何
+VFS 接口，除了对 xWrite 方法的调用、以及带 `SQLITE_FCNTL_SIZE_HINT` 的 xFileControl 方法调用。
+
+**SQLITE_FCNTL_COMMIT_ATOMIC_WRITE**：此操作码使自上一次成功调用
+`SQLITE_FCNTL_BEGIN_ATOMIC_WRITE` 以来的所有写操作被原子地执行。当且仅当所有写操作都成功完成并已
+提交到持久存储时，此文件控制返回 `SQLITE_OK`。无论成功与否，此文件控制都把文件描述符移出批量写模式，
+使所有后续写操作独立。SQLite 绝不会在先前没有成功调用 `SQLITE_FCNTL_BEGIN_ATOMIC_WRITE` 的情况下
+调用 `SQLITE_FCNTL_COMMIT_ATOMIC_WRITE`。
+
+**SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE**：此操作码使自上一次成功调用
+`SQLITE_FCNTL_BEGIN_ATOMIC_WRITE` 以来的所有写操作被回滚。此文件控制把文件描述符移出批量写模式，
+使所有后续写操作独立。SQLite 绝不会在先前没有成功调用 `SQLITE_FCNTL_BEGIN_ATOMIC_WRITE` 的情况下
+调用 `SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE`。
+
+**SQLITE_FCNTL_LOCK_TIMEOUT**：此操作码用于配置 VFS：在尝试用 VFS 的 xLock 或 xShmLock 方法取得
+文件锁失败前，最多阻塞 M 毫秒。参数是指向包含 M 要设为的值的 32 位有符号整数的指针。返回前，该
+32 位有符号整数被 M 的先前值覆盖。
+
+**SQLITE_FCNTL_BLOCK_ON_CONNECT**：此操作码用于配置 VFS：在取 SHARED 锁连接 wal 模式数据库时
+阻塞。这用于实现与 `SQLITE_SETLK_BLOCK_ON_CONNECT` 关联的功能。
+
+**SQLITE_FCNTL_DATA_VERSION**：此操作码用于检测数据库文件的更改。参数是指向 32 位无符号整数的
+指针。pager 的 "data version" 被写入该指针。"data version" 在对应数据库文件发生任何更改时改变，
+无论更改是通过同一数据库连接上的 SQL 语句、还是通过可能位于其它进程的独立数据库连接提交的事务。
+`sqlite3_total_changes()` 接口可用于发现连接上是否有任何数据库已更改，但该接口对 TEMP 和 MAIN
+都响应、且不提供只检测 MAIN 更改的机制。
+
+## 标准文件控制操作码
+
+（`SQLITE_FCNTL_DATA_VERSION` 之后）`sqlite3_total_changes()` 接口响应 TEMP 和 MAIN 的更改、且
+不提供只检测 MAIN 更改的机制。此外，`sqlite3_total_changes()` 接口只响应内部更改、省略其它数据库
+连接所做的更改。PRAGMA data_version 命令提供检测单个附加数据库因其它数据库连接而发生的更改的机制，
+但省略由调用它的数据库连接实现的更改。此文件控制是检测内部或外部发生的、与特定附加数据库关联的更改
+的唯一机制。
+
+**SQLITE_FCNTL_CKPT_START**：此操作码在 wal 模式检查点内、客户端开始把页从 wal 文件复制到数据库
+文件之前调用。
+
+**SQLITE_FCNTL_CKPT_DONE**：此操作码在 wal 模式检查点内、客户端完成把页从 wal 文件复制到数据库
+文件之后、但 *-shm 文件更新以记录这些页已被检查点之前调用。
+
+**SQLITE_FCNTL_EXTERNAL_READER**（实验性）：此操作码用于检测另一进程中是否有数据库客户端在该
+数据库上打开 wal 模式事务。它只在 unix 上可用。随此文件控制传入的 (void*) 参数应是指向 (int)
+类型值的指针。若数据库是 wal 模式数据库、且其它进程中至少有一个客户端当前在该数据库上打开 SQL
+事务，则该整数值被设为 1。若数据库不是 wal 模式数据库、或任何其它进程中没有这样的连接，则被设为 0。
+此操作码不能用于检测当前进程内客户端打开的事务，只能检测其它进程中的。
+
+**SQLITE_FCNTL_CKSM_FILE**：此操作码仅供校验和 VFS shim 内部使用。
+
+**SQLITE_FCNTL_RESET_CACHE**：若数据库上当前没有打开事务、且数据库不是临时数据库，则此文件控制
+清除内存页缓存的内容。若有打开的事务、或数据库是临时数据库，此操作码是空操作，而非错误。
+
+**SQLITE_FCNTL_FILESTAT**：此操作码返回关于访问给定 schema 的数据库和日志文件所用的 sqlite3_file
+对象的底层诊断信息。`sqlite3_file_control()` 的第四个参数应是已初始化的 sqlite3_str 指针。描述
+sqlite3_file 对象各个方面的 JSON 文本被追加到 sqlite3_str。`SQLITE_FCNTL_FILESTAT` 操作码通常
+是空操作，除非用编译期选项启用它。
 
 ---
 
-## Virtual Table Constraint Operator Codes
+## 虚拟表约束算子代码（Virtual Table Constraint Operator Codes）
 
 ```
-
 #define SQLITE_INDEX_CONSTRAINT_EQ          2
 #define SQLITE_INDEX_CONSTRAINT_GT          4
 #define SQLITE_INDEX_CONSTRAINT_LE          8
@@ -8085,66 +5009,43 @@ options are used to enable it.
 #define SQLITE_INDEX_CONSTRAINT_LIMIT      73
 #define SQLITE_INDEX_CONSTRAINT_OFFSET     74
 #define SQLITE_INDEX_CONSTRAINT_FUNCTION  150
-
 ```
 
-These macros define the allowed values for the
-sqlite3_index_info.aConstraint[].op field.  Each value represents
-an operator that is part of a constraint term in the WHERE clause of
-a query that uses a virtual table.
+这些宏定义 sqlite3_index_info.aConstraint[].op 字段的允许值。每个值表示使用虚拟表的查询的 WHERE
+子句中约束项的一部分算子。
 
-The left-hand operand of the operator is given by the corresponding
-aConstraint[].iColumn field.  An iColumn of -1 indicates the left-hand
-operand is the rowid.
-The SQLITE_INDEX_CONSTRAINT_LIMIT and SQLITE_INDEX_CONSTRAINT_OFFSET
-operators have no left-hand operand, and so for those operators the
-corresponding aConstraint[].iColumn is meaningless and should not be
-used.
+算子的左侧操作数由对应的 aConstraint[].iColumn 字段给出。iColumn 为 -1 表示左侧操作数是 rowid。
+`SQLITE_INDEX_CONSTRAINT_LIMIT` 和 `SQLITE_INDEX_CONSTRAINT_OFFSET` 算子没有左侧操作数，因此对
+这些算子，对应的 aConstraint[].iColumn 无意义、不应使用。
 
-All operator values from SQLITE_INDEX_CONSTRAINT_FUNCTION through
-value 255 are reserved to represent functions that are overloaded
-by the xFindFunction method of the virtual table
-implementation.
+从 `SQLITE_INDEX_CONSTRAINT_FUNCTION` 到值 255 的所有算子值保留用于表示由虚拟表实现的
+xFindFunction 方法重载的函数。
 
-The right-hand operands for each constraint might be accessible using
-the sqlite3_vtab_rhs_value() interface.  Usually the right-hand
-operand is only available if it appears as a single constant literal
-in the input SQL.  If the right-hand operand is another column or an
-expression (even a constant expression) or a parameter, then the
-sqlite3_vtab_rhs_value() probably will not be able to extract it.
-The SQLITE_INDEX_CONSTRAINT_ISNULL and
-SQLITE_INDEX_CONSTRAINT_ISNOTNULL operators have no right-hand operand
-and hence calls to sqlite3_vtab_rhs_value() for those operators will
-always return SQLITE_NOTFOUND.
+每个约束的右侧操作数可能可用 `sqlite3_vtab_rhs_value()` 接口访问。通常右侧操作数只在它作为输入
+SQL 中的单个常量字面量出现时可用。若右侧操作数是另一列、表达式（即使是常量表达式）或参数，则
+`sqlite3_vtab_rhs_value()` 很可能无法提取它。`SQLITE_INDEX_CONSTRAINT_ISNULL` 和
+`SQLITE_INDEX_CONSTRAINT_ISNOTNULL` 算子没有右侧操作数，因此对这些算子调用
+`sqlite3_vtab_rhs_value()` 将总是返回 `SQLITE_NOTFOUND`。
 
-The collating sequence to be used for comparison can be found using
-the sqlite3_vtab_collation() interface.  For most real-world virtual
-tables, the collating sequence of constraints does not matter (for example
-because the constraints are numeric) and so the sqlite3_vtab_collation()
-interface is not commonly needed.
+用于比较的排序规则可用 `sqlite3_vtab_collation()` 接口找到。对大多数现实世界的虚拟表，约束的
+排序规则无关紧要（例如因为约束是数字的），因此 `sqlite3_vtab_collation()` 接口不常需要。
 
 ---
 
-## Virtual Table Scan Flags
+## 虚拟表扫描标志（Virtual Table Scan Flags）
 
 ```
-
-#define SQLITE_INDEX_SCAN_UNIQUE 0x00000001 /* Scan visits at most 1 row */
-#define SQLITE_INDEX_SCAN_HEX    0x00000002 /* Display idxNum as hex */
-                                            /* in EXPLAIN QUERY PLAN */
-
+#define SQLITE_INDEX_SCAN_UNIQUE 0x00000001 /* 扫描最多访问 1 行 */
+#define SQLITE_INDEX_SCAN_HEX    0x00000002 /* 在 EXPLAIN QUERY PLAN 中把 idxNum 显示为十六进制 */
 ```
 
-Virtual table implementations are allowed to set the
-sqlite3_index_info.idxFlags field to some combination of
-these bits.
+允许虚拟表实现把 sqlite3_index_info.idxFlags 字段设置为这些位的某种组合。
 
 ---
 
-## Device Characteristics
+## 设备特性（Device Characteristics）
 
 ```
-
 #define SQLITE_IOCAP_ATOMIC                 0x00000001
 #define SQLITE_IOCAP_ATOMIC512              0x00000002
 #define SQLITE_IOCAP_ATOMIC1K               0x00000004
@@ -8161,234 +5062,161 @@ these bits.
 #define SQLITE_IOCAP_IMMUTABLE              0x00002000
 #define SQLITE_IOCAP_BATCH_ATOMIC           0x00004000
 #define SQLITE_IOCAP_SUBPAGE_READ           0x00008000
-
 ```
 
-The xDeviceCharacteristics method of the sqlite3_io_methods
-object returns an integer which is a vector of these
-bit values expressing I/O characteristics of the mass storage
-device that holds the file that the sqlite3_io_methods
-refers to.
+sqlite3_io_methods 对象的 xDeviceCharacteristics 方法返回一个整数，它是这些位值的向量，表示持有
+sqlite3_io_methods 所指文件的存储设备的 I/O 特性。
 
-The SQLITE_IOCAP_ATOMIC property means that all writes of
-any size are atomic.  The SQLITE_IOCAP_ATOMICnnn values
-mean that writes of blocks that are nnn bytes in size and
-are aligned to an address which is an integer multiple of
-nnn are atomic.  The SQLITE_IOCAP_SAFE_APPEND value means
-that when data is appended to a file, the data is appended
-first then the size of the file is extended, never the other
-way around.  The SQLITE_IOCAP_SEQUENTIAL property means that
-information is written to disk in the same order as calls
-to xWrite().  The SQLITE_IOCAP_POWERSAFE_OVERWRITE property means that
-after reboot following a crash or power loss, the only bytes in a
-file that were written at the application level might have changed
-and that adjacent bytes, even bytes within the same sector are
-guaranteed to be unchanged.  The SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN
-flag indicates that a file cannot be deleted when open.  The
-SQLITE_IOCAP_IMMUTABLE flag indicates that the file is on
-read-only media and cannot be changed even by processes with
-elevated privileges.
+`SQLITE_IOCAP_ATOMIC` 特性表示任意大小的写都是原子的。`SQLITE_IOCAP_ATOMICnnn` 值表示：大小为
+nnn 字节、且对齐到 nnn 整数倍地址的整块写是原子的。`SQLITE_IOCAP_SAFE_APPEND` 值表示：向文件
+追加数据时，先追加数据、再扩展文件大小，绝不会反过来。`SQLITE_IOCAP_SEQUENTIAL` 特性表示信息按
+xWrite() 调用的顺序写入磁盘。`SQLITE_IOCAP_POWERSAFE_OVERWRITE` 特性表示：崩溃或断电后重启，
+文件中只有应用层写入的字节可能改变，相邻字节（即使同一扇区内的字节）保证不变。
+`SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN` 标志表示文件打开时不能被删除。`SQLITE_IOCAP_IMMUTABLE`
+标志表示文件位于只读介质上，即使有提升权限的进程也不能改变。
 
-The SQLITE_IOCAP_BATCH_ATOMIC property means that the underlying
-filesystem supports doing multiple write operations atomically when those
-write operations are bracketed by SQLITE_FCNTL_BEGIN_ATOMIC_WRITE and
-SQLITE_FCNTL_COMMIT_ATOMIC_WRITE.
+`SQLITE_IOCAP_BATCH_ATOMIC` 特性表示底层文件系统支持原子地完成多个写操作，当这些写操作被
+`SQLITE_FCNTL_BEGIN_ATOMIC_WRITE` 和 `SQLITE_FCNTL_COMMIT_ATOMIC_WRITE` 括起时。
 
-The SQLITE_IOCAP_SUBPAGE_READ property means that it is ok to read
-from the database file in amounts that are not a multiple of the
-page size and that do not begin at a page boundary.  Without this
-property, SQLite is careful to only do full-page reads and write
-on aligned pages, with the one exception that it will do a sub-page
-read of the first page to access the database header.
+`SQLITE_IOCAP_SUBPAGE_READ` 特性表示以不是页大小整数倍的量、且不从页边界开始的量读取数据库文件
+是可以的。没有此特性，SQLite 谨慎地只做对齐页上的整页读写，唯一例外是读第一页的次页访问数据库头。
 
 ---
 
-## File Locking Levels
+## 文件锁级别（File Locking Levels）
 
 ```
-
-#define SQLITE_LOCK_NONE          0       /* xUnlock() only */
-#define SQLITE_LOCK_SHARED        1       /* xLock() or xUnlock() */
-#define SQLITE_LOCK_RESERVED      2       /* xLock() only */
-#define SQLITE_LOCK_PENDING       3       /* xLock() only */
-#define SQLITE_LOCK_EXCLUSIVE     4       /* xLock() only */
-
+#define SQLITE_LOCK_NONE          0       /* 仅 xUnlock() */
+#define SQLITE_LOCK_SHARED        1       /* xLock() 或 xUnlock() */
+#define SQLITE_LOCK_RESERVED      2       /* 仅 xLock() */
+#define SQLITE_LOCK_PENDING       3       /* 仅 xLock() */
+#define SQLITE_LOCK_EXCLUSIVE     4       /* 仅 xLock() */
 ```
 
-SQLite uses one of these integer values as the second
-argument to calls it makes to the xLock() and xUnlock() methods
-of an sqlite3_io_methods object.  These values are ordered from
-least restrictive to most restrictive.
+SQLite 用这些整数值之一作为它对 sqlite3_io_methods 对象的 xLock() 和 xUnlock() 方法调用的第二个
+参数。这些值从最不严格到最严格排序。
 
-The argument to xLock() is always SHARED or higher.  The argument to
-xUnlock is either SHARED or NONE.
+xLock() 的参数总是 SHARED 或更高。xUnlock 的参数要么是 SHARED、要么是 NONE。
 
 ---
 
-## Mutex Types
+## 互斥类型（Mutex Types）
 
 ```
-
 #define SQLITE_MUTEX_FAST             0
 #define SQLITE_MUTEX_RECURSIVE        1
 #define SQLITE_MUTEX_STATIC_MAIN      2
 #define SQLITE_MUTEX_STATIC_MEM       3  /* sqlite3_malloc() */
-#define SQLITE_MUTEX_STATIC_MEM2      4  /* NOT USED */
+#define SQLITE_MUTEX_STATIC_MEM2      4  /* 未使用 */
 #define SQLITE_MUTEX_STATIC_OPEN      4  /* sqlite3BtreeOpen() */
 #define SQLITE_MUTEX_STATIC_PRNG      5  /* sqlite3_randomness() */
-#define SQLITE_MUTEX_STATIC_LRU       6  /* lru page list */
-#define SQLITE_MUTEX_STATIC_LRU2      7  /* NOT USED */
+#define SQLITE_MUTEX_STATIC_LRU       6  /* lru 页列表 */
+#define SQLITE_MUTEX_STATIC_LRU2      7  /* 未使用 */
 #define SQLITE_MUTEX_STATIC_PMEM      7  /* sqlite3PageMalloc() */
-#define SQLITE_MUTEX_STATIC_APP1      8  /* For use by application */
-#define SQLITE_MUTEX_STATIC_APP2      9  /* For use by application */
-#define SQLITE_MUTEX_STATIC_APP3     10  /* For use by application */
-#define SQLITE_MUTEX_STATIC_VFS1     11  /* For use by built-in VFS */
-#define SQLITE_MUTEX_STATIC_VFS2     12  /* For use by extension VFS */
-#define SQLITE_MUTEX_STATIC_VFS3     13  /* For use by application VFS */
-
+#define SQLITE_MUTEX_STATIC_APP1      8  /* 供应用使用 */
+#define SQLITE_MUTEX_STATIC_APP2      9  /* 供应用使用 */
+#define SQLITE_MUTEX_STATIC_APP3     10  /* 供应用使用 */
+#define SQLITE_MUTEX_STATIC_VFS1     11  /* 供内建 VFS 使用 */
+#define SQLITE_MUTEX_STATIC_VFS2     12  /* 供扩展 VFS 使用 */
+#define SQLITE_MUTEX_STATIC_VFS3     13  /* 供应用 VFS 使用 */
 ```
 
-The sqlite3_mutex_alloc() interface takes a single argument
-which is one of these integer constants.
+`sqlite3_mutex_alloc()` 接口接受单个参数，即这些整数常量之一。
 
-The set of static mutexes may change from one SQLite release to the
-next.  Applications that override the built-in mutex logic must be
-prepared to accommodate additional static mutexes.
+静态互斥锁的集合可能随 SQLite 版本而变。覆盖内建互斥锁逻辑的应用必须准备好容纳额外的静态互斥锁。
 
 ---
 
-## Flags For File Open Operations
+## 文件打开操作标志（Flags For File Open Operations）
 
 ```
-
-#define SQLITE_OPEN_READONLY         0x00000001  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_READWRITE        0x00000002  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_CREATE           0x00000004  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_DELETEONCLOSE    0x00000008  /* VFS only */
-#define SQLITE_OPEN_EXCLUSIVE        0x00000010  /* VFS only */
-#define SQLITE_OPEN_AUTOPROXY        0x00000020  /* VFS only */
-#define SQLITE_OPEN_URI              0x00000040  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_MEMORY           0x00000080  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_MAIN_DB          0x00000100  /* VFS only */
-#define SQLITE_OPEN_TEMP_DB          0x00000200  /* VFS only */
-#define SQLITE_OPEN_TRANSIENT_DB     0x00000400  /* VFS only */
-#define SQLITE_OPEN_MAIN_JOURNAL     0x00000800  /* VFS only */
-#define SQLITE_OPEN_TEMP_JOURNAL     0x00001000  /* VFS only */
-#define SQLITE_OPEN_SUBJOURNAL       0x00002000  /* VFS only */
-#define SQLITE_OPEN_SUPER_JOURNAL    0x00004000  /* VFS only */
-#define SQLITE_OPEN_NOMUTEX          0x00008000  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_FULLMUTEX        0x00010000  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_SHAREDCACHE      0x00020000  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_PRIVATECACHE     0x00040000  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_WAL              0x00080000  /* VFS only */
-#define SQLITE_OPEN_NOFOLLOW         0x01000000  /* Ok for sqlite3_open_v2() */
-#define SQLITE_OPEN_EXRESCODE        0x02000000  /* Extended result codes */
-
+#define SQLITE_OPEN_READONLY         0x00000001  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_READWRITE        0x00000002  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_CREATE           0x00000004  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_DELETEONCLOSE    0x00000008  /* 仅 VFS */
+#define SQLITE_OPEN_EXCLUSIVE        0x00000010  /* 仅 VFS */
+#define SQLITE_OPEN_AUTOPROXY        0x00000020  /* 仅 VFS */
+#define SQLITE_OPEN_URI              0x00000040  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_MEMORY           0x00000080  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_MAIN_DB          0x00000100  /* 仅 VFS */
+#define SQLITE_OPEN_TEMP_DB          0x00000200  /* 仅 VFS */
+#define SQLITE_OPEN_TRANSIENT_DB     0x00000400  /* 仅 VFS */
+#define SQLITE_OPEN_MAIN_JOURNAL     0x00000800  /* 仅 VFS */
+#define SQLITE_OPEN_TEMP_JOURNAL     0x00001000  /* 仅 VFS */
+#define SQLITE_OPEN_SUBJOURNAL       0x00002000  /* 仅 VFS */
+#define SQLITE_OPEN_SUPER_JOURNAL    0x00004000  /* 仅 VFS */
+#define SQLITE_OPEN_NOMUTEX          0x00008000  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_FULLMUTEX        0x00010000  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_SHAREDCACHE      0x00020000  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_PRIVATECACHE     0x00040000  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_WAL              0x00080000  /* 仅 VFS */
+#define SQLITE_OPEN_NOFOLLOW         0x01000000  /* 可用于 sqlite3_open_v2() */
+#define SQLITE_OPEN_EXRESCODE        0x02000000  /* 扩展结果码 */
 ```
 
-These bit values are intended for use in the
-3rd parameter to the sqlite3_open_v2() interface and
-in the 4th parameter to the sqlite3_vfs.xOpen method.
+这些位值用于 `sqlite3_open_v2()` 接口的第三个参数和 `sqlite3_vfs.xOpen` 方法的第四个参数。
 
-Only those flags marked as "Ok for sqlite3_open_v2()" may be
-used as the third argument to the sqlite3_open_v2() interface.
-The other flags have historically been ignored by sqlite3_open_v2(),
-though future versions of SQLite might change so that an error is
-raised if any of the disallowed bits are passed into sqlite3_open_v2().
-Applications should not depend on the historical behavior.
+只有标记为 "可用于 sqlite3_open_v2()" 的标志才能用作 `sqlite3_open_v2()` 接口的第三个参数。
+历史上 `sqlite3_open_v2()` 忽略其它标志，但未来版本的 SQLite 可能改变：若把任何不允许的位传入
+`sqlite3_open_v2()` 则报错。应用不应依赖历史行为。
 
-Note in particular that passing the SQLITE_OPEN_EXCLUSIVE flag into
-sqlite3_open_v2() does *not* cause the underlying database file
-to be opened using O_EXCL.  Passing SQLITE_OPEN_EXCLUSIVE into
-sqlite3_open_v2() has historically been a no-op and might become an
-error in future versions of SQLite.
+特别注意：把 `SQLITE_OPEN_EXCLUSIVE` 标志传入 `sqlite3_open_v2()` 并不导致底层数据库文件用
+O_EXCL 打开。历史上把 `SQLITE_OPEN_EXCLUSIVE` 传入 `sqlite3_open_v2()` 是空操作，未来版本的
+SQLite 可能使其成为错误。
 
----
-
-## Prepare Flags
+## 预编译标志（Prepare Flags）
 
 ```
-
 #define SQLITE_PREPARE_PERSISTENT              0x01
 #define SQLITE_PREPARE_NORMALIZE               0x02
 #define SQLITE_PREPARE_NO_VTAB                 0x04
 #define SQLITE_PREPARE_DONT_LOG                0x10
 #define SQLITE_PREPARE_FROM_DDL                0x20
-
 ```
 
-These constants define various flags that can be passed into the
-"prepFlags" parameter of the sqlite3_prepare_v3() and
-sqlite3_prepare16_v3() interfaces.
+这些常量定义可传入 `sqlite3_prepare_v3()` 和 `sqlite3_prepare16_v3()` 接口的 "prepFlags" 参数
+的各种标志。
 
-New flags may be added in future releases of SQLite.
+未来版本的 SQLite 可能加入新标志。
 
- SQLITE_PREPARE_PERSISTENT
-The SQLITE_PREPARE_PERSISTENT flag is a hint to the query planner
-that the prepared statement will be retained for a long time and
-probably reused many times. Without this flag, sqlite3_prepare_v3()
-and sqlite3_prepare16_v3() assume that the prepared statement will
-be used just once or at most a few times and then destroyed using
-sqlite3_finalize() relatively soon. The current implementation acts
-on this hint by avoiding the use of lookaside memory so as not to
-deplete the limited store of lookaside memory. Future versions of
-SQLite may act on this hint differently.
+**SQLITE_PREPARE_PERSISTENT**：此标志是给查询规划器的提示：预编译语句将被长期保留、很可能被多次
+复用。没有此标志，`sqlite3_prepare_v3()` 和 `sqlite3_prepare16_v3()` 假定预编译语句只被使用一次
+或最多几次，然后相对较快地用 `sqlite3_finalize()` 销毁。当前实现通过避免使用 lookaside 内存来
+响应此提示，以免耗尽有限的 lookaside 内存存储。未来版本的 SQLite 可能以不同方式响应此提示。
 
- SQLITE_PREPARE_NORMALIZE
-The SQLITE_PREPARE_NORMALIZE flag is a no-op. This flag used
-to be required for any prepared statement that wanted to use the
-sqlite3_normalized_sql() interface.  However, the
-sqlite3_normalized_sql() interface is now available to all
-prepared statements, regardless of whether or not they use this
-flag.
+**SQLITE_PREPARE_NORMALIZE**：此标志是空操作。此标志曾经是任何想使用 `sqlite3_normalized_sql()`
+接口的预编译语句所必需的。但现在 `sqlite3_normalized_sql()` 接口对所有预编译语句都可用，无论是否
+使用此标志。
 
- SQLITE_PREPARE_NO_VTAB
-The SQLITE_PREPARE_NO_VTAB flag causes the SQL compiler
-to return an error (error code SQLITE_ERROR) if the statement uses
-any virtual tables.
+**SQLITE_PREPARE_NO_VTAB**：此标志使 SQL 编译器在语句使用任何虚拟表时返回错误（错误码
+`SQLITE_ERROR`）。
 
- SQLITE_PREPARE_DONT_LOG
-The SQLITE_PREPARE_DONT_LOG flag prevents SQL compiler
-errors from being sent to the error log defined by
-SQLITE_CONFIG_LOG.  This can be used, for example, to do test
-compiles to see if some SQL syntax is well-formed, without generating
-messages on the global error log when it is not.  If the test compile
-fails, the sqlite3_prepare_v3() call returns the same error indications
-with or without this flag; it just omits the call to sqlite3_log() that
-logs the error.
+**SQLITE_PREPARE_DONT_LOG**：此标志阻止 SQL 编译器错误被发送到 `SQLITE_CONFIG_LOG` 定义的错误
+日志。例如可用于做测试编译，检查某些 SQL 语法是否良好，而不在不良好时在全局错误日志上生成消息。
+若测试编译失败，无论有无此标志，`sqlite3_prepare_v3()` 调用都返回相同的错误指示；它只是省略记录
+错误的 `sqlite3_log()` 调用。
 
- SQLITE_PREPARE_FROM_DDL
-The SQLITE_PREPARE_FROM_DDL flag causes the SQL compiler to enforce
-security constraints that would otherwise only be enforced when parsing
-the database schema.  In other words, the SQLITE_PREPARE_FROM_DDL flag
-causes the SQL compiler to treat the SQL statement being prepared as if
-it had come from an attacker.  When SQLITE_PREPARE_FROM_DDL is used and
-SQLITE_DBCONFIG_TRUSTED_SCHEMA is off, SQL functions may only be called
-if they are tagged with SQLITE_INNOCUOUS and virtual tables may only
-be used if they are tagged with SQLITE_VTAB_INNOCUOUS.  Best practice
-is to use the SQLITE_PREPARE_FROM_DDL option when preparing any SQL that
-is derived from parts of the database schema. In particular, virtual
-table implementations that run SQL statements that are derived from
-arguments to their CREATE VIRTUAL TABLE statement should always use
-sqlite3_prepare_v3() and set the SQLITE_PREPARE_FROM_DDL flag to
-prevent bypass of the SQLITE_DBCONFIG_TRUSTED_SCHEMA security checks.
+**SQLITE_PREPARE_FROM_DDL**：此标志使 SQL 编译器强制实施那些否则只在解析数据库 schema 时才强制
+实施的安全约束。换句话说，此标志使 SQL 编译器把正在准备的 SQL 语句当作来自攻击者。使用
+`SQLITE_PREPARE_FROM_DDL` 且 `SQLITE_DBCONFIG_TRUSTED_SCHEMA` 关闭时，SQL 函数只有在被标记为
+`SQLITE_INNOCUOUS` 时才能被调用，虚拟表只有在被标记为 `SQLITE_VTAB_INNOCUOUS` 时才能被使用。
+最佳实践：准备任何派生自数据库 schema 一部分的 SQL 时使用 `SQLITE_PREPARE_FROM_DDL` 选项。尤其是，
+运行派生自其 CREATE VIRTUAL TABLE 语句参数的 SQL 语句的虚拟表实现，应总是使用 `sqlite3_prepare_v3()`
+并设置 `SQLITE_PREPARE_FROM_DDL` 标志，以防止绕过 `SQLITE_DBCONFIG_TRUSTED_SCHEMA` 安全检查。
 
 ---
 
-## Prepared Statement Scan Status
+## 预编译语句扫描状态（Prepared Statement Scan Status）
 
 ```
-
 #define SQLITE_SCANSTAT_COMPLEX 0x0001
-
 ```
 
 ---
 
-## Prepared Statement Scan Status Opcodes
+## 预编译语句扫描状态操作码（Prepared Statement Scan Status Opcodes）
 
 ```
-
 #define SQLITE_SCANSTAT_NLOOP    0
 #define SQLITE_SCANSTAT_NVISIT   1
 #define SQLITE_SCANSTAT_EST      2
@@ -8397,288 +5225,193 @@ prevent bypass of the SQLITE_DBCONFIG_TRUSTED_SCHEMA security checks.
 #define SQLITE_SCANSTAT_SELECTID 5
 #define SQLITE_SCANSTAT_PARENTID 6
 #define SQLITE_SCANSTAT_NCYCLE   7
-
 ```
 
-The following constants can be used for the T parameter to the
-sqlite3_stmt_scanstatus(S,X,T,V) interface.  Each constant designates a
-different metric for sqlite3_stmt_scanstatus() to return.
+以下常量可用于 `sqlite3_stmt_scanstatus(S,X,T,V)` 接口的 T 参数。每个常量指定
+`sqlite3_stmt_scanstatus()` 要返回的一种不同度量。
 
-When the value returned to V is a string, space to hold that string is
-managed by the prepared statement S and will be automatically freed when
-S is finalized.
+当返回给 V 的值是字符串时，容纳该字符串的空间由预编译语句 S 管理，S 被终结时自动释放。
 
-Not all values are available for all query elements. When a value is
-not available, the output variable is set to -1 if the value is numeric,
-or to NULL if it is a string (SQLITE_SCANSTAT_NAME).
+并非所有值对所有查询元素都可用。当某值不可用时，若该值是数值则输出变量被设为 -1，若是字符串
+（`SQLITE_SCANSTAT_NAME`）则设为 NULL。
 
- SQLITE_SCANSTAT_NLOOP
-The sqlite3_int64 variable pointed to by the V parameter will be
-set to the total number of times that the X-th loop has run.
+**SQLITE_SCANSTAT_NLOOP**：V 参数指向的 sqlite3_int64 变量将被设为第 X 个循环运行的总次数。
 
- SQLITE_SCANSTAT_NVISIT
-The sqlite3_int64 variable pointed to by the V parameter will be set
-to the total number of rows examined by all iterations of the X-th loop.
+**SQLITE_SCANSTAT_NVISIT**：V 参数指向的 sqlite3_int64 变量将被设为第 X 个循环所有迭代检查的
+行总数。
 
- SQLITE_SCANSTAT_EST
-The "double" variable pointed to by the V parameter will be set to the
-query planner's estimate for the average number of rows output from each
-iteration of the X-th loop.  If the query planner's estimate was accurate,
-then this value will approximate the quotient NVISIT/NLOOP and the
-product of this value for all prior loops with the same SELECTID will
-be the NLOOP value for the current loop.
+**SQLITE_SCANSTAT_EST**：V 参数指向的 "double" 变量将被设为查询规划器对第 X 个循环每次迭代输出
+的平均行数的估计。若查询规划器的估计准确，则此值将近似于 NVISIT/NLOOP 的商，且对同一 SELECTID
+的所有先前循环此值的乘积将是当前循环的 NLOOP 值。
 
- SQLITE_SCANSTAT_NAME
-The "const char *" variable pointed to by the V parameter will be set
-to a zero-terminated UTF-8 string containing the name of the index or table
-used for the X-th loop.
+**SQLITE_SCANSTAT_NAME**：V 参数指向的 "const char *" 变量将被设为包含第 X 个循环所用索引或表名
+的零结尾 UTF-8 字符串。
 
- SQLITE_SCANSTAT_EXPLAIN
-The "const char *" variable pointed to by the V parameter will be set
-to a zero-terminated UTF-8 string containing the EXPLAIN QUERY PLAN
-description for the X-th loop.
+**SQLITE_SCANSTAT_EXPLAIN**：V 参数指向的 "const char *" 变量将被设为包含第 X 个循环的 EXPLAIN
+QUERY PLAN 描述的零结尾 UTF-8 字符串。
 
- SQLITE_SCANSTAT_SELECTID
-The "int" variable pointed to by the V parameter will be set to the
-id for the X-th query plan element. The id value is unique within the
-statement. The select-id is the same value as is output in the first
-column of an EXPLAIN QUERY PLAN query.
+**SQLITE_SCANSTAT_SELECTID**：V 参数指向的 "int" 变量将被设为第 X 个查询计划元素的 id。该 id 值
+在语句内唯一。select-id 与 EXPLAIN QUERY PLAN 查询第一列输出的值相同。
 
- SQLITE_SCANSTAT_PARENTID
-The "int" variable pointed to by the V parameter will be set to the
-id of the parent of the current query element, if applicable, or
-to zero if the query element has no parent. This is the same value as
-returned in the second column of an EXPLAIN QUERY PLAN query.
+**SQLITE_SCANSTAT_PARENTID**：V 参数指向的 "int" 变量将被设为当前查询元素的父元素 id（若适用），
+若查询元素没有父元素则设为零。这与 EXPLAIN QUERY PLAN 查询第二列返回的值相同。
 
- SQLITE_SCANSTAT_NCYCLE
-The sqlite3_int64 output value is set to the number of cycles,
-according to the processor time-stamp counter, that elapsed while the
-query element was being processed. This value is not available for
-all query elements - if it is unavailable the output variable is
-set to -1.
+**SQLITE_SCANSTAT_NCYCLE**：sqlite3_int64 输出值被设为处理查询元素期间、根据处理器时间戳计数器
+流逝的周期数。此值并非对所有查询元素都可用——若不可用，输出变量被设为 -1。
 
 ---
 
-## Compile-Time Library Version Numbers
+## 编译期库版本号（Compile-Time Library Version Numbers）
 
 ```
-
 #define SQLITE_VERSION        "3.53.4"
 #define SQLITE_VERSION_NUMBER 3053004
 #define SQLITE_SOURCE_ID      "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
 #define SQLITE_SCM_BRANCH     "branch-3.53"
 #define SQLITE_SCM_TAGS       "release version-3.53.4"
 #define SQLITE_SCM_DATETIME   "2026-07-24T19:02:57.525Z"
-
 ```
 
-The SQLITE_VERSION C preprocessor macro in the sqlite3.h header
-evaluates to a string literal that is the SQLite version in the
-format "X.Y.Z" where X is the major version number (always 3 for
-SQLite3) and Y is the minor version number and Z is the release number.
-The SQLITE_VERSION_NUMBER C preprocessor macro resolves to an integer
-with the value (X*1000000 + Y*1000 + Z) where X, Y, and Z are the same
-numbers used in SQLITE_VERSION.
-The SQLITE_VERSION_NUMBER for any given release of SQLite will also
-be larger than the release from which it is derived.  Either Y will
-be held constant and Z will be incremented or else Y will be incremented
-and Z will be reset to zero.
+sqlite3.h 头文件中的 `SQLITE_VERSION` C 预处理宏求值为字符串字面量，是格式 "X.Y.Z" 的 SQLite
+版本，其中 X 是主版本号（对 SQLite3 总是 3）、Y 是次版本号、Z 是发布号。`SQLITE_VERSION_NUMBER`
+C 预处理宏求值为值 (X*1000000 + Y*1000 + Z) 的整数，其中 X、Y、Z 与 `SQLITE_VERSION` 中使用的
+数字相同。任何给定 SQLite 版本的 `SQLITE_VERSION_NUMBER` 也将大于其派生自的版本。要么 Y 保持
+不变且 Z 递增，要么 Y 递增且 Z 重置为零。
 
-Since version 3.6.18 (2009-09-11),
-SQLite source code has been stored in the
-Fossil configuration management
-system.  The SQLITE_SOURCE_ID macro evaluates to
-a string which identifies a particular check-in of SQLite
-within its configuration management system.  The SQLITE_SOURCE_ID
-string contains the date and time of the check-in (UTC) and a SHA1
-or SHA3-256 hash of the entire source tree.  If the source code has
-been edited in any way since it was last checked in, then the last
-four hexadecimal digits of the hash may be modified.
+自版本 3.6.18（2009-09-11）起，SQLite 源代码存储在 Fossil 配置管理系统中。`SQLITE_SOURCE_ID`
+宏求值为一个字符串，标识其配置管理系统中 SQLite 的特定 check-in。`SQLITE_SOURCE_ID` 字符串包含
+check-in 的日期时间（UTC）和整个源代码树的 SHA1 或 SHA3-256 哈希。若源代码自上次 check-in 以来
+以任何方式被编辑，则哈希的最后四个十六进制数字可能被修改。
 
-See also: sqlite3_libversion(),
-sqlite3_libversion_number(), sqlite3_sourceid(),
-sqlite_version() and sqlite_source_id().
+另见：sqlite3_libversion()、sqlite3_libversion_number()、sqlite3_sourceid()、sqlite_version()
+和 sqlite_source_id()。
 
 ---
 
-## Flags for the xShmLock VFS method
+## xShmLock VFS 方法的标志（Flags for the xShmLock VFS method）
 
 ```
-
 #define SQLITE_SHM_UNLOCK       1
 #define SQLITE_SHM_LOCK         2
 #define SQLITE_SHM_SHARED       4
 #define SQLITE_SHM_EXCLUSIVE    8
-
 ```
 
-These integer constants define the various locking operations
-allowed by the xShmLock method of sqlite3_io_methods.  The
-following are the only legal combinations of flags to the
-xShmLock method:
+这些整数常量定义 sqlite3_io_methods 的 xShmLock 方法允许的各种锁操作。以下是传给 xShmLock 方法
+的唯一合法标志组合：
 
--   SQLITE_SHM_LOCK | SQLITE_SHM_SHARED
+- `SQLITE_SHM_LOCK | SQLITE_SHM_SHARED`
+- `SQLITE_SHM_LOCK | SQLITE_SHM_EXCLUSIVE`
+- `SQLITE_SHM_UNLOCK | SQLITE_SHM_SHARED`
+- `SQLITE_SHM_UNLOCK | SQLITE_SHM_EXCLUSIVE`
 
--   SQLITE_SHM_LOCK | SQLITE_SHM_EXCLUSIVE
+解锁时，必须提供与加锁时相同的 SHARED 或 EXCLUSIVE 标志。
 
--   SQLITE_SHM_UNLOCK | SQLITE_SHM_SHARED
-
--   SQLITE_SHM_UNLOCK | SQLITE_SHM_EXCLUSIVE
-
-When unlocking, the same SHARED or EXCLUSIVE flag must be supplied as
-was given on the corresponding lock.
-
-The xShmLock method can transition between unlocked and SHARED or
-between unlocked and EXCLUSIVE.  It cannot transition between SHARED
-and EXCLUSIVE.
+xShmLock 方法可以在未锁定与 SHARED 之间、或未锁定与 EXCLUSIVE 之间转换。它不能在 SHARED 与
+EXCLUSIVE 之间转换。
 
 ---
 
-## Constants Defining Special Destructor Behavior
+## 定义特殊析构函数行为的常量（Constants Defining Special Destructor Behavior）
 
 ```
-
 typedef void (*sqlite3_destructor_type)(void*);
 #define SQLITE_STATIC      ((sqlite3_destructor_type)0)
 #define SQLITE_TRANSIENT   ((sqlite3_destructor_type)-1)
-
 ```
 
-These are special values for the destructor that is passed in as the
-final argument to routines like sqlite3_result_blob().  If the destructor
-argument is SQLITE_STATIC, it means that the content pointer is constant
-and will never change.  It does not need to be destroyed.  The
-SQLITE_TRANSIENT value means that the content will likely change in
-the near future and that SQLite should make its own private copy of
-the content before returning.
+这些是作为最终参数传给 `sqlite3_result_blob()` 等例程的析构函数的特殊值。若析构函数参数是
+`SQLITE_STATIC`，表示内容指针是常量、永不改变，不需要被销毁。`SQLITE_TRANSIENT` 值表示内容很可能
+在不久将来改变，SQLite 应在返回前制作内容的私有副本。
 
-The typedef is necessary to work around problems in certain
-C++ compilers.
+该 typedef 为规避某些 C++ 编译器中的问题所必需。
 
 ---
 
-## Status Parameters
+## 状态参数（Status Parameters）
 
 ```
-
 #define SQLITE_STATUS_MEMORY_USED          0
 #define SQLITE_STATUS_PAGECACHE_USED       1
 #define SQLITE_STATUS_PAGECACHE_OVERFLOW   2
-#define SQLITE_STATUS_SCRATCH_USED         3  /* NOT USED */
-#define SQLITE_STATUS_SCRATCH_OVERFLOW     4  /* NOT USED */
+#define SQLITE_STATUS_SCRATCH_USED         3  /* 未使用 */
+#define SQLITE_STATUS_SCRATCH_OVERFLOW     4  /* 未使用 */
 #define SQLITE_STATUS_MALLOC_SIZE          5
 #define SQLITE_STATUS_PARSER_STACK         6
 #define SQLITE_STATUS_PAGECACHE_SIZE       7
-#define SQLITE_STATUS_SCRATCH_SIZE         8  /* NOT USED */
+#define SQLITE_STATUS_SCRATCH_SIZE         8  /* 未使用 */
 #define SQLITE_STATUS_MALLOC_COUNT         9
-
 ```
 
-These integer constants designate various run-time status parameters
-that can be returned by sqlite3_status().
+这些整数常量指定 `sqlite3_status()` 可以返回的各种运行时状态参数。
 
- SQLITE_STATUS_MEMORY_USED
-This parameter is the current amount of memory checked out
-using sqlite3_malloc(), either directly or indirectly.  The
-figure includes calls made to sqlite3_malloc() by the application
-and internal memory usage by the SQLite library.  Auxiliary page-cache
-memory controlled by SQLITE_CONFIG_PAGECACHE is not included in
-this parameter.  The amount returned is the sum of the allocation
-sizes as reported by the xSize method in sqlite3_mem_methods.
+**SQLITE_STATUS_MEMORY_USED**：此参数是当前用 `sqlite3_malloc()` 直接或间接借出的内存量。该数字
+包括应用对 `sqlite3_malloc()` 的调用、以及 SQLite 库的内部内存使用。`SQLITE_CONFIG_PAGECACHE`
+控制的辅助页缓存内存不包含在此参数中。返回的量是 sqlite3_mem_methods 中 xSize 方法报告的各分配
+大小的总和。
 
- SQLITE_STATUS_MALLOC_SIZE
-This parameter records the largest memory allocation request
-handed to sqlite3_malloc() or sqlite3_realloc() (or their
-internal equivalents).  Only the value returned in the
-*pHighwater parameter to sqlite3_status() is of interest.
-The value written into the *pCurrent parameter is undefined.
+**SQLITE_STATUS_MALLOC_SIZE**：此参数记录交给 `sqlite3_malloc()` 或 `sqlite3_realloc()`（或其
+内部等价物）的最大内存分配请求。只有 `sqlite3_status()` 的 *pHighwater 参数返回的值有意义。写入
+*pCurrent 参数的值未定义。
 
- SQLITE_STATUS_MALLOC_COUNT
-This parameter records the number of separate memory allocations
-currently checked out.
+**SQLITE_STATUS_MALLOC_COUNT**：此参数记录当前借出的独立内存分配数。
 
- SQLITE_STATUS_PAGECACHE_USED
-This parameter returns the number of pages used out of the
-pagecache memory allocator that was configured using
-SQLITE_CONFIG_PAGECACHE.  The
-value returned is in pages, not in bytes.
+**SQLITE_STATUS_PAGECACHE_USED**：此参数返回用 `SQLITE_CONFIG_PAGECACHE` 配置的页缓存内存分配器
+中已使用的页数。返回的值以页为单位，而非字节。
 
-SQLITE_STATUS_PAGECACHE_OVERFLOW
-This parameter returns the number of bytes of page cache
-allocation which could not be satisfied by the SQLITE_CONFIG_PAGECACHE
-buffer and where forced to overflow to sqlite3_malloc().  The
-returned value includes allocations that overflowed because they
-were too large (they were larger than the "sz" parameter to
-SQLITE_CONFIG_PAGECACHE) and allocations that overflowed because
-no space was left in the page cache.
+## 状态参数
 
- SQLITE_STATUS_PAGECACHE_SIZE
-This parameter records the largest memory allocation request
-handed to the pagecache memory allocator.  Only the value returned in the
-*pHighwater parameter to sqlite3_status() is of interest.
-The value written into the *pCurrent parameter is undefined.
+（`SQLITE_STATUS_PAGECACHE_USED` 返回的值以页为单位，而非字节。）
 
- SQLITE_STATUS_SCRATCH_USED
-No longer used.
+**SQLITE_STATUS_PAGECACHE_OVERFLOW**：此参数返回无法由 `SQLITE_CONFIG_PAGECACHE` 缓冲区满足、
+被迫溢出到 `sqlite3_malloc()` 的页缓存分配的字节数。返回值包括因太大而溢出（大于
+`SQLITE_CONFIG_PAGECACHE` 的 "sz" 参数）的分配、以及因页缓存中没有剩余空间而溢出的分配。
 
- SQLITE_STATUS_SCRATCH_OVERFLOW
-No longer used.
+**SQLITE_STATUS_PAGECACHE_SIZE**：此参数记录交给页缓存内存分配器的最大内存分配请求。只有
+`sqlite3_status()` 的 *pHighwater 参数返回的值有意义。写入 *pCurrent 参数的值未定义。
 
- SQLITE_STATUS_SCRATCH_SIZE
-No longer used.
+**SQLITE_STATUS_SCRATCH_USED**：不再使用。
 
- SQLITE_STATUS_PARSER_STACK
-The *pHighwater parameter records the deepest parser stack.
-The *pCurrent value is undefined.  The *pHighwater value is only
-meaningful if SQLite is compiled with YYTRACKMAXSTACKDEPTH.
+**SQLITE_STATUS_SCRATCH_OVERFLOW**：不再使用。
 
-New status parameters may be added from time to time.
+**SQLITE_STATUS_SCRATCH_SIZE**：不再使用。
+
+**SQLITE_STATUS_PARSER_STACK**：*pHighwater 参数记录最深的解析器栈。*pCurrent 值未定义。*pHighwater
+值仅在 SQLite 用 YYTRACKMAXSTACKDEPTH 编译时有意义。
+
+可能不时加入新的状态参数。
 
 ---
 
-## Synchronization Type Flags
+## 同步类型标志（Synchronization Type Flags）
 
 ```
-
 #define SQLITE_SYNC_NORMAL        0x00002
 #define SQLITE_SYNC_FULL          0x00003
 #define SQLITE_SYNC_DATAONLY      0x00010
-
 ```
 
-When SQLite invokes the xSync() method of an
-sqlite3_io_methods object it uses a combination of
-these integer values as the second argument.
+当 SQLite 调用 sqlite3_io_methods 对象的 xSync() 方法时，它用这些整数值的组合作为第二个参数。
 
-When the SQLITE_SYNC_DATAONLY flag is used, it means that the
-sync operation only needs to flush data to mass storage.  Inode
-information need not be flushed. If the lower four bits of the flag
-equal SQLITE_SYNC_NORMAL, that means to use normal fsync() semantics.
-If the lower four bits equal SQLITE_SYNC_FULL, that means
-to use Mac OS X style fullsync instead of fsync().
+使用 `SQLITE_SYNC_DATAONLY` 标志时，表示同步操作只需把数据刷到海量存储，inode 信息不必刷。若标志
+的低四位等于 `SQLITE_SYNC_NORMAL`，表示使用普通 fsync() 语义。若低四位等于 `SQLITE_SYNC_FULL`，
+表示用 Mac OS X 风格的 fullsync 代替 fsync()。
 
-Do not confuse the SQLITE_SYNC_NORMAL and SQLITE_SYNC_FULL flags
-with the PRAGMA synchronous=NORMAL and PRAGMA synchronous=FULL
-settings.  The synchronous pragma determines when calls to the
-xSync VFS method occur and applies uniformly across all platforms.
-The SQLITE_SYNC_NORMAL and SQLITE_SYNC_FULL flags determine how
-energetic or rigorous or forceful the sync operations are and
-only make a difference on Mac OSX for the default SQLite code.
-(Third-party VFS implementations might also make the distinction
-between SQLITE_SYNC_NORMAL and SQLITE_SYNC_FULL, but among the
-operating systems natively supported by SQLite, only Mac OSX
-cares about the difference.)
+不要把 `SQLITE_SYNC_NORMAL` 和 `SQLITE_SYNC_FULL` 标志与 PRAGMA synchronous=NORMAL 和 PRAGMA
+synchronous=FULL 设置混淆。synchronous pragma 决定 xSync VFS 方法的调用何时发生，并在所有平台上
+统一适用。`SQLITE_SYNC_NORMAL` 和 `SQLITE_SYNC_FULL` 标志决定同步操作的力度或严格程度，对默认
+SQLite 代码只在 Mac OSX 上产生影响。（第三方 VFS 实现也可能区分 `SQLITE_SYNC_NORMAL` 和
+`SQLITE_SYNC_FULL`，但在 SQLite 原生支持的操作系统中，只有 Mac OSX 关心这个区别。）
 
 ---
 
-## Testing Interface Operation Codes
+## 测试接口操作码（Testing Interface Operation Codes）
 
 ```
-
 #define SQLITE_TESTCTRL_FIRST                    5
 #define SQLITE_TESTCTRL_PRNG_SAVE                5
 #define SQLITE_TESTCTRL_PRNG_RESTORE             6
-#define SQLITE_TESTCTRL_PRNG_RESET               7  /* NOT USED */
+#define SQLITE_TESTCTRL_PRNG_RESET               7  /* 未使用 */
 #define SQLITE_TESTCTRL_FK_NO_ACTION             7
 #define SQLITE_TESTCTRL_BITVEC_TEST              8
 #define SQLITE_TESTCTRL_FAULT_INSTALL            9
@@ -8686,15 +5419,15 @@ cares about the difference.)
 #define SQLITE_TESTCTRL_PENDING_BYTE            11
 #define SQLITE_TESTCTRL_ASSERT                  12
 #define SQLITE_TESTCTRL_ALWAYS                  13
-#define SQLITE_TESTCTRL_RESERVE                 14  /* NOT USED */
+#define SQLITE_TESTCTRL_RESERVE                 14  /* 未使用 */
 #define SQLITE_TESTCTRL_JSON_SELFCHECK          14
 #define SQLITE_TESTCTRL_OPTIMIZATIONS           15
-#define SQLITE_TESTCTRL_ISKEYWORD               16  /* NOT USED */
+#define SQLITE_TESTCTRL_ISKEYWORD               16  /* 未使用 */
 #define SQLITE_TESTCTRL_GETOPT                  16
-#define SQLITE_TESTCTRL_SCRATCHMALLOC           17  /* NOT USED */
+#define SQLITE_TESTCTRL_SCRATCHMALLOC           17  /* 未使用 */
 #define SQLITE_TESTCTRL_INTERNAL_FUNCTIONS      17
 #define SQLITE_TESTCTRL_LOCALTIME_FAULT         18
-#define SQLITE_TESTCTRL_EXPLAIN_STMT            19  /* NOT USED */
+#define SQLITE_TESTCTRL_EXPLAIN_STMT            19  /* 未使用 */
 #define SQLITE_TESTCTRL_ONCE_RESET_THRESHOLD    19
 #define SQLITE_TESTCTRL_NEVER_CORRUPT           20
 #define SQLITE_TESTCTRL_VDBE_COVERAGE           21
@@ -8710,207 +5443,130 @@ cares about the difference.)
 #define SQLITE_TESTCTRL_TRACEFLAGS              31
 #define SQLITE_TESTCTRL_TUNE                    32
 #define SQLITE_TESTCTRL_LOGEST                  33
-#define SQLITE_TESTCTRL_USELONGDOUBLE           34  /* NOT USED */
+#define SQLITE_TESTCTRL_USELONGDOUBLE           34  /* 未使用 */
 #define SQLITE_TESTCTRL_ATOF                    34
-#define SQLITE_TESTCTRL_LAST                    34  /* Largest TESTCTRL */
-
+#define SQLITE_TESTCTRL_LAST                    34  /* 最大的 TESTCTRL */
 ```
 
-These constants are the valid operation code parameters used
-as the first argument to sqlite3_test_control().
+这些常量是 `sqlite3_test_control()` 第一个参数使用的有效操作码参数。
 
-These parameters and their meanings are subject to change
-without notice.  These values are for testing purposes only.
-Applications should not use any of these parameters or the
-sqlite3_test_control() interface.
+这些参数及其含义可能随时更改而不通知。这些值仅供测试使用。应用不应使用任何这些参数或
+`sqlite3_test_control()` 接口。
 
 ---
 
-## SQL Trace Event Codes
+## SQL 跟踪事件码（SQL Trace Event Codes）
 
 ```
-
 #define SQLITE_TRACE_STMT       0x01
 #define SQLITE_TRACE_PROFILE    0x02
 #define SQLITE_TRACE_ROW        0x04
 #define SQLITE_TRACE_CLOSE      0x08
-
 ```
 
-These constants identify classes of events that can be monitored
-using the sqlite3_trace_v2() tracing logic.  The M argument
-to sqlite3_trace_v2(D,M,X,P) is an OR-ed combination of one or more of
-the following constants.  The first argument to the trace callback
-is one of the following constants.
+这些常量标识可用 `sqlite3_trace_v2()` 跟踪逻辑监控的事件类别。`sqlite3_trace_v2(D,M,X,P)` 的
+M 参数是一个或多个以下常量的 OR 组合。跟踪回调的第一个参数是以下常量之一。
 
-New tracing constants may be added in future releases.
+未来版本可能加入新的跟踪常量。
 
-A trace callback has four arguments: xCallback(T,C,P,X).
-The T argument is one of the integer type codes above.
-The C argument is a copy of the context pointer passed in as the
-fourth argument to sqlite3_trace_v2().
-The P and X arguments are pointers whose meanings depend on T.
+跟踪回调有四个参数：xCallback(T,C,P,X)。T 参数是上面的整数类型码之一。C 参数是作为
+`sqlite3_trace_v2()` 第四个参数传入的上下文指针的副本。P 和 X 参数是指针，其含义取决于 T。
 
- SQLITE_TRACE_STMT
-An SQLITE_TRACE_STMT callback is invoked when a prepared statement
-first begins running and possibly at other times during the
-execution of the prepared statement, such as at the start of each
-trigger subprogram. The P argument is a pointer to the
-prepared statement. The X argument is a pointer to a string which
-is the unexpanded SQL text of the prepared statement or an SQL comment
-that indicates the invocation of a trigger.  The callback can compute
-the same text that would have been returned by the legacy sqlite3_trace()
-interface by using the X argument when X begins with "--" and invoking
-sqlite3_expanded_sql(P) otherwise.
+**SQLITE_TRACE_STMT**：当预编译语句第一次开始运行时、以及可能在预编译语句执行期间的其它时刻（例如
+每个触发器子程序开始时）调用 `SQLITE_TRACE_STMT` 回调。P 参数是指向预编译语句的指针。X 参数是指向
+字符串的指针，该字符串是预编译语句的未展开 SQL 文本、或指示触发器调用的 SQL 注释。回调可用 X 参数
+计算传统 `sqlite3_trace()` 接口会返回的相同文本：当 X 以 "--" 开头时用 X，否则调用
+`sqlite3_expanded_sql(P)`。
 
- SQLITE_TRACE_PROFILE
-An SQLITE_TRACE_PROFILE callback provides approximately the same
-information as is provided by the sqlite3_profile() callback.
-The P argument is a pointer to the prepared statement and the
-X argument points to a 64-bit integer which is approximately
-the number of nanoseconds that the prepared statement took to run.
-The SQLITE_TRACE_PROFILE callback is invoked when the statement finishes.
+**SQLITE_TRACE_PROFILE**：`SQLITE_TRACE_PROFILE` 回调提供与 `sqlite3_profile()` 回调大致相同的
+信息。P 参数是指向预编译语句的指针，X 参数指向一个 64 位整数，近似于预编译语句运行所花的纳秒数。
+语句完成时调用 `SQLITE_TRACE_PROFILE` 回调。
 
- SQLITE_TRACE_ROW
-An SQLITE_TRACE_ROW callback is invoked whenever a prepared
-statement generates a single row of result.
-The P argument is a pointer to the prepared statement and the
-X argument is unused.
+**SQLITE_TRACE_ROW**：每当预编译语句生成单个结果行时调用 `SQLITE_TRACE_ROW` 回调。P 参数是指向
+预编译语句的指针，X 参数未使用。
 
- SQLITE_TRACE_CLOSE
-An SQLITE_TRACE_CLOSE callback is invoked when a database
-connection closes.
-The P argument is a pointer to the database connection object
-and the X argument is unused.
+**SQLITE_TRACE_CLOSE**：数据库连接关闭时调用 `SQLITE_TRACE_CLOSE` 回调。P 参数是指向数据库连接
+对象的指针，X 参数未使用。
 
 ---
 
-## Allowed return values from sqlite3_txn_state()
+## sqlite3_txn_state() 的允许返回值（Allowed return values from sqlite3_txn_state()）
 
 ```
-
 #define SQLITE_TXN_NONE  0
 #define SQLITE_TXN_READ  1
 #define SQLITE_TXN_WRITE 2
-
 ```
 
-These constants define the current transaction state of a database file.
-The sqlite3_txn_state(D,S) interface returns one of these
-constants in order to describe the transaction state of schema S
-in database connection D.
+这些常量定义数据库文件的当前事务状态。`sqlite3_txn_state(D,S)` 接口返回这些常量之一，以描述数据库
+连接 D 中 schema S 的事务状态。
 
- SQLITE_TXN_NONE
-The SQLITE_TXN_NONE state means that no transaction is currently
-pending.
+**SQLITE_TXN_NONE**：`SQLITE_TXN_NONE` 状态表示当前没有待处理的事务。
 
- SQLITE_TXN_READ
-The SQLITE_TXN_READ state means that the database is currently
-in a read transaction.  Content has been read from the database file
-but nothing in the database file has changed.  The transaction state
-will be advanced to SQLITE_TXN_WRITE if any changes occur and there are
-no other conflicting concurrent write transactions.  The transaction
-state will revert to SQLITE_TXN_NONE following a ROLLBACK or
-COMMIT.
+**SQLITE_TXN_READ**：`SQLITE_TXN_READ` 状态表示数据库当前处于读事务中。已从数据库文件读取内容，
+但数据库文件中没有任何改变。若有任何更改发生、且没有其它冲突的并发写事务，事务状态将推进到
+`SQLITE_TXN_WRITE`。在 ROLLBACK 或 COMMIT 之后，事务状态将恢复到 `SQLITE_TXN_NONE`。
 
- SQLITE_TXN_WRITE
-The SQLITE_TXN_WRITE state means that the database is currently
-in a write transaction.  Content has been written to the database file
-but has not yet committed.  The transaction state will change to
-SQLITE_TXN_NONE at the next ROLLBACK or COMMIT.
+**SQLITE_TXN_WRITE**：`SQLITE_TXN_WRITE` 状态表示数据库当前处于写事务中。内容已写入数据库文件但
+尚未提交。事务状态将在下一次 ROLLBACK 或 COMMIT 时变为 `SQLITE_TXN_NONE`。
 
 ---
 
-## Virtual Table Configuration Options
+## 虚拟表配置选项（Virtual Table Configuration Options）
 
 ```
-
 #define SQLITE_VTAB_CONSTRAINT_SUPPORT 1
 #define SQLITE_VTAB_INNOCUOUS          2
 #define SQLITE_VTAB_DIRECTONLY         3
 #define SQLITE_VTAB_USES_ALL_SCHEMAS   4
-
 ```
 
-These macros define the various options to the
-sqlite3_vtab_config() interface that virtual table implementations
-can use to customize and optimize their behavior.
+这些宏定义 `sqlite3_vtab_config()` 接口的各种选项，虚拟表实现可用它们自定义和优化其行为。
 
-SQLITE_VTAB_CONSTRAINT_SUPPORT
-Calls of the form
-sqlite3_vtab_config(db,SQLITE_VTAB_CONSTRAINT_SUPPORT,X) are supported,
-where X is an integer.  If X is zero, then the virtual table whose
-xCreate or xConnect method invoked sqlite3_vtab_config() does not
-support constraints.  In this configuration (which is the default) if
-a call to the xUpdate method returns SQLITE_CONSTRAINT, then the entire
-statement is rolled back as if OR ABORT had been
-specified as part of the user's SQL statement, regardless of the actual
-ON CONFLICT mode specified.
+**SQLITE_VTAB_CONSTRAINT_SUPPORT**：支持 `sqlite3_vtab_config(db,SQLITE_VTAB_CONSTRAINT_SUPPORT,X)`
+形式的调用，其中 X 是整数。若 X 为零，则调用 `sqlite3_vtab_config()` 的虚拟表（其 xCreate 或
+xConnect 方法调用的）不支持约束。在此配置（默认）下，若对 xUpdate 方法的调用返回
+`SQLITE_CONSTRAINT`，则整个语句被回滚，仿佛用户的 SQL 语句中指定了 OR ABORT，无论实际指定了什么
+ON CONFLICT 模式。
 
-If X is non-zero, then the virtual table implementation guarantees
-that if xUpdate returns SQLITE_CONSTRAINT, it will do so before
-any modifications to internal or persistent data structures have been made.
-If the ON CONFLICT mode is ABORT, FAIL, IGNORE or ROLLBACK, SQLite
-is able to roll back a statement or database transaction, and abandon
-or continue processing the current SQL statement as appropriate.
-If the ON CONFLICT mode is REPLACE and the xUpdate method returns
-SQLITE_CONSTRAINT, SQLite handles this as if the ON CONFLICT mode
-had been ABORT.
+若 X 非零，则虚拟表实现保证：若 xUpdate 返回 `SQLITE_CONSTRAINT`，它会在对内部或持久数据结构做
+任何修改之前返回。若 ON CONFLICT 模式是 ABORT、FAIL、IGNORE 或 ROLLBACK，SQLite 能够回滚语句或
+数据库事务，并根据情况放弃或继续处理当前 SQL 语句。若 ON CONFLICT 模式是 REPLACE 且 xUpdate 方法
+返回 `SQLITE_CONSTRAINT`，SQLite 会把它当作 ON CONFLICT 模式为 ABORT 来处理。
 
-Virtual table implementations that are required to handle OR REPLACE
-must do so within the xUpdate method. If a call to the
-sqlite3_vtab_on_conflict() function indicates that the current ON
-CONFLICT policy is REPLACE, the virtual table implementation should
-silently replace the appropriate rows within the xUpdate callback and
-return SQLITE_OK. Or, if this is not possible, it may return
-SQLITE_CONSTRAINT, in which case SQLite falls back to OR ABORT
-constraint handling.
+需要处理 OR REPLACE 的虚拟表实现必须在 xUpdate 方法内处理。若对 `sqlite3_vtab_on_conflict()` 函数
+的调用指示当前 ON CONFLICT 策略是 REPLACE，虚拟表实现应在 xUpdate 回调内静默替换适当的行并返回
+`SQLITE_OK`。或者，若无法做到，可以返回 `SQLITE_CONSTRAINT`，此时 SQLite 回退到 OR ABORT 约束处理。
 
-SQLITE_VTAB_DIRECTONLY
-Calls of the form
-sqlite3_vtab_config(db,SQLITE_VTAB_DIRECTONLY) from within the
-the xConnect or xCreate methods of a virtual table implementation
-prohibits that virtual table from being used from within triggers and
-views.
+**SQLITE_VTAB_DIRECTONLY**：虚拟表实现的 xConnect 或 xCreate 方法内部的
+`sqlite3_vtab_config(db,SQLITE_VTAB_DIRECTONLY)` 形式的调用，禁止该虚拟表被用于触发器和视图中。
 
-SQLITE_VTAB_INNOCUOUS
-Calls of the form
-sqlite3_vtab_config(db,SQLITE_VTAB_INNOCUOUS) from within the
-xConnect or xCreate methods of a virtual table implementation
-identify that virtual table as being safe to use from within triggers
-and views.  Conceptually, the SQLITE_VTAB_INNOCUOUS tag means that the
-virtual table can do no serious harm even if it is controlled by a
-malicious hacker.  Developers should avoid setting the SQLITE_VTAB_INNOCUOUS
-flag unless absolutely necessary.
+**SQLITE_VTAB_INNOCUOUS**：虚拟表实现的 xConnect 或 xCreate 方法内部的
+`sqlite3_vtab_config(db,SQLITE_VTAB_INNOCUOUS)` 形式的调用，将该虚拟表标识为可在触发器和视图中
+安全使用。从概念上说，`SQLITE_VTAB_INNOCUOUS` 标记表示：即使虚拟表被恶意黑客控制，也不会造成严重
+伤害。开发者应避免设置 `SQLITE_VTAB_INNOCUOUS` 标志，除非绝对必要。
 
-SQLITE_VTAB_USES_ALL_SCHEMAS
-Calls of the form
-sqlite3_vtab_config(db,SQLITE_VTAB_USES_ALL_SCHEMA) from within the
-the xConnect or xCreate methods of a virtual table implementation
-instruct the query planner to begin at least a read transaction on
-all schemas ("main", "temp", and any ATTACH-ed databases) whenever the
-virtual table is used.
+**SQLITE_VTAB_USES_ALL_SCHEMAS**：虚拟表实现的 xConnect 或 xCreate 方法内部的
+`sqlite3_vtab_config(db,SQLITE_VTAB_USES_ALL_SCHEMAS)` 形式的调用，指示查询规划器：每当使用该
+虚拟表时，至少在所有的 schema（"main"、"temp" 以及任何 ATTACH 的数据库）上开始一个读事务。
 
 ---
 
-## Win32 Directory Types
+## Win32 目录类型（Win32 Directory Types）
 
 ```
-
 #define SQLITE_WIN32_DATA_DIRECTORY_TYPE  1
 #define SQLITE_WIN32_TEMP_DIRECTORY_TYPE  2
 
 ```
 
-These macros are only available on Windows.  They define the allowed values
-for the type argument to the sqlite3_win32_set_directory interface.
+这些宏只在 Windows 上可用。它们定义 sqlite3_win32_set_directory 接口的 type 参数的允许值。
 
 ---
 
-## Run-Time Limit Categories
+## 运行时限制类别（Run-Time Limit Categories）
 
 ```
-
 #define SQLITE_LIMIT_LENGTH                    0
 #define SQLITE_LIMIT_SQL_LENGTH                1
 #define SQLITE_LIMIT_COLUMN                    2
@@ -8924,69 +5580,44 @@ for the type argument to the sqlite3_win32_set_directory interface.
 #define SQLITE_LIMIT_TRIGGER_DEPTH            10
 #define SQLITE_LIMIT_WORKER_THREADS           11
 #define SQLITE_LIMIT_PARSER_DEPTH             12
-
 ```
 
-These constants define various performance limits
-that can be lowered at run-time using sqlite3_limit().
-A concise description of these limits follows, and additional information
-is available at Limits in SQLite.
+这些常量定义各种性能限制，可用 `sqlite3_limit()` 在运行时降低。下面给出这些限制的简洁描述，更多
+信息见 Limits in SQLite。
 
- SQLITE_LIMIT_LENGTH
-The maximum size of any string or BLOB or table row, in bytes.
+**SQLITE_LIMIT_LENGTH**：任何字符串、BLOB 或表行的最大大小，以字节计。
 
- SQLITE_LIMIT_SQL_LENGTH
-The maximum length of an SQL statement, in bytes.
+**SQLITE_LIMIT_SQL_LENGTH**：SQL 语句的最大长度，以字节计。
 
- SQLITE_LIMIT_COLUMN
-The maximum number of columns in a table definition or in the
-result set of a SELECT or the maximum number of columns in an index
-or in an ORDER BY or GROUP BY clause.
+**SQLITE_LIMIT_COLUMN**：表定义、SELECT 结果集中的最大列数，或索引、ORDER BY、GROUP BY 子句中
+的最大列数。
 
- SQLITE_LIMIT_EXPR_DEPTH
-The maximum depth of the parse tree on any expression and
-the maximum nesting depth for subqueries and VIEWs
+**SQLITE_LIMIT_EXPR_DEPTH**：任何表达式解析树的最大深度，以及子查询和视图的最大嵌套深度。
 
- SQLITE_LIMIT_PARSER_DEPTH
-The maximum depth of the LALR(1) parser stack used to analyze
-input SQL statements.
+**SQLITE_LIMIT_PARSER_DEPTH**：用于分析输入 SQL 语句的 LALR(1) 解析器栈的最大深度。
 
- SQLITE_LIMIT_COMPOUND_SELECT
-The maximum number of terms in a compound SELECT statement.
+**SQLITE_LIMIT_COMPOUND_SELECT**：复合 SELECT 语句中的最大项数。
 
- SQLITE_LIMIT_VDBE_OP
-The maximum number of instructions in a virtual machine program
-used to implement an SQL statement.  If sqlite3_prepare_v2() or
-the equivalent tries to allocate space for more than this many opcodes
-in a single prepared statement, an SQLITE_NOMEM error is returned.
+**SQLITE_LIMIT_VDBE_OP**：用于实现 SQL 语句的虚拟机程序中的最大指令数。若 `sqlite3_prepare_v2()`
+或等价物尝试在单个预编译语句中为超过这么多操作码分配空间，则返回 `SQLITE_NOMEM` 错误。
 
- SQLITE_LIMIT_FUNCTION_ARG
-The maximum number of arguments on a function.
+**SQLITE_LIMIT_FUNCTION_ARG**：函数上的最大参数个数。
 
- SQLITE_LIMIT_ATTACHED
-The maximum number of attached databases.
+**SQLITE_LIMIT_ATTACHED**：附加数据库的最大数量。
 
-SQLITE_LIMIT_LIKE_PATTERN_LENGTH
-The maximum length of the pattern argument to the LIKE or
-GLOB operators.
+**SQLITE_LIMIT_LIKE_PATTERN_LENGTH**：LIKE 或 GLOB 算子的模式参数的最大长度。
 
-SQLITE_LIMIT_VARIABLE_NUMBER
-The maximum index number of any parameter in an SQL statement.
+**SQLITE_LIMIT_VARIABLE_NUMBER**：SQL 语句中任何参数的最大索引号。
 
- SQLITE_LIMIT_TRIGGER_DEPTH
-The maximum depth of recursion for triggers, and the maximum
-nesting depth for separate triggers.
+**SQLITE_LIMIT_TRIGGER_DEPTH**：触发器递归的最大深度，以及独立触发器的最大嵌套深度。
 
- SQLITE_LIMIT_WORKER_THREADS
-The maximum number of auxiliary worker threads that a single
-prepared statement may start.
+**SQLITE_LIMIT_WORKER_THREADS**：单个预编译语句可以启动的辅助工作线程的最大数量。
 
 ---
 
-## Status Parameters for database connections
+## 数据库连接的状态参数（Status Parameters for database connections）
 
 ```
-
 #define SQLITE_DBSTATUS_LOOKASIDE_USED       0
 #define SQLITE_DBSTATUS_CACHE_USED           1
 #define SQLITE_DBSTATUS_SCHEMA_USED          2
@@ -9001,128 +5632,75 @@ prepared statement may start.
 #define SQLITE_DBSTATUS_CACHE_USED_SHARED   11
 #define SQLITE_DBSTATUS_CACHE_SPILL         12
 #define SQLITE_DBSTATUS_TEMPBUF_SPILL       13
-#define SQLITE_DBSTATUS_MAX                 13   /* Largest defined DBSTATUS */
-
+#define SQLITE_DBSTATUS_MAX                 13   /* 最大的已定义 DBSTATUS */
 ```
 
-These constants are the available integer "verbs" that can be passed as
-the second argument to the sqlite3_db_status() interface.
+这些常量是可作为 `sqlite3_db_status()` 接口第二参数传入的可用整数 "verbs"。
 
-New verbs may be added in future releases of SQLite. Existing verbs
-might be discontinued. Applications should check the return code from
-sqlite3_db_status() to make sure that the call worked.
-The sqlite3_db_status() interface will return a non-zero error code
-if a discontinued or unsupported verb is invoked.
+未来版本的 SQLite 可能加入新的 verbs。现有 verbs 可能停用。应用应检查 `sqlite3_db_status()`
+的返回码以确保调用生效。若调用已停用或不支持的 verb，`sqlite3_db_status()` 接口将返回非零错误码。
 
- SQLITE_DBSTATUS_LOOKASIDE_USED
-This parameter returns the number of lookaside memory slots currently
-checked out.
+**SQLITE_DBSTATUS_LOOKASIDE_USED**：此参数返回当前借出的 lookaside 内存槽数。
 
- SQLITE_DBSTATUS_LOOKASIDE_HIT
-This parameter returns the number of malloc attempts that were
-satisfied using lookaside memory. Only the high-water value is meaningful;
-the current value is always zero.
+**SQLITE_DBSTATUS_LOOKASIDE_HIT**：此参数返回用 lookaside 内存满足的 malloc 尝试数。只有高水位
+值有意义；当前值总是零。
 
-SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE
-This parameter returns the number of malloc attempts that might have
-been satisfied using lookaside memory but failed due to the amount of
-memory requested being larger than the lookaside slot size.
-Only the high-water value is meaningful;
-the current value is always zero.
+**SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE**：此参数返回本可用 lookaside 内存满足、但因请求的内存
+量大而失败（大于 lookaside 槽大小）的 malloc 尝试数。只有高水位值有意义；当前值总是零。
 
-SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL
-This parameter returns the number of malloc attempts that might have
-been satisfied using lookaside memory but failed due to all lookaside
-memory already being in use.
-Only the high-water value is meaningful;
-the current value is always zero.
+**SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL**：此参数返回本可用 lookaside 内存满足、但因所有 lookaside
+内存已在使用而失败的 malloc 尝试数。只有高水位值有意义；当前值总是零。
 
- SQLITE_DBSTATUS_CACHE_USED
-This parameter returns the approximate number of bytes of heap
-memory used by all pager caches associated with the database connection.
-The highwater mark associated with SQLITE_DBSTATUS_CACHE_USED is always 0.
+**SQLITE_DBSTATUS_CACHE_USED**：此参数返回与数据库连接关联的所有 pager 缓存使用的堆内存字节数的
+近似值。与 `SQLITE_DBSTATUS_CACHE_USED` 关联的高水位标记总是 0。
 
-SQLITE_DBSTATUS_CACHE_USED_SHARED
-This parameter is similar to DBSTATUS_CACHE_USED, except that if a
-pager cache is shared between two or more connections the bytes of heap
-memory used by that pager cache is divided evenly between the attached
-connections.  In other words, if none of the pager caches associated
-with the database connection are shared, this request returns the same
-value as DBSTATUS_CACHE_USED. Or, if one or more of the pager caches are
-shared, the value returned by this call will be smaller than that returned
-by DBSTATUS_CACHE_USED. The highwater mark associated with
-SQLITE_DBSTATUS_CACHE_USED_SHARED is always 0.
+**SQLITE_DBSTATUS_CACHE_USED_SHARED**：此参数与 DBSTATUS_CACHE_USED 类似，区别是若 pager 缓存在
+两个或多个连接之间共享，则该 pager 缓存使用的堆内存字节数在附加连接之间均分。换句话说，若与数据库
+连接关联的 pager 缓存都没有共享，则此请求返回与 DBSTATUS_CACHE_USED 相同的值。若一个或多个 pager
+缓存共享，则此调用返回的值将小于 DBSTATUS_CACHE_USED 返回的值。与 `SQLITE_DBSTATUS_CACHE_USED_SHARED`
+关联的高水位标记总是 0。
 
- SQLITE_DBSTATUS_SCHEMA_USED
-This parameter returns the approximate number of bytes of heap
-memory used to store the schema for all databases associated
-with the connection - main, temp, and any ATTACH-ed databases.
-The full amount of memory used by the schemas is reported, even if the
-schema memory is shared with other database connections due to
-shared cache mode being enabled.
-The highwater mark associated with SQLITE_DBSTATUS_SCHEMA_USED is always 0.
+**SQLITE_DBSTATUS_SCHEMA_USED**：此参数返回用于存储与连接关联的所有数据库（main、temp 以及任何
+ATTACH 的数据库）的 schema 的堆内存字节数的近似值。即使因启用共享缓存模式而使 schema 内存与其它
+数据库连接共享，也会报告 schema 使用的全部内存量。与 `SQLITE_DBSTATUS_SCHEMA_USED` 关联的高水位
+标记总是 0。
 
- SQLITE_DBSTATUS_STMT_USED
-This parameter returns the approximate number of bytes of heap
-and lookaside memory used by all prepared statements associated with
-the database connection.
-The highwater mark associated with SQLITE_DBSTATUS_STMT_USED is always 0.
+**SQLITE_DBSTATUS_STMT_USED**：此参数返回与数据库连接关联的所有预编译语句使用的堆和 lookaside
+内存字节数的近似值。与 `SQLITE_DBSTATUS_STMT_USED` 关联的高水位标记总是 0。
 
- SQLITE_DBSTATUS_CACHE_HIT
-This parameter returns the number of pager cache hits that have
-occurred. The highwater mark associated with SQLITE_DBSTATUS_CACHE_HIT
-is always 0.
+**SQLITE_DBSTATUS_CACHE_HIT**：此参数返回已发生的 pager 缓存命中次数。与
+`SQLITE_DBSTATUS_CACHE_HIT` 关联的高水位标记总是 0。
 
- SQLITE_DBSTATUS_CACHE_MISS
-This parameter returns the number of pager cache misses that have
-occurred. The highwater mark associated with SQLITE_DBSTATUS_CACHE_MISS
-is always 0.
+**SQLITE_DBSTATUS_CACHE_MISS**：此参数返回已发生的 pager 缓存未命中次数。与
+`SQLITE_DBSTATUS_CACHE_MISS` 关联的高水位标记总是 0。
 
- SQLITE_DBSTATUS_CACHE_WRITE
-This parameter returns the number of dirty cache entries that have
-been written to disk. Specifically, the number of pages written to the
-wal file in wal mode databases, or the number of pages written to the
-database file in rollback mode databases. Any pages written as part of
-transaction rollback or database recovery operations are not included.
-If an IO or other error occurs while writing a page to disk, the effect
-on subsequent SQLITE_DBSTATUS_CACHE_WRITE requests is undefined. The
-highwater mark associated with SQLITE_DBSTATUS_CACHE_WRITE is always 0.
+**SQLITE_DBSTATUS_CACHE_WRITE**：此参数返回已写入磁盘的脏缓存条目数。具体地说，是 wal 模式数据库
+中写入 wal 文件的页数、或回滚模式数据库中写入数据库文件的页数。作为事务回滚或数据库恢复操作的一
+部分写入的任何页不包含在内。若写页到磁盘时发生 I/O 或其它错误，对后续 `SQLITE_DBSTATUS_CACHE_WRITE`
+请求的影响未定义。与 `SQLITE_DBSTATUS_CACHE_WRITE` 关联的高水位标记总是 0。
 
-There is overlap between the quantities measured by this parameter
-(SQLITE_DBSTATUS_CACHE_WRITE) and SQLITE_DBSTATUS_TEMPBUF_SPILL.
-Resetting one will reduce the other.
+此参数（`SQLITE_DBSTATUS_CACHE_WRITE`）测量的量与 `SQLITE_DBSTATUS_TEMPBUF_SPILL` 有重叠。
+重置其中一个会减少另一个。
 
- SQLITE_DBSTATUS_CACHE_SPILL
-This parameter returns the number of dirty cache entries that have
-been written to disk in the middle of a transaction due to the page
-cache overflowing. Transactions are more efficient if they are written
-to disk all at once. When pages spill mid-transaction, that introduces
-additional overhead. This parameter can be used to help identify
-inefficiencies that can be resolved by increasing the cache size.
+**SQLITE_DBSTATUS_CACHE_SPILL**：此参数返回因页缓存溢出、在事务中途写入磁盘的脏缓存条目数。事务
+一次性全部写入磁盘时更高效。页在事务中途溢出会引入额外开销。此参数可用于帮助识别可通过增大缓存
+大小解决的效率低下。
 
- SQLITE_DBSTATUS_DEFERRED_FKS
-This parameter returns zero for the current value if and only if
-all foreign key constraints (deferred or immediate) have been
-resolved.  The highwater mark is always 0.
+**SQLITE_DBSTATUS_DEFERRED_FKS**：当且仅当所有外键约束（延迟或立即）都已解析时，此参数的当前值
+为零。高水位标记总是 0。
 
-[SQLITE_DBSTATUS_TEMPBUF_SPILL SQLITE_DBSTATUS_TEMPBUF_SPILL
-This parameter returns the number of bytes written to temporary
-files on disk that could have been kept in memory had sufficient memory
-been available.  This value includes writes to intermediate tables that
-are part of complex queries, external sorts that spill to disk, and
-writes to TEMP tables.
-The highwater mark is always 0.
+**SQLITE_DBSTATUS_TEMPBUF_SPILL**：此参数返回写入磁盘临时文件的字节数，这些字节若有足够内存本可
+保存在内存中。此值包括：作为复杂查询一部分的中间表写入、溢出到磁盘的外部排序、以及对 TEMP 表的
+写入。高水位标记总是 0。
 
-There is overlap between the quantities measured by this parameter
-(SQLITE_DBSTATUS_TEMPBUF_SPILL) and SQLITE_DBSTATUS_CACHE_WRITE.
-Resetting one will reduce the other.
+此参数（`SQLITE_DBSTATUS_TEMPBUF_SPILL`）测量的量与 `SQLITE_DBSTATUS_CACHE_WRITE` 有重叠。
+重置其中一个会减少另一个。
 
 ---
 
-## Status Parameters for prepared statements
+## 预编译语句的状态参数（Status Parameters for prepared statements）
 
 ```
-
 #define SQLITE_STMTSTATUS_FULLSCAN_STEP     1
 #define SQLITE_STMTSTATUS_SORT              2
 #define SQLITE_STMTSTATUS_AUTOINDEX         3
@@ -9132,109 +5710,71 @@ Resetting one will reduce the other.
 #define SQLITE_STMTSTATUS_FILTER_MISS       7
 #define SQLITE_STMTSTATUS_FILTER_HIT        8
 #define SQLITE_STMTSTATUS_MEMUSED           99
-
 ```
 
-These preprocessor macros define integer codes that name counter
-values associated with the sqlite3_stmt_status() interface.
-The meanings of the various counters are as follows:
+这些预处理宏定义命名与 `sqlite3_stmt_status()` 接口关联的计数器值的整数代码。各计数器的含义如下：
 
- SQLITE_STMTSTATUS_FULLSCAN_STEP
-This is the number of times that SQLite has stepped forward in
-a table as part of a full table scan.  Large numbers for this counter
-may indicate opportunities for performance improvement through
-careful use of indices.
+**SQLITE_STMTSTATUS_FULLSCAN_STEP**：这是 SQLite 作为全表扫描一部分在表中向前步进的次数。此计数器
+数值大可能表明有机会通过谨慎使用索引来提高性能。
 
- SQLITE_STMTSTATUS_SORT
-This is the number of sort operations that have occurred.
-A non-zero value in this counter may indicate an opportunity to
-improve performance through careful use of indices.
+**SQLITE_STMTSTATUS_SORT**：这是已发生的排序操作次数。此计数器非零值可能表明有机会通过谨慎使用
+索引来提高性能。
 
- SQLITE_STMTSTATUS_AUTOINDEX
-This is the number of rows inserted into transient indices that
-were created automatically in order to help joins run faster.
-A non-zero value in this counter may indicate an opportunity to
-improve performance by adding permanent indices that do not
-need to be reinitialized each time the statement is run.
+**SQLITE_STMTSTATUS_AUTOINDEX**：这是插入到自动创建的瞬态索引中的行数，这些索引是为帮助连接运行
+更快而自动创建的。此计数器非零值可能表明有机会通过添加无需每次运行语句都重新初始化的永久索引来提高
+性能。
 
- SQLITE_STMTSTATUS_VM_STEP
-This is the number of virtual machine operations executed
-by the prepared statement if that number is less than or equal
-to 2147483647.  The number of virtual machine operations can be
-used as a proxy for the total work done by the prepared statement.
-If the number of virtual machine operations exceeds 2147483647
-then the value returned by this statement status code is undefined.
+**SQLITE_STMTSTATUS_VM_STEP**：若该数小于或等于 2147483647，这是预编译语句执行的虚拟机操作数。
+虚拟机操作数可用作预编译语句完成总工作量的代理。若虚拟机操作数超过 2147483647，则此语句状态码返回
+的值未定义。
 
- SQLITE_STMTSTATUS_REPREPARE
-This is the number of times that the prepare statement has been
-automatically regenerated due to schema changes or changes to
-bound parameters that might affect the query plan.
+**SQLITE_STMTSTATUS_REPREPARE**：这是预编译语句因 schema 更改、或可能影响查询计划的绑定参数更改
+而自动重新生成的次数。
 
- SQLITE_STMTSTATUS_RUN
-This is the number of times that the prepared statement has
-been run.  A single "run" for the purposes of this counter is one
-or more calls to sqlite3_step() followed by a call to sqlite3_reset().
-The counter is incremented on the first sqlite3_step() call of each
-cycle.
+**SQLITE_STMTSTATUS_RUN**：这是预编译语句已被运行的次数。就此计数器而言，一次"运行"是一次或多次
+`sqlite3_step()` 调用后跟一次 `sqlite3_reset()` 调用。计数器在每次循环的第一个 `sqlite3_step()`
+调用时递增。
 
-SQLITE_STMTSTATUS_FILTER_HIT
+**SQLITE_STMTSTATUS_FILTER_HIT** 和 **SQLITE_STMTSTATUS_FILTER_MISS**：`SQLITE_STMTSTATUS_FILTER_HIT`
+是 Bloom 过滤器返回未找到、从而跳过连接步骤的次数。对应的 `SQLITE_STMTSTATUS_FILTER_MISS` 值是
+Bloom 过滤器返回找到、从而连接步骤不得不正常处理的次数。
 
-SQLITE_STMTSTATUS_FILTER_MISS
-SQLITE_STMTSTATUS_FILTER_HIT is the number of times that a join
-step was bypassed because a Bloom filter returned not-found.  The
-corresponding SQLITE_STMTSTATUS_FILTER_MISS value is the number of
-times that the Bloom filter returned a find, and thus the join step
-had to be processed as normal.
-
- SQLITE_STMTSTATUS_MEMUSED
-This is the approximate number of bytes of heap memory
-used to store the prepared statement.  This value is not actually
-a counter, and so the resetFlg parameter to sqlite3_stmt_status()
-is ignored when the opcode is SQLITE_STMTSTATUS_MEMUSED.
+**SQLITE_STMTSTATUS_MEMUSED**：这是用于存储预编译语句的堆内存字节数的近似值。此值实际上不是计数器，
+因此操作码为 `SQLITE_STMTSTATUS_MEMUSED` 时，`sqlite3_stmt_status()` 的 resetFlg 参数被忽略。
 
 ---
 
-## Database Snapshot
+## 数据库快照（Database Snapshot）
 
 ```
-
 typedef struct sqlite3_snapshot {
+
+
   unsigned char hidden[48];
 } sqlite3_snapshot;
-
 ```
 
-An instance of the snapshot object records the state of a WAL mode
-database for some specific point in history.
+快照对象的一个实例记录 WAL 模式数据库在某个特定历史时间点的状态。
 
-In WAL mode, multiple database connections that are open on the
-same database file can each be reading a different historical version
-of the database file.  When a database connection begins a read
-transaction, that connection sees an unchanging copy of the database
-as it existed for the point in time when the transaction first started.
-Subsequent changes to the database from other connections are not seen
-by the reader until a new read transaction is started.
+在 WAL 模式下，打开在同一数据库文件上的多个数据库连接可以各自读取数据库文件的不同历史版本。当
+数据库连接开始读事务时，该连接看到数据库在事务开始时间点存在的不可变副本。其它连接对数据库的后续
+更改，在新读事务开始前不会被读者看到。
 
-The sqlite3_snapshot object records state information about an historical
-version of the database file so that it is possible to later open a new read
-transaction that sees that historical version of the database rather than
-the most recent version.
+sqlite3_snapshot 对象记录数据库文件历史版本的状态信息，以便以后可能打开一个新的读事务，看到该
+历史版本的数据库，而不是最近的版本。
 
-1 Constructor using this object: sqlite3_snapshot_get()
-
-1 Destructor using this object: sqlite3_snapshot_free()
-
-3 Methods using this object:
- sqlite3_snapshot_cmp(),
-sqlite3_snapshot_open(),
-sqlite3_snapshot_recover()
+- 1 个使用此对象的构造函数：sqlite3_snapshot_get()
+- 1 个使用此对象的析构函数：sqlite3_snapshot_free()
+- 3 个使用此对象的方法：
+  - sqlite3_snapshot_cmp()
+  - sqlite3_snapshot_open()
+  - sqlite3_snapshot_recover()
 
 ---
 
-## 64-Bit Integer Types
+## 64 位整数类型（64-Bit Integer Types）
 
 ```
-
 #ifdef SQLITE_INT64_TYPE
   typedef SQLITE_INT64_TYPE sqlite_int64;
 # ifdef SQLITE_UINT64_TYPE
@@ -9251,27 +5791,22 @@ sqlite3_snapshot_recover()
 #endif
 typedef sqlite_int64 sqlite3_int64;
 typedef sqlite_uint64 sqlite3_uint64;
-
 ```
 
-Because there is no cross-platform way to specify 64-bit integer types
-SQLite includes typedefs for 64-bit signed and unsigned integers.
+因为没有跨平台方式指定 64 位整数类型，SQLite 包含 64 位有符号和无符号整数的 typedef。
 
-The sqlite3_int64 and sqlite3_uint64 are the preferred type definitions.
-The sqlite_int64 and sqlite_uint64 types are supported for backwards
-compatibility only.
+sqlite3_int64 和 sqlite3_uint64 是首选类型定义。sqlite_int64 和 sqlite_uint64 类型仅为向后
+兼容而支持。
 
-The sqlite3_int64 and sqlite_int64 types can store integer values
-between -9223372036854775808 and +9223372036854775807 inclusive.  The
-sqlite3_uint64 and sqlite_uint64 types can store integer values
-between 0 and +18446744073709551615 inclusive.
+sqlite3_int64 和 sqlite_int64 类型可以存储 -9223372036854775808 到 +9223372036854775807（含）
+之间的整数值。sqlite3_uint64 和 sqlite_uint64 类型可以存储 0 到 +18446744073709551615（含）之间
+的整数值。
 
 ---
 
-## Virtual Table Object
+## 虚拟表对象（Virtual Table Object）
 
 ```
-
 struct sqlite3_module {
   int iVersion;
   int (*xCreate)(sqlite3*, void *pAux,
@@ -9300,336 +5835,206 @@ struct sqlite3_module {
                        void (**pxFunc)(sqlite3_context*,int,sqlite3_value**),
                        void **ppArg);
   int (*xRename)(sqlite3_vtab *pVtab, const char *zNew);
-  /* The methods above are in version 1 of the sqlite_module object. Those
-  ** below are for version 2 and greater. */
+  /* 以上方法在 sqlite_module 对象的第 1 版中。下面的是第 2 版及更高版本。 */
   int (*xSavepoint)(sqlite3_vtab *pVTab, int);
   int (*xRelease)(sqlite3_vtab *pVTab, int);
   int (*xRollbackTo)(sqlite3_vtab *pVTab, int);
-  /* The methods above are in versions 1 and 2 of the sqlite_module object.
-  ** Those below are for version 3 and greater. */
+  /* 以上方法在 sqlite_module 对象的第 1 版和第 2 版中。下面的是第 3 版及更高版本。 */
   int (*xShadowName)(const char*);
-  /* The methods above are in versions 1 through 3 of the sqlite_module object.
-  ** Those below are for version 4 and greater. */
+  /* 以上方法在 sqlite_module 对象的第 1 版到第 3 版中。下面的是第 4 版及更高版本。 */
   int (*xIntegrity)(sqlite3_vtab *pVTab, const char *zSchema,
                     const char *zTabName, int mFlags, char **pzErr);
 };
-
 ```
 
-This structure, sometimes called a "virtual table module",
-defines the implementation of a virtual table.
-This structure consists mostly of methods for the module.
+此结构（有时称为"虚拟表模块"）定义虚拟表的实现。此结构主要由模块的方法组成。
 
-A virtual table module is created by filling in a persistent
-instance of this structure and passing a pointer to that instance
-to sqlite3_create_module() or sqlite3_create_module_v2().
-The registration remains valid until it is replaced by a different
-module or until the database connection closes.  The content
-of this structure must not change while it is registered with
-any database connection.
+通过填充此结构的持久实例、并把指向该实例的指针传给 `sqlite3_create_module()` 或
+`sqlite3_create_module_v2()` 来创建虚拟表模块。注册在它被不同模块替换、或数据库连接关闭之前一直
+有效。此结构的内容在它被任何数据库连接注册期间不得改变。
 
 ---
 
-## Virtual Table Cursor Object
+## 虚拟表游标对象（Virtual Table Cursor Object）
 
 ```
-
 struct sqlite3_vtab_cursor {
-  sqlite3_vtab *pVtab;      /* Virtual table of this cursor */
-  /* Virtual table implementations will typically add additional fields */
+  sqlite3_vtab *pVtab;      /* 本游标的虚拟表 */
+  /* 虚拟表实现通常会追加额外字段 */
 };
-
 ```
 
-Every virtual table module implementation uses a subclass of the
-following structure to describe cursors that point into the
-virtual table and are used
-to loop through the virtual table.  Cursors are created using the
-xOpen method of the module and are destroyed
-by the xClose method.  Cursors are used
-by the xFilter, xNext, xEof, xColumn, and xRowid methods
-of the module.  Each module implementation will define
-the content of a cursor structure to suit its own needs.
+每个虚拟表模块实现都使用以下结构的子类来描述指向虚拟表、并用于遍历虚拟表的游标。游标用模块的
+xOpen 方法创建，用 xClose 方法销毁。游标被模块的 xFilter、xNext、xEof、xColumn 和 xRowid 方法
+使用。每个模块实现都会定义游标结构的内容以适合其自身需要。
 
-This superclass exists in order to define fields of the cursor that
-are common to all implementations.
+此超类存在的目的是定义所有实现共有的游标字段。
 
 ---
 
-## A Handle To An Open BLOB
+## 打开的 BLOB 的句柄（A Handle To An Open BLOB）
 
 ```
-
 typedef struct sqlite3_blob sqlite3_blob;
-
 ```
 
-An instance of this object represents an open BLOB on which
-incremental BLOB I/O can be performed.
-Objects of this type are created by sqlite3_blob_open()
-and destroyed by sqlite3_blob_close().
-The sqlite3_blob_read() and sqlite3_blob_write() interfaces
-can be used to read or write small subsections of the BLOB.
-The sqlite3_blob_bytes() interface returns the size of the BLOB in bytes.
+此对象的实例表示可以在其上执行增量 BLOB I/O 的打开 BLOB。此类型的对象由 `sqlite3_blob_open()`
+创建、由 `sqlite3_blob_close()` 销毁。`sqlite3_blob_read()` 和 `sqlite3_blob_write()` 接口可用于
+读写 BLOB 的小段。`sqlite3_blob_bytes()` 接口返回 BLOB 的字节大小。
 
-1 Constructor using this object: sqlite3_blob_open()
-
-1 Destructor using this object: sqlite3_blob_close()
-
-4 Methods using this object:
- sqlite3_blob_bytes(),
-sqlite3_blob_read(),
-sqlite3_blob_reopen(),
-sqlite3_blob_write()
+- 1 个使用此对象的构造函数：sqlite3_blob_open()
+- 1 个使用此对象的析构函数：sqlite3_blob_close()
+- 4 个使用此对象的方法：
+  - sqlite3_blob_bytes()
+  - sqlite3_blob_read()
+  - sqlite3_blob_reopen()
+  - sqlite3_blob_write()
 
 ---
 
-## Database Connection Handle
+## 数据库连接句柄（Database Connection Handle）
 
 ```
-
 typedef struct sqlite3 sqlite3;
-
 ```
 
-Each open SQLite database is represented by a pointer to an instance of
-the opaque structure named "sqlite3".  It is useful to think of an sqlite3
-pointer as an object.  The sqlite3_open(), sqlite3_open16(), and
-sqlite3_open_v2() interfaces are its constructors, and sqlite3_close()
-and sqlite3_close_v2() are its destructors.  There are many other
-interfaces (such as
-sqlite3_prepare_v2(), sqlite3_create_function(), and
-sqlite3_busy_timeout() to name but three) that are methods on an
-sqlite3 object.
+每个打开的 SQLite 数据库由指向名为 "sqlite3" 的不透明结构实例的指针表示。把 sqlite3 指针看作
+一个对象很有用。`sqlite3_open()`、`sqlite3_open16()` 和 `sqlite3_open_v2()` 接口是它的构造函数，
+`sqlite3_close()` 和 `sqlite3_close_v2()` 是它的析构函数。还有许多其它接口（例如
+`sqlite3_prepare_v2()`、`sqlite3_create_function()` 和 `sqlite3_busy_timeout()`，仅举三例）是
+sqlite3 对象上的方法。
 
-3 Constructors using this object:
- sqlite3_open(),
-sqlite3_open16(),
-sqlite3_open_v2()
-
-2 Destructors using this object:
- sqlite3_close(),
-sqlite3_close_v2()
-
-80 Methods using this object:
+- 3 个使用此对象的构造函数：
+  - sqlite3_open()
+  - sqlite3_open16()
+  - sqlite3_open_v2()
+- 2 个使用此对象的析构函数：
+  - sqlite3_close()
+  - sqlite3_close_v2()
+- 80 个使用此对象的方法：
 
 - sqlite3_autovacuum_pages
-
 - sqlite3_blob_open
-
 - sqlite3_busy_handler
-
 - sqlite3_busy_timeout
-
 - sqlite3_changes
-
 - sqlite3_changes64
-
 - sqlite3_collation_needed
-
 - sqlite3_collation_needed16
-
 - sqlite3_commit_hook
-
 - sqlite3_create_collation
-
 - sqlite3_create_collation16
-
 - sqlite3_create_collation_v2
-
 - sqlite3_create_function
-
 - sqlite3_create_function16
-
 - sqlite3_create_function_v2
-
 - sqlite3_create_module
-
 - sqlite3_create_module_v2
-
 - sqlite3_create_window_function
-
 - sqlite3_db_cacheflush
-
 - sqlite3_db_config
-
 - sqlite3_db_filename
-
 - sqlite3_db_mutex
-
 - sqlite3_db_name
-
 - sqlite3_db_readonly
-
 - sqlite3_db_release_memory
-
 - sqlite3_db_status
-
 - sqlite3_db_status64
-
 - sqlite3_drop_modules
-
 - sqlite3_enable_load_extension
-
 - sqlite3_errcode
-
 - sqlite3_errmsg
-
 - sqlite3_errmsg16
-
 - sqlite3_error_offset
-
 - sqlite3_errstr
-
 - sqlite3_exec
-
 - sqlite3_extended_errcode
-
 - sqlite3_extended_result_codes
-
 - sqlite3_file_control
-
 - sqlite3_free_table
-
 - sqlite3_get_autocommit
-
 - sqlite3_get_clientdata
-
 - sqlite3_get_table
-
 - sqlite3_interrupt
 
+## 数据库连接句柄
+
+（80 个方法列表续）
+
 - sqlite3_is_interrupted
-
 - sqlite3_last_insert_rowid
-
 - sqlite3_limit
-
 - sqlite3_load_extension
-
 - sqlite3_next_stmt
-
 - sqlite3_overload_function
-
 - sqlite3_prepare
-
 - sqlite3_prepare16
-
 - sqlite3_prepare16_v2
-
 - sqlite3_prepare16_v3
-
 - sqlite3_prepare_v2
-
 - sqlite3_prepare_v3
-
 - sqlite3_preupdate_blobwrite
-
 - sqlite3_preupdate_count
-
 - sqlite3_preupdate_depth
-
 - sqlite3_preupdate_hook
-
 - sqlite3_preupdate_new
-
 - sqlite3_preupdate_old
-
 - sqlite3_progress_handler
-
 - sqlite3_rollback_hook
-
 - sqlite3_set_authorizer
-
 - sqlite3_set_clientdata
-
 - sqlite3_set_errmsg
-
 - sqlite3_set_last_insert_rowid
-
 - sqlite3_setlk_timeout
-
 - sqlite3_system_errno
-
 - sqlite3_table_column_metadata
-
 - sqlite3_total_changes
-
 - sqlite3_total_changes64
-
 - sqlite3_trace_v2
-
 - sqlite3_txn_state
-
 - sqlite3_unlock_notify
-
 - sqlite3_update_hook
-
 - sqlite3_wal_autocheckpoint
-
 - sqlite3_wal_checkpoint
-
 - sqlite3_wal_checkpoint_v2
-
 - sqlite3_wal_hook
 
 ---
 
-## Dynamic String Object
+## 动态字符串对象（Dynamic String Object）
 
 ```
-
 typedef struct sqlite3_str sqlite3_str;
-
 ```
 
-An instance of the sqlite3_str object contains a dynamically-sized
-string under construction.
+sqlite3_str 对象的一个实例包含正在构造的动态大小字符串。
 
-The lifecycle of an sqlite3_str object is as follows:
+sqlite3_str 对象的生命周期如下：
 
-1.  The sqlite3_str object is created using sqlite3_str_new().
+1. 用 `sqlite3_str_new()` 创建 sqlite3_str 对象。
+2. 用各种方法（如 `sqlite3_str_appendf()`）向 sqlite3_str 对象追加文本。
+3. 用 `sqlite3_str_finish()` 接口销毁 sqlite3_str 对象并返回它创建的字符串。
 
-2.  Text is appended to the sqlite3_str object using various
-methods, such as sqlite3_str_appendf().
-
-3.  The sqlite3_str object is destroyed and the string it created
-is returned using the sqlite3_str_finish() interface.
-
-1 Constructor using this object: sqlite3_str_new()
-
-2 Destructors using this object:
- sqlite3_str_finish(),
-sqlite3_str_free()
-
-10 Methods using this object:
+- 1 个使用此对象的构造函数：sqlite3_str_new()
+- 2 个使用此对象的析构函数：sqlite3_str_finish()、sqlite3_str_free()
+- 10 个使用此对象的方法：
 
 - sqlite3_str_append
-
 - sqlite3_str_appendall
-
 - sqlite3_str_appendchar
-
 - sqlite3_str_appendf
-
 - sqlite3_str_errcode
-
 - sqlite3_str_length
-
 - sqlite3_str_reset
-
 - sqlite3_str_truncate
-
 - sqlite3_str_value
-
 - sqlite3_str_vappendf
 
 ---
 
-## Application Defined Page Cache.
+## 应用自定义页缓存（Application Defined Page Cache）
 
 ```
-
 typedef struct sqlite3_pcache_methods2 sqlite3_pcache_methods2;
 struct sqlite3_pcache_methods2 {
   int iVersion;
@@ -9647,402 +6052,228 @@ struct sqlite3_pcache_methods2 {
   void (*xDestroy)(sqlite3_pcache*);
   void (*xShrink)(sqlite3_pcache*);
 };
-
 ```
 
-The sqlite3_config(SQLITE_CONFIG_PCACHE2, ...) interface can
-register an alternative page cache implementation by passing in an
-instance of the sqlite3_pcache_methods2 structure.
-In many applications, most of the heap memory allocated by
-SQLite is used for the page cache.
-By implementing a
-custom page cache using this API, an application can better control
-the amount of memory consumed by SQLite, the way in which
-that memory is allocated and released, and the policies used to
-determine exactly which parts of a database file are cached and for
-how long.
+`sqlite3_config(SQLITE_CONFIG_PCACHE2, ...)` 接口可以通过传入 sqlite3_pcache_methods2 结构的
+实例来注册替代页缓存实现。在许多应用中，SQLite 分配的大部分堆内存用于页缓存。通过用此 API 实现
+自定义页缓存，应用可以更好地控制 SQLite 消耗的内存量、内存分配和释放的方式、以及用于确定数据库
+文件哪些部分被缓存、缓存多久的策略。
 
-The alternative page cache mechanism is an
-extreme measure that is only needed by the most demanding applications.
-The built-in page cache is recommended for most uses.
+替代页缓存机制是极端措施，只有最苛刻的应用才需要。对大多数用途推荐内建页缓存。
 
-The contents of the sqlite3_pcache_methods2 structure are copied to an
-internal buffer by SQLite within the call to sqlite3_config.  Hence
-the application may discard the parameter after the call to
-sqlite3_config() returns.
+sqlite3_pcache_methods2 结构的内容由 SQLite 在 sqlite3_config 调用内复制到内部缓冲区。因此应用
+可以在 `sqlite3_config()` 调用返回后丢弃该参数。
 
-The xInit() method is called once for each effective
-call to sqlite3_initialize()
-(usually only once during the lifetime of the process). The xInit()
-method is passed a copy of the sqlite3_pcache_methods2.pArg value.
-The intent of the xInit() method is to set up global data structures
-required by the custom page cache implementation.
-If the xInit() method is NULL, then the
-built-in default page cache is used instead of the application defined
-page cache.
+xInit() 方法对每次有效的 `sqlite3_initialize()` 调用调用一次（通常在进程生命周期内只调用一次）。
+xInit() 方法收到 sqlite3_pcache_methods2.pArg 值的副本。xInit() 方法的意图是建立自定义页缓存实现
+所需的全局数据结构。若 xInit() 方法为 NULL，则用内建默认页缓存代替应用自定义页缓存。
 
-The xShutdown() method is called by sqlite3_shutdown().
-It can be used to clean up
-any outstanding resources before process shutdown, if required.
-The xShutdown() method may be NULL.
+xShutdown() 方法由 `sqlite3_shutdown()` 调用。可在进程关闭前清理任何未释放的资源（如需要）。
+xShutdown() 方法可以为 NULL。
 
-SQLite automatically serializes calls to the xInit method,
-so the xInit method need not be threadsafe.  The
-xShutdown method is only called from sqlite3_shutdown() so it does
-not need to be threadsafe either.  All other methods must be threadsafe
-in multithreaded applications.
+SQLite 自动串行化对 xInit 方法的调用，因此 xInit 方法无需是线程安全的。xShutdown 方法只从
+`sqlite3_shutdown()` 调用，因此也无需是线程安全的。在多线程应用中，所有其它方法必须是线程安全的。
 
-SQLite will never invoke xInit() more than once without an intervening
-call to xShutdown().
+SQLite 绝不会在没有间隔的 xShutdown() 调用的情况下多次调用 xInit()。
 
-SQLite invokes the xCreate() method to construct a new cache instance.
-SQLite will typically create one cache instance for each open database file,
-though this is not guaranteed. The
-first parameter, szPage, is the size in bytes of the pages that must
-be allocated by the cache.  szPage will always be a power of two.  The
-second parameter szExtra is a number of bytes of extra storage
-associated with each page cache entry.  The szExtra parameter will be
-a number less than 250.  SQLite will use the
-extra szExtra bytes on each page to store metadata about the underlying
-database page on disk.  The value passed into szExtra depends
-on the SQLite version, the target platform, and how SQLite was compiled.
-The third argument to xCreate(), bPurgeable, is true if the cache being
-created will be used to cache database pages of a file stored on disk, or
-false if it is used for an in-memory database. The cache implementation
-does not have to do anything special based upon the value of bPurgeable;
-it is purely advisory.  On a cache where bPurgeable is false, SQLite will
-never invoke xUnpin() except to deliberately delete a page.
-In other words, calls to xUnpin() on a cache with bPurgeable set to
-false will always have the "discard" flag set to true.
-Hence, a cache created with bPurgeable set to false will
-never contain any unpinned pages.
+SQLite 调用 xCreate() 方法构造新的缓存实例。SQLite 通常为每个打开的数据库文件创建一个缓存实例，
+但这不保证。第一个参数 szPage 是缓存必须分配的页的字节大小。szPage 将总是 2 的幂。第二个参数
+szExtra 是与每个页缓存条目关联的额外存储字节数。szExtra 参数将是一个小于 250 的数。SQLite 将用
+每页额外的 szExtra 字节存储关于磁盘上底层数据库页的元数据。传入 szExtra 的值取决于 SQLite 版本、
+目标平台以及 SQLite 的编译方式。xCreate() 的第三个参数 bPurgeable 为真，表示创建的缓存将用于缓存
+存储在磁盘上的文件的数据库页；为假，表示用于内存数据库。缓存实现不必基于 bPurgeable 的值做任何
+特别处理；它纯粹是建议性的。在 bPurgeable 为假的缓存上，SQLite 绝不会调用 xUnpin()，除非故意删除
+页。换句话说，对 bPurgeable 设为假的缓存调用 xUnpin()，其 "discard" 标志将总是设为真。因此，
+bPurgeable 设为假的缓存绝不会包含任何未固定（unpinned）的页。
 
-The xCachesize() method may be called at any time by SQLite to set the
-suggested maximum cache-size (number of pages stored) for the cache
-instance passed as the first argument. This is the value configured using
-the SQLite "PRAGMA cache_size" command.  As with the bPurgeable
-parameter, the implementation is not required to do anything with this
-value; it is advisory only.
+SQLite 可在任何时刻调用 xCachesize() 方法，为第一个参数传入的缓存实例设置建议的最大缓存大小
+（存储的页数）。这是用 SQLite "PRAGMA cache_size" 命令配置的值。与 bPurgeable 参数一样，实现
+不必对此值做任何事；它只是建议性的。
 
-The xPagecount() method must return the number of pages currently
-stored in the cache, both pinned and unpinned.
+xPagecount() 方法必须返回当前存储在缓存中的页数，包括固定（pinned）和未固定的页。
 
-The xFetch() method locates a page in the cache and returns a pointer to
-an sqlite3_pcache_page object associated with that page, or a NULL pointer.
-The pBuf element of the returned sqlite3_pcache_page object will be a
-pointer to a buffer of szPage bytes used to store the content of a
-single database page.  The pExtra element of sqlite3_pcache_page will be
-a pointer to the szExtra bytes of extra storage that SQLite has requested
-for each entry in the page cache.
+xFetch() 方法在缓存中定位一页，返回与该页关联的 sqlite3_pcache_page 对象的指针，或 NULL 指针。
+返回的 sqlite3_pcache_page 对象的 pBuf 元素将是指向 szPage 字节缓冲区的指针，用于存储单个数据库
+页的内容。sqlite3_pcache_page 的 pExtra 元素将是指向 SQLite 为页缓存中每个条目请求的 szExtra 字节
+额外存储的指针。
 
-The page to be fetched is determined by the key. The minimum key value
-is 1.  After it has been retrieved using xFetch, the page is considered
-to be "pinned".
+要获取的页由 key 确定。最小 key 值为 1。用 xFetch 取回后，该页被视为"固定"。
 
-If the requested page is already in the page cache, then the page cache
-implementation must return a pointer to the page buffer with its content
-intact.  If the requested page is not already in the cache, then the
-cache implementation should use the value of the createFlag
-parameter to help it determine what action to take:
+若请求的页已在页缓存中，则页缓存实现必须返回内容完整的页缓冲区指针。若请求的页还不在缓存中，则
+缓存实现应使用 createFlag 参数的值帮助决定采取什么动作：
 
- createFlag  Behavior when page is not already in cache
- 0  Do not allocate a new page.  Return NULL.
- 1  Allocate a new page if it is easy and convenient to do so.
-Otherwise return NULL.
- 2  Make every effort to allocate a new page.  Only return
-NULL if allocating a new page is effectively impossible.
+| createFlag | 页不在缓存中时的行为 |
+|------|------|
+| 0 | 不分配新页。返回 NULL。 |
+| 1 | 若容易且方便则分配新页。否则返回 NULL。 |
+| 2 | 尽一切努力分配新页。只有分配新页实际上不可能时才返回 NULL。 |
 
-SQLite will normally invoke xFetch() with a createFlag of 0 or 1.  SQLite
-will only use a createFlag of 2 after a prior call with a createFlag of 1
-failed.  In between the xFetch() calls, SQLite may
-attempt to unpin one or more cache pages by spilling the content of
-pinned pages to disk and synching the operating system disk cache.
+SQLite 通常以 createFlag 0 或 1 调用 xFetch()。SQLite 只会在先前以 createFlag 1 的调用失败后
+使用 createFlag 2。在 xFetch() 调用之间，SQLite 可能尝试通过把固定页的内容溢出到磁盘、并同步操作
+系统磁盘缓存来取消固定一个或多个缓存页。
 
-xUnpin() is called by SQLite with a pointer to a currently pinned page
-as its second argument.  If the third parameter, discard, is non-zero,
-then the page must be evicted from the cache.
-If the discard parameter is
-zero, then the page may be discarded or retained at the discretion of the
-page cache implementation. The page cache implementation
-may choose to evict unpinned pages at any time.
+xUnpin() 由 SQLite 以当前固定页的指针作为第二个参数调用。若第三个参数 discard 非零，则必须从缓存
+中逐出该页。若 discard 参数为零，则页缓存实现可自行决定丢弃或保留该页。页缓存实现可随时选择逐出
+未固定的页。
 
-The cache must not perform any reference counting. A single
-call to xUnpin() unpins the page regardless of the number of prior calls
-to xFetch().
+缓存不得进行任何引用计数。无论先前调用过多少次 xFetch()，单次 xUnpin() 调用都会取消固定该页。
 
-The xRekey() method is used to change the key value associated with the
-page passed as the second argument. If the cache
-previously contains an entry associated with newKey, it must be
-discarded. Any prior cache entry associated with newKey is guaranteed not
-to be pinned.
+xRekey() 方法用于改变作为第二个参数传入的页关联的 key 值。若缓存先前包含与 newKey 关联的条目，
+必须丢弃它。任何先前与 newKey 关联的缓存条目保证未被固定。
 
-When SQLite calls the xTruncate() method, the cache must discard all
-existing cache entries with page numbers (keys) greater than or equal
-to the value of the iLimit parameter passed to xTruncate(). If any
-of these pages are pinned, they become implicitly unpinned, meaning that
-they can be safely discarded.
+当 SQLite 调用 xTruncate() 方法时，缓存必须丢弃所有页号（key）大于或等于传给 xTruncate() 的
+iLimit 参数值的现有缓存条目。若其中任何页被固定，它们被隐式地取消固定，意味着可以安全地丢弃。
 
-The xDestroy() method is used to delete a cache allocated by xCreate().
-All resources associated with the specified cache should be freed. After
-calling the xDestroy() method, SQLite considers the sqlite3_pcache*
-handle invalid, and will not use it with any other sqlite3_pcache_methods2
-functions.
+xDestroy() 方法用于删除 xCreate() 分配的缓存。应释放与指定缓存关联的所有资源。调用 xDestroy()
+方法后，SQLite 认为 sqlite3_pcache* 句柄无效，不会把它与任何其它 sqlite3_pcache_methods2 函数
+一起使用。
 
-SQLite invokes the xShrink() method when it wants the page cache to
-free up as much of heap memory as possible.  The page cache implementation
-is not obligated to free any memory, but well-behaved implementations should
-do their best.
+当 SQLite 希望页缓存释放尽可能多的堆内存时，调用 xShrink() 方法。页缓存实现没有义务释放任何内存，
+但行为良好的实现应尽力而为。
 
 ---
 
-## Prepared Statement Object
+## 预编译语句对象（Prepared Statement Object）
+
 
 ```
-
 typedef struct sqlite3_stmt sqlite3_stmt;
-
 ```
 
-An instance of this object represents a single SQL statement that
-has been compiled into binary form and is ready to be evaluated.
+此对象的实例表示一条已被编译成二进制形式、准备好被求值的单个 SQL 语句。
 
-Think of each SQL statement as a separate computer program.  The
-original SQL text is source code.  A prepared statement object
-is the compiled object code.  All SQL must be converted into a
-prepared statement before it can be run.
+把每条 SQL 语句看作一个独立的计算机程序。原始 SQL 文本是源代码。预编译语句对象是编译后的目标代码。
+所有 SQL 在被运行前都必须转换成预编译语句。
 
-The life-cycle of a prepared statement object usually goes like this:
+预编译语句对象的生命周期通常如下：
 
-1.  Create the prepared statement object using sqlite3_prepare_v2().
+1. 用 `sqlite3_prepare_v2()` 创建预编译语句对象。
+2. 用 `sqlite3_bind_*()` 接口把值绑定到参数。
+3. 通过调用 `sqlite3_step()` 一次或多次运行 SQL。
+4. 用 `sqlite3_reset()` 重置预编译语句，然后回到步骤 2。做零次或多次。
+5. 用 `sqlite3_finalize()` 销毁对象。
 
-2.  Bind values to parameters using the sqlite3_bind_*()
-interfaces.
-
-3.  Run the SQL by calling sqlite3_step() one or more times.
-
-4.  Reset the prepared statement using sqlite3_reset() then go back
-to step 2.  Do this zero or more times.
-
-5.  Destroy the object using sqlite3_finalize().
-
-6 Constructors using this object:
+- 6 个使用此对象的构造函数：
 
 - sqlite3_prepare
-
 - sqlite3_prepare16
-
 - sqlite3_prepare16_v2
-
 - sqlite3_prepare16_v3
-
 - sqlite3_prepare_v2
-
 - sqlite3_prepare_v3
 
-1 Destructor using this object: sqlite3_finalize()
-
-53 Methods using this object:
+- 1 个使用此对象的析构函数：sqlite3_finalize()
+- 53 个使用此对象的方法：
 
 - sqlite3_bind_blob
-
 - sqlite3_bind_blob64
-
 - sqlite3_bind_double
-
 - sqlite3_bind_int
-
 - sqlite3_bind_int64
-
 - sqlite3_bind_null
-
 - sqlite3_bind_parameter_count
-
 - sqlite3_bind_parameter_index
-
 - sqlite3_bind_parameter_name
-
 - sqlite3_bind_pointer
-
 - sqlite3_bind_text
-
 - sqlite3_bind_text16
-
 - sqlite3_bind_text64
-
 - sqlite3_bind_value
-
 - sqlite3_bind_zeroblob
-
 - sqlite3_bind_zeroblob64
-
 - sqlite3_clear_bindings
-
 - sqlite3_column_blob
-
 - sqlite3_column_bytes
-
 - sqlite3_column_bytes16
-
 - sqlite3_column_count
-
 - sqlite3_column_database_name
-
 - sqlite3_column_database_name16
-
 - sqlite3_column_decltype
-
 - sqlite3_column_decltype16
-
 - sqlite3_column_double
-
 - sqlite3_column_int
-
 - sqlite3_column_int64
-
 - sqlite3_column_name
-
 - sqlite3_column_name16
-
 - sqlite3_column_origin_name
-
 - sqlite3_column_origin_name16
-
 - sqlite3_column_table_name
-
 - sqlite3_column_table_name16
-
 - sqlite3_column_text
-
 - sqlite3_column_text16
-
 - sqlite3_column_type
-
 - sqlite3_column_value
-
 - sqlite3_data_count
-
 - sqlite3_db_handle
-
 - sqlite3_expanded_sql
-
 - sqlite3_normalized_sql
-
 - sqlite3_reset
-
 - sqlite3_sql
-
 - sqlite3_step
-
 - sqlite3_stmt_busy
-
 - sqlite3_stmt_explain
-
 - sqlite3_stmt_isexplain
-
 - sqlite3_stmt_readonly
-
 - sqlite3_stmt_scanstatus
-
 - sqlite3_stmt_scanstatus_reset
-
 - sqlite3_stmt_scanstatus_v2
-
 - sqlite3_stmt_status
 
 ---
 
-## Dynamically Typed Value Object
+## 动态类型值对象（Dynamically Typed Value Object）
 
 ```
-
 typedef struct sqlite3_value sqlite3_value;
-
 ```
 
-SQLite uses the sqlite3_value object to represent all values
-that can be stored in a database table. SQLite uses dynamic typing
-for the values it stores.  Values stored in sqlite3_value objects
-can be integers, floating point values, strings, BLOBs, or NULL.
+SQLite 用 sqlite3_value 对象表示可以存储在数据库表中的所有值。SQLite 对存储的值使用动态类型。
+存储在 sqlite3_value 对象中的值可以是整数、浮点值、字符串、BLOB 或 NULL。
 
-An sqlite3_value object may be either "protected" or "unprotected".
-Some interfaces require a protected sqlite3_value.  Other interfaces
-will accept either a protected or an unprotected sqlite3_value.
-Every interface that accepts sqlite3_value arguments specifies
-whether or not it requires a protected sqlite3_value.  The
-sqlite3_value_dup() interface can be used to construct a new
-protected sqlite3_value from an unprotected sqlite3_value.
+sqlite3_value 对象可以是"受保护的"或"不受保护的"。某些接口要求受保护的 sqlite3_value。其它接口
+接受受保护或不受保护的 sqlite3_value。每个接受 sqlite3_value 参数的接口都指定它是否要求受保护的
+sqlite3_value。`sqlite3_value_dup()` 接口可用于从不受保护的 sqlite3_value 构造新的受保护的
+sqlite3_value。
 
-The terms "protected" and "unprotected" refer to whether or not
-a mutex is held.  An internal mutex is held for a protected
-sqlite3_value object but no mutex is held for an unprotected
-sqlite3_value object.  If SQLite is compiled to be single-threaded
-(with SQLITE_THREADSAFE=0 and with sqlite3_threadsafe() returning 0)
-or if SQLite is run in one of reduced mutex modes
-SQLITE_CONFIG_SINGLETHREAD or SQLITE_CONFIG_MULTITHREAD
-then there is no distinction between protected and unprotected
-sqlite3_value objects and they can be used interchangeably.  However,
-for maximum code portability it is recommended that applications
-still make the distinction between protected and unprotected
-sqlite3_value objects even when not strictly required.
+术语"受保护的"和"不受保护的"指是否持有互斥锁。受保护的 sqlite3_value 对象持有内部互斥锁，不受
+保护的 sqlite3_value 对象不持有互斥锁。若 SQLite 被编译为单线程（`SQLITE_THREADSAFE=0` 且
+`sqlite3_threadsafe()` 返回 0）、或 SQLite 运行在减少互斥锁模式之一（`SQLITE_CONFIG_SINGLETHREAD`
+或 `SQLITE_CONFIG_MULTITHREAD`）下，则受保护和不受保护的 sqlite3_value 对象之间没有区别、可以互换
+使用。但为了最大代码可移植性，建议应用即使不是严格需要，也仍然区分受保护和不受保护的 sqlite3_value
+对象。
 
-The sqlite3_value objects that are passed as parameters into the
-implementation of application-defined SQL functions are protected.
-The sqlite3_value objects returned by sqlite3_vtab_rhs_value()
-are protected.
-The sqlite3_value object returned by
-sqlite3_column_value() is unprotected.
-Unprotected sqlite3_value objects may only be used as arguments
-to sqlite3_result_value(), sqlite3_bind_value(), and
-sqlite3_value_dup().
-The sqlite3_value_type() family of
-interfaces require protected sqlite3_value objects.
+作为参数传入应用自定义 SQL 函数实现的 sqlite3_value 对象是受保护的。`sqlite3_vtab_rhs_value()`
+返回的 sqlite3_value 对象是受保护的。`sqlite3_column_value()` 返回的 sqlite3_value 对象是不受
+保护的。不受保护的 sqlite3_value 对象只能用作 `sqlite3_result_value()`、`sqlite3_bind_value()`
+和 `sqlite3_value_dup()` 的参数。`sqlite3_value_type()` 系列接口要求受保护的 sqlite3_value 对象。
 
-19 Methods using this object:
+- 19 个使用此对象的方法：
 
 - sqlite3_value_blob
-
 - sqlite3_value_bytes
-
 - sqlite3_value_bytes16
-
 - sqlite3_value_double
-
 - sqlite3_value_dup
-
 - sqlite3_value_encoding
-
 - sqlite3_value_free
-
 - sqlite3_value_frombind
-
 - sqlite3_value_int
-
 - sqlite3_value_int64
-
 - sqlite3_value_nochange
-
 - sqlite3_value_numeric_type
-
 - sqlite3_value_pointer
-
 - sqlite3_value_subtype
-
 - sqlite3_value_text
-
 - sqlite3_value_text16
-
 - sqlite3_value_text16be
-
 - sqlite3_value_text16le
-
 - sqlite3_value_type
 
 ---
 
-## Deprecated Functions
+## 废弃函数（Deprecated Functions）
 
 ```
-
 #ifndef SQLITE_OMIT_DEPRECATED
 int sqlite3_aggregate_count(sqlite3_context*);
 int sqlite3_expired(sqlite3_stmt*);
@@ -10052,402 +6283,255 @@ void sqlite3_thread_cleanup(void);
 int sqlite3_memory_alarm(void(*)(void*,sqlite3_int64,int),
                       void*,sqlite3_int64);
 #endif
-
 ```
 
-These functions are deprecated.  In order to maintain
-backwards compatibility with older code, these functions continue
-to be supported.  However, new applications should avoid
-the use of these functions.  To encourage programmers to avoid
-these functions, we will not explain what they do.
+这些函数已废弃。为保持与旧代码的向后兼容，这些函数继续被支持。但新应用应避免使用这些函数。为鼓励
+程序员避免这些函数，我们将不解释它们是做什么的。
 
 ---
 
-## Online Backup API.
+## 在线备份 API（Online Backup API）
 
 ```
-
 sqlite3_backup *sqlite3_backup_init(
-  sqlite3 *pDest,                        /* Destination database handle */
-  const char *zDestName,                 /* Destination database name */
-  sqlite3 *pSource,                      /* Source database handle */
-  const char *zSourceName                /* Source database name */
+  sqlite3 *pDest,                        /* 目标数据库句柄 */
+  const char *zDestName,                 /* 目标数据库名 */
+  sqlite3 *pSource,                      /* 源数据库句柄 */
+  const char *zSourceName                /* 源数据库名 */
 );
 int sqlite3_backup_step(sqlite3_backup *p, int nPage);
 int sqlite3_backup_finish(sqlite3_backup *p);
 int sqlite3_backup_remaining(sqlite3_backup *p);
 int sqlite3_backup_pagecount(sqlite3_backup *p);
-
 ```
 
-The backup API copies the content of one database into another.
-It is useful either for creating backups of databases or
-for copying in-memory databases to or from persistent files.
+备份 API 把一个数据库的内容复制到另一个数据库。它既可用于创建数据库备份，也可用于把内存数据库
+复制到持久文件、或从持久文件复制到内存数据库。
 
-See Also: Using the SQLite Online Backup API
+另见：使用 SQLite 在线备份 API
 
-SQLite holds a write transaction open on the destination database file
-for the duration of the backup operation.
-The source database is read-locked only while it is being read;
-it is not locked continuously for the entire backup operation.
-Thus, the backup may be performed on a live source database without
-preventing other database connections from
-reading or writing to the source database while the backup is underway.
+SQLite 在备份操作期间对目标数据库文件持有打开的写事务。源数据库只在被读取时加读锁；不会在整个备份
+操作期间持续加锁。因此，可以对正在使用的源数据库执行备份，而不会阻止其它数据库连接在备份进行期间
+读取或写入源数据库。
 
-To perform a backup operation:
+执行备份操作：
 
-1. sqlite3_backup_init() is called once to initialize the
-backup,
+## 在线备份 API
 
-2. sqlite3_backup_step() is called one or more times to transfer
-the data between the two databases, and finally
+执行备份操作：
 
-3. sqlite3_backup_finish() is called to release all resources
-associated with the backup operation.
+1. 调用 `sqlite3_backup_init()` 一次初始化备份，
+2. 调用 `sqlite3_backup_step()` 一次或多次在两个数据库之间传输数据，最后
+3. 调用 `sqlite3_backup_finish()` 释放与备份操作关联的所有资源。
 
-There should be exactly one call to sqlite3_backup_finish() for each
-successful call to sqlite3_backup_init().
+每次成功调用 `sqlite3_backup_init()` 都应恰好有一次对 `sqlite3_backup_finish()` 的调用。
 
- sqlite3_backup_init()
+**sqlite3_backup_init()**
 
-The D and N arguments to sqlite3_backup_init(D,N,S,M) are the
-database connection associated with the destination database
-and the database name, respectively.
-The database name is "main" for the main database, "temp" for the
-temporary database, or the name specified after the AS keyword in
-an ATTACH statement for an attached database.
-The S and M arguments passed to
-sqlite3_backup_init(D,N,S,M) identify the database connection
-and database name of the source database, respectively.
-The source and destination database connections (parameters S and D)
-must be different or else sqlite3_backup_init(D,N,S,M) will fail with
-an error.
+`sqlite3_backup_init(D,N,S,M)` 的 D 和 N 参数分别是与目标数据库关联的数据库连接和数据库名。
+数据库名对主数据库是 "main"、对临时数据库是 "temp"、对附加数据库是 ATTACH 语句中 AS 关键字之后
+指定的名字。传给 `sqlite3_backup_init(D,N,S,M)` 的 S 和 M 参数分别标识源数据库的数据库连接和
+数据库名。源和目标数据库连接（参数 S 和 D）必须不同，否则 `sqlite3_backup_init(D,N,S,M)` 将以
+错误失败。
 
-A call to sqlite3_backup_init() will fail, returning NULL, if
-there is already a read or read-write transaction open on the
-destination database.
+若目标数据库上已打开读事务或读写事务，对 `sqlite3_backup_init()` 的调用将失败、返回 NULL。
 
-If an error occurs within sqlite3_backup_init(D,N,S,M), then NULL is
-returned and an error code and error message are stored in the
-destination database connection D.
-The error code and message for the failed call to sqlite3_backup_init()
-can be retrieved using the sqlite3_errcode(), sqlite3_errmsg(), and/or
-sqlite3_errmsg16() functions.
-A successful call to sqlite3_backup_init() returns a pointer to an
-sqlite3_backup object.
-The sqlite3_backup object may be used with the sqlite3_backup_step() and
-sqlite3_backup_finish() functions to perform the specified backup
-operation.
+若 `sqlite3_backup_init(D,N,S,M)` 内发生错误，则返回 NULL，错误码和错误消息存储在目标数据库
+连接 D 中。可用 `sqlite3_errcode()`、`sqlite3_errmsg()` 和/或 `sqlite3_errmsg16()` 函数取回对
+`sqlite3_backup_init()` 失败调用的错误码和消息。成功的 `sqlite3_backup_init()` 调用返回指向
+sqlite3_backup 对象的指针。sqlite3_backup 对象可与 `sqlite3_backup_step()` 和
+`sqlite3_backup_finish()` 函数一起使用来执行指定的备份操作。
 
- sqlite3_backup_step()
+**sqlite3_backup_step()**
 
-Function sqlite3_backup_step(B,N) will copy up to N pages between
-the source and destination databases specified by sqlite3_backup object B.
-If N is negative, all remaining source pages are copied.
-If sqlite3_backup_step(B,N) successfully copies N pages and there
-are still more pages to be copied, then the function returns SQLITE_OK.
-If sqlite3_backup_step(B,N) successfully finishes copying all pages
-from source to destination, then it returns SQLITE_DONE.
-If an error occurs while running sqlite3_backup_step(B,N),
-then an error code is returned. As well as SQLITE_OK and
-SQLITE_DONE, a call to sqlite3_backup_step() may return SQLITE_READONLY,
-SQLITE_NOMEM, SQLITE_BUSY, SQLITE_LOCKED, or an
-SQLITE_IOERR_XXX extended error code.
+函数 `sqlite3_backup_step(B,N)` 将在 sqlite3_backup 对象 B 指定的源和目标数据库之间复制最多 N 页。
+若 N 为负，则复制所有剩余的源页。若 `sqlite3_backup_step(B,N)` 成功复制 N 页、且仍有更多页要复制，
+则函数返回 `SQLITE_OK`。若 `sqlite3_backup_step(B,N)` 成功完成把所有页从源复制到目标，则返回
+`SQLITE_DONE`。若运行 `sqlite3_backup_step(B,N)` 时发生错误，则返回错误码。除 `SQLITE_OK` 和
+`SQLITE_DONE` 外，对 `sqlite3_backup_step()` 的调用可能返回 `SQLITE_READONLY`、`SQLITE_NOMEM`、
+`SQLITE_BUSY`、`SQLITE_LOCKED` 或某个 `SQLITE_IOERR_XXX` 扩展错误码。
 
-The sqlite3_backup_step() might return SQLITE_READONLY if
+`sqlite3_backup_step()` 在以下情况可能返回 `SQLITE_READONLY`：
 
-1.  the destination database was opened read-only, or
+1. 目标数据库以只读方式打开，或
+2. 目标数据库使用预写日志日志记录、且目标和源页大小不同，或
+3. 目标数据库是内存数据库、且目标和源页大小不同。
 
-2.  the destination database is using write-ahead-log journaling
-and the destination and source page sizes differ, or
+若 `sqlite3_backup_step()` 无法取得所需的文件系统锁，则调用忙处理器函数（若指定了）。若锁可用之前
+忙处理器返回非零，则向调用者返回 `SQLITE_BUSY`。此时可稍后重试对 `sqlite3_backup_step()` 的调用。
+若调用 `sqlite3_backup_step()` 时源数据库连接正被用于写入源数据库，则立即返回 `SQLITE_LOCKED`。
+同样，此时可稍后重试该调用。若返回 `SQLITE_IOERR_XXX`、`SQLITE_NOMEM` 或 `SQLITE_READONLY`，
+则重试对 `sqlite3_backup_step()` 的调用没有意义。这些错误被视为致命错误。应用必须接受备份操作已
+失败，并把备份操作句柄传给 `sqlite3_backup_finish()` 以释放相关资源。
 
-3.  the destination database is an in-memory database and the
-destination and source page sizes differ.
+第一次调用 `sqlite3_backup_step()` 获得目标文件的排他锁。排他锁直到调用 `sqlite3_backup_finish()`、
+或备份操作完成且 `sqlite3_backup_step()` 返回 `SQLITE_DONE` 时才释放。每次调用
+`sqlite3_backup_step()` 都获得源数据库的共享锁，该锁持续到 `sqlite3_backup_step()` 调用结束。
+由于源数据库在 `sqlite3_backup_step()` 调用之间不被加锁，源数据库可能在备份过程进行到一半时被修改。
+若源数据库被外部进程、或通过备份操作所用之外的数据库连接修改，则备份将被下一次 `sqlite3_backup_step()`
+调用自动重新启动。若源数据库被备份操作所用的同一个数据库连接修改，则备份数据库同时被自动更新。
 
-If sqlite3_backup_step() cannot obtain a required file-system lock, then
-the busy-handler function
-is invoked (if one is specified). If the
-busy-handler returns non-zero before the lock is available, then
-SQLITE_BUSY is returned to the caller. In this case the call to
-sqlite3_backup_step() can be retried later. If the source
-database connection
-is being used to write to the source database when sqlite3_backup_step()
-is called, then SQLITE_LOCKED is returned immediately. Again, in this
-case the call to sqlite3_backup_step() can be retried later on. If
-SQLITE_IOERR_XXX, SQLITE_NOMEM, or
-SQLITE_READONLY is returned, then
-there is no point in retrying the call to sqlite3_backup_step(). These
-errors are considered fatal.  The application must accept
-that the backup operation has failed and pass the backup operation handle
-to the sqlite3_backup_finish() to release associated resources.
+**sqlite3_backup_finish()**
 
-The first call to sqlite3_backup_step() obtains an exclusive lock
-on the destination file. The exclusive lock is not released until either
-sqlite3_backup_finish() is called or the backup operation is complete
-and sqlite3_backup_step() returns SQLITE_DONE.  Every call to
-sqlite3_backup_step() obtains a shared lock on the source database that
-lasts for the duration of the sqlite3_backup_step() call.
-Because the source database is not locked between calls to
-sqlite3_backup_step(), the source database may be modified mid-way
-through the backup process.  If the source database is modified by an
-external process or via a database connection other than the one being
-used by the backup operation, then the backup will be automatically
-restarted by the next call to sqlite3_backup_step(). If the source
-database is modified by using the same database connection as is used
-by the backup operation, then the backup database is automatically
-updated at the same time.
+当 `sqlite3_backup_step()` 已返回 `SQLITE_DONE`、或应用希望放弃备份操作时，应用应把它传给
+`sqlite3_backup_finish()` 来销毁 sqlite3_backup。`sqlite3_backup_finish()` 接口释放与 sqlite3_backup
+对象关联的所有资源。若 `sqlite3_backup_step()` 尚未返回 `SQLITE_DONE`，则目标数据库上任何活动的
+写事务被回滚。sqlite3_backup 对象在调用 `sqlite3_backup_finish()` 后无效、不得再使用。
 
- sqlite3_backup_finish()
+若没有发生 `sqlite3_backup_step()` 错误，`sqlite3_backup_finish` 返回 `SQLITE_OK`，无论
+`sqlite3_backup_step()` 是否完成。若在同一个 sqlite3_backup 对象上任何先前的 `sqlite3_backup_step()`
+调用期间发生内存不足或 I/O 错误，则 `sqlite3_backup_finish()` 返回相应的错误码。
 
-When sqlite3_backup_step() has returned SQLITE_DONE, or when the
-application wishes to abandon the backup operation, the application
-should destroy the sqlite3_backup by passing it to sqlite3_backup_finish().
-The sqlite3_backup_finish() interfaces releases all
-resources associated with the sqlite3_backup object.
-If sqlite3_backup_step() has not yet returned SQLITE_DONE, then any
-active write-transaction on the destination database is rolled back.
-The sqlite3_backup object is invalid
-and may not be used following a call to sqlite3_backup_finish().
+从 `sqlite3_backup_step()` 返回 `SQLITE_BUSY` 或 `SQLITE_LOCKED` 不是永久错误，不影响
+`sqlite3_backup_finish()` 的返回值。
 
-The value returned by sqlite3_backup_finish is SQLITE_OK if no
-sqlite3_backup_step() errors occurred, regardless of whether or not
-sqlite3_backup_step() completed.
-If an out-of-memory condition or IO error occurred during any prior
-sqlite3_backup_step() call on the same sqlite3_backup object, then
-sqlite3_backup_finish() returns the corresponding error code.
+**sqlite3_backup_remaining() 和 sqlite3_backup_pagecount()**
 
-A return of SQLITE_BUSY or SQLITE_LOCKED from sqlite3_backup_step()
-is not a permanent error and does not affect the return value of
-sqlite3_backup_finish().
+`sqlite3_backup_remaining()` 例程返回最近一次 `sqlite3_backup_step()` 结束时仍要备份的页数。
+`sqlite3_backup_pagecount()` 例程返回最近一次 `sqlite3_backup_step()` 结束时源数据库的总页数。
+这些函数返回的值只由 `sqlite3_backup_step()` 更新。若源数据库以改变源数据库大小或剩余页数的方式被
+修改，那些更改在下一次 `sqlite3_backup_step()` 之前不会反映在 `sqlite3_backup_pagecount()` 和
+`sqlite3_backup_remaining()` 的输出中。
 
-sqlite3_backup_remaining() and sqlite3_backup_pagecount()
+**数据库句柄的并发使用**
 
-The sqlite3_backup_remaining() routine returns the number of pages still
-to be backed up at the conclusion of the most recent sqlite3_backup_step().
-The sqlite3_backup_pagecount() routine returns the total number of pages
-in the source database at the conclusion of the most recent
-sqlite3_backup_step().
-The values returned by these functions are only updated by
-sqlite3_backup_step(). If the source database is modified in a way that
-changes the size of the source database or the number of pages remaining,
-those changes are not reflected in the output of sqlite3_backup_pagecount()
-and sqlite3_backup_remaining() until after the next
-sqlite3_backup_step().
+备份操作进行中或正在初始化时，应用可以把源数据库连接用于其它用途。若 SQLite 被编译和配置为支持
+线程安全的数据库连接，则源数据库连接可从其它线程并发使用。
 
-Concurrent Usage of Database Handles
+但应用必须保证：在调用 `sqlite3_backup_init()` 之后、到对应调用 `sqlite3_backup_finish()` 之前，
+不把目标数据库连接传给任何其它 API（由任何线程）。SQLite 当前不检查应用是否错误访问目标数据库连接，
+因此不报告错误码，但操作仍可能出故障。备份进行期间使用目标数据库连接也可能导致互斥锁死锁。
 
-The source database connection may be used by the application for other
-purposes while a backup operation is underway or being initialized.
-If SQLite is compiled and configured to support threadsafe database
-connections, then the source database connection may be used concurrently
-from within other threads.
+若在共享缓存模式下运行，应用必须保证备份运行期间不访问目标数据库使用的共享缓存。实际上，这意味着
+应用必须保证正在备份到的磁盘文件不被进程内任何连接访问，而不只是传给 `sqlite3_backup_init()` 的
+那个特定连接。
 
-However, the application must guarantee that the destination
-database connection is not passed to any other API (by any thread) after
-sqlite3_backup_init() is called and before the corresponding call to
-sqlite3_backup_finish().  SQLite does not currently check to see
-if the application incorrectly accesses the destination database connection
-and so no error code is reported, but the operations may malfunction
-nevertheless.  Use of the destination database connection while a
-backup is in progress might also cause a mutex deadlock.
+sqlite3_backup 对象本身是部分线程安全的。多个线程可以安全地对 `sqlite3_backup_step()` 做多次并发
+调用。但 `sqlite3_backup_remaining()` 和 `sqlite3_backup_pagecount()` API 严格来说不是线程安全的。
+若在另一线程正在调用 `sqlite3_backup_step()` 的同时调用它们，它们可能返回无效值。
 
-If running in shared cache mode, the application must
-guarantee that the shared cache used by the destination database
-is not accessed while the backup is running. In practice this means
-that the application must guarantee that the disk file being
-backed up to is not accessed by any connection within the process,
-not just the specific connection that was passed to sqlite3_backup_init().
+**使用备份 API 的替代方案**
 
-The sqlite3_backup object itself is partially threadsafe. Multiple
-threads may safely make multiple concurrent calls to sqlite3_backup_step().
-However, the sqlite3_backup_remaining() and sqlite3_backup_pagecount()
-APIs are not strictly speaking threadsafe. If they are invoked at the
-same time as another thread is invoking sqlite3_backup_step() it is
-possible that they return invalid values.
+安全创建 SQLite 数据库一致性备份的其它技术包括：
 
-Alternatives To Using The Backup API
-
-Other techniques for safely creating a consistent backup of an SQLite
-database include:
-
--  The VACUUM INTO command.
-
--  The sqlite3_rsync utility program.
+- VACUUM INTO 命令。
+- sqlite3_rsync 实用程序。
 
 ---
 
-## Bind array values to the CARRAY table-valued function
+## 把数组值绑定到 CARRAY 表值函数（Bind array values to the CARRAY table-valued function）
 
 ```
-
 int sqlite3_carray_bind_v2(
-  sqlite3_stmt *pStmt,        /* Statement to be bound */
-  int i,                      /* Parameter index */
-  void *aData,                /* Pointer to array data */
-  int nData,                  /* Number of data elements */
-  int mFlags,                 /* CARRAY flags */
-  void (*xDel)(void*),        /* Destructor for aData */
-  void *pDel                  /* Optional argument to xDel() */
+  sqlite3_stmt *pStmt,        /* 要绑定的语句 */
+  int i,                      /* 参数索引 */
+  void *aData,                /* 指向数组数据的指针 */
+  int nData,                  /* 数据元素个数 */
+  int mFlags,                 /* CARRAY 标志 */
+  void (*xDel)(void*),        /* aData 的析构函数 */
+  void *pDel                  /* 传给 xDel() 的可选参数 */
 );
 int sqlite3_carray_bind(
-  sqlite3_stmt *pStmt,        /* Statement to be bound */
-  int i,                      /* Parameter index */
-  void *aData,                /* Pointer to array data */
-  int nData,                  /* Number of data elements */
-  int mFlags,                 /* CARRAY flags */
-  void (*xDel)(void*)         /* Destructor for aData */
+  sqlite3_stmt *pStmt,        /* 要绑定的语句 */
+  int i,                      /* 参数索引 */
+  void *aData,                /* 指向数组数据的指针 */
+  int nData,                  /* 数据元素个数 */
+  int mFlags,                 /* CARRAY 标志 */
+  void (*xDel)(void*)         /* aData 的析构函数 */
 );
-
 ```
 
-The sqlite3_carray_bind_v2(S,I,P,N,F,X,D) interface binds an array value to
-parameter that is the first argument of the carray() table-valued function.
-The S parameter is a pointer to the prepared statement that uses the
-carray() functions.  I is the parameter index to be bound.  I must be the
-index of the parameter that is the first argument to the carray()
-table-valued function. P is a pointer to the array to be bound, and N
-is the number of elements in the array.  The F argument is one of
-constants SQLITE_CARRAY_INT32, SQLITE_CARRAY_INT64,
-SQLITE_CARRAY_DOUBLE, SQLITE_CARRAY_TEXT,
-or SQLITE_CARRAY_BLOB to indicate the datatype of the array P.
+`sqlite3_carray_bind_v2(S,I,P,N,F,X,D)` 接口把数组值绑定到作为 carray() 表值函数第一个参数的参数
+上。S 参数是指向使用 carray() 函数的预编译语句的指针。I 是要绑定的参数索引。I 必须是作为 carray()
+表值函数第一个参数的参数的索引。P 是指向要绑定的数组的指针，N 是数组中的元素个数。F 参数是
+`SQLITE_CARRAY_INT32`、`SQLITE_CARRAY_INT64`、`SQLITE_CARRAY_DOUBLE`、`SQLITE_CARRAY_TEXT` 或
+`SQLITE_CARRAY_BLOB` 常量之一，指示数组 P 的数据类型。
 
-If the X argument is not a NULL pointer or one of the special
-values SQLITE_STATIC or SQLITE_TRANSIENT, then SQLite will invoke
-the function X with argument D when it is finished using the data in P.
-The call to X(D) is a destructor for the array P. The destructor X(D)
-is invoked even if the call to sqlite3_carray_bind_v2() fails. If the X
-parameter is the special-case value SQLITE_STATIC, then SQLite assumes
-that the data static and the destructor is never invoked.  If the X
-parameter is the special-case value SQLITE_TRANSIENT, then
-sqlite3_carray_bind_v2() makes its own private copy of the data prior
-to returning and never invokes the destructor X.
+若 X 参数不是 NULL 指针、也不是 `SQLITE_STATIC` 或 `SQLITE_TRANSIENT` 特殊值之一，则 SQLite 在
+用完 P 中的数据时调用函数 X、以 D 为参数。调用 X(D) 是数组 P 的析构函数。即使对
+`sqlite3_carray_bind_v2()` 的调用失败，也会调用析构函数 X(D)。若 X 参数是特殊值 `SQLITE_STATIC`，
+则 SQLite 假定数据是静态的、从不调用析构函数。若 X 参数是特殊值 `SQLITE_TRANSIENT`，则
+`sqlite3_carray_bind_v2()` 在返回前制作数据的私有副本、从不调用析构函数 X。
 
-The sqlite3_carray_bind() function works the same as sqlite3_carray_bind_v2()
-with a D parameter set to P.  In other words,
-sqlite3_carray_bind(S,I,P,N,F,X) is same as
-sqlite3_carray_bind_v2(S,I,P,N,F,X,P).
+`sqlite3_carray_bind()` 函数与 `sqlite3_carray_bind_v2()` 工作方式相同，只是 D 参数设为 P。换句话说，
+`sqlite3_carray_bind(S,I,P,N,F,X)` 与 `sqlite3_carray_bind_v2(S,I,P,N,F,X,P)` 相同。
 
 ---
 
-## Count The Number Of Rows Modified
+## 计算被修改的行数（Count The Number Of Rows Modified）
 
 ```
-
 int sqlite3_changes(sqlite3*);
 sqlite3_int64 sqlite3_changes64(sqlite3*);
-
 ```
 
-These functions return the number of rows modified, inserted or
-deleted by the most recently completed INSERT, UPDATE or DELETE
-statement on the database connection specified by the only parameter.
-The two functions are identical except for the type of the return value
-and that if the number of rows modified by the most recent INSERT, UPDATE,
-or DELETE is greater than the maximum value supported by type "int", then
-the return value of sqlite3_changes() is undefined. Executing any other
-type of SQL statement does not modify the value returned by these functions.
-For the purposes of this interface, a CREATE TABLE AS SELECT statement
-does not count as an INSERT, UPDATE or DELETE statement and hence the rows
-added to the new table by the CREATE TABLE AS SELECT statement are not
-counted.
+这些函数返回指定参数上的数据库连接中、最近一次完成的 INSERT、UPDATE 或 DELETE 语句修改、插入或
+删除的行数。除返回值的类型不同外，这两个函数相同；且若最近一次 INSERT、UPDATE 或 DELETE 修改的
+行数大于 "int" 类型支持的最大值，则 `sqlite3_changes()` 的返回值未定义。执行任何其它类型的 SQL
+语句不会修改这些函数返回的值。就此接口而言，CREATE TABLE AS SELECT 语句不算 INSERT、UPDATE 或
+DELETE 语句，因此 CREATE TABLE AS SELECT 语句添加到新表的行不被计数。
 
-Only changes made directly by the INSERT, UPDATE or DELETE statement are
-considered - auxiliary changes caused by triggers,
-foreign key actions or REPLACE constraint resolution are not counted.
+只考虑 INSERT、UPDATE 或 DELETE 语句直接做的更改——由触发器、外键动作或 REPLACE 约束解决引起的
+辅助更改不被计数。
 
-Changes to a view that are intercepted by
-INSTEAD OF triggers are not counted. The value
-returned by sqlite3_changes() immediately after an INSERT, UPDATE or
-DELETE statement run on a view is always zero. Only changes made to real
-tables are counted.
+被 INSTEAD OF 触发器拦截的视图更改不被计数。在视图上运行 INSERT、UPDATE 或 DELETE 语句后立即
+调用 `sqlite3_changes()` 返回的值总是零。只计算对真实表做的更改。
 
-Things are more complicated if the sqlite3_changes() function is
-executed while a trigger program is running. This may happen if the
-program uses the changes() SQL function, or if some other callback
-function invokes sqlite3_changes() directly. Essentially:
+若在触发器程序运行期间执行 `sqlite3_changes()` 函数，事情更复杂。这可能发生：若程序使用 changes()
+SQL 函数，或某个其它回调函数直接调用 `sqlite3_changes()`。基本地：
 
--  Before entering a trigger program the value returned by
-sqlite3_changes() function is saved. After the trigger program
-has finished, the original value is restored.
+- 进入触发器程序前，`sqlite3_changes()` 函数返回的值被保存。触发器程序结束后，恢复原值。
+- 在触发器程序内，每条 INSERT、UPDATE 和 DELETE 语句照常在其完成时设置 `sqlite3_changes()` 返回
+  的值。当然，此值不包含子触发器执行的任何更改，因为 `sqlite3_changes()` 值会在每个子触发器运行后
+  被保存和恢复。
 
--  Within a trigger program each INSERT, UPDATE and DELETE
-statement sets the value returned by sqlite3_changes()
-upon completion as normal. Of course, this value will not include
-any changes performed by sub-triggers, as the sqlite3_changes()
-value will be saved and restored after each sub-trigger has run.
+这意味着：若触发器内第一条 INSERT、UPDATE 或 DELETE 语句使用 changes() SQL 函数（或类似函数），
+它返回调用语句开始执行时设置的值。若触发器程序内第二条或后续此类语句使用它，返回的值反映同一触发器
+内先前 INSERT、UPDATE 或 DELETE 语句修改的行数。
 
-This means that if the changes() SQL function (or similar) is used
-by the first INSERT, UPDATE or DELETE statement within a trigger, it
-returns the value as set when the calling statement began executing.
-If it is used by the second or subsequent such statement within a trigger
-program, the value returned reflects the number of rows modified by the
-previous INSERT, UPDATE or DELETE statement within the same trigger.
+若在 `sqlite3_changes()` 运行期间另一线程对同一数据库连接做更改，则返回的值不可预测、无意义。
 
-If a separate thread makes changes on the same database connection
-while sqlite3_changes() is running then the value returned
-is unpredictable and not meaningful.
+另见：
 
-See also:
+- `sqlite3_total_changes()` 接口
+- count_changes pragma
+- changes() SQL 函数
 
--  the sqlite3_total_changes() interface
+## 计算被修改的行数
 
--  the count_changes pragma
-
--  the changes() SQL function
-
--  the data_version pragma
+- data_version pragma
 
 ---
 
-## Closing A Database Connection
+## 关闭数据库连接（Closing A Database Connection）
 
 ```
-
 int sqlite3_close(sqlite3*);
 int sqlite3_close_v2(sqlite3*);
-
 ```
 
-The sqlite3_close() and sqlite3_close_v2() routines are destructors
-for the sqlite3 object.
-Calls to sqlite3_close() and sqlite3_close_v2() return SQLITE_OK if
-the sqlite3 object is successfully destroyed and all associated
-resources are deallocated.
+`sqlite3_close()` 和 `sqlite3_close_v2()` 例程是 sqlite3 对象的析构函数。若 sqlite3 对象被成功
+销毁、且所有相关资源被释放，对 `sqlite3_close()` 和 `sqlite3_close_v2()` 的调用返回 `SQLITE_OK`。
 
-Ideally, applications should finalize all
-prepared statements, close all BLOB handles, and
-finish all sqlite3_backup objects associated
-with the sqlite3 object prior to attempting to close the object.
-If the database connection is associated with unfinalized prepared
-statements, BLOB handlers, and/or unfinished sqlite3_backup objects then
-sqlite3_close() will leave the database connection open and return
-SQLITE_BUSY. If sqlite3_close_v2() is called with unfinalized prepared
-statements, unclosed BLOB handlers, and/or unfinished sqlite3_backups,
-it returns SQLITE_OK regardless, but instead of deallocating the database
-connection immediately, it marks the database connection as an unusable
-"zombie" and makes arrangements to automatically deallocate the database
-connection after all prepared statements are finalized, all BLOB handles
-are closed, and all backups have finished. The sqlite3_close_v2() interface
-is intended for use with host languages that are garbage collected, and
-where the order in which destructors are called is arbitrary.
+理想情况下，应用应在尝试关闭对象之前终结所有预编译语句、关闭所有 BLOB 句柄、完成所有与 sqlite3
+对象关联的 sqlite3_backup 对象。若数据库连接与未终结的预编译语句、未关闭的 BLOB 句柄和/或未完成的
+sqlite3_backup 对象关联，则 `sqlite3_close()` 会让数据库连接保持打开并返回 `SQLITE_BUSY`。若
+`sqlite3_close_v2()` 在存在未终结预编译语句、未关闭 BLOB 句柄和/或未完成 sqlite3_backup 时被调用，
+它无论如何返回 `SQLITE_OK`，但不是立即释放数据库连接，而是把数据库连接标记为不可用的 "zombie"（僵尸），
+并安排在所有预编译语句被终结、所有 BLOB 句柄被关闭、所有备份完成后自动释放数据库连接。
+`sqlite3_close_v2()` 接口供使用垃圾回收、且析构函数调用顺序任意的宿主语言使用。
 
-If an sqlite3 object is destroyed while a transaction is open,
-the transaction is automatically rolled back.
+若 sqlite3 对象在事务打开时被销毁，事务被自动回滚。
 
-The C parameter to sqlite3_close(C) and sqlite3_close_v2(C)
-must be either a NULL
-pointer or an sqlite3 object pointer obtained
-from sqlite3_open(), sqlite3_open16(), or
-sqlite3_open_v2(), and not previously closed.
-Calling sqlite3_close() or sqlite3_close_v2() with a NULL pointer
-argument is a harmless no-op.
+`sqlite3_close(C)` 和 `sqlite3_close_v2(C)` 的 C 参数必须是 NULL 指针、或从 `sqlite3_open()`、
+`sqlite3_open16()` 或 `sqlite3_open_v2()` 获得、且先前未关闭的 sqlite3 对象指针。用 NULL 指针参数
+调用 `sqlite3_close()` 或 `sqlite3_close_v2()` 是无害的空操作。
 
 ---
 
-## Collation Needed Callbacks
+## 排序规则请求回调（Collation Needed Callbacks）
 
 ```
-
 int sqlite3_collation_needed(
   sqlite3*,
   void*,
@@ -10458,216 +6542,140 @@ int sqlite3_collation_needed16(
   void*,
   void(*)(void*,sqlite3*,int eTextRep,const void*)
 );
-
 ```
 
-To avoid having to register all collation sequences before a database
-can be used, a single callback function may be registered with the
-database connection to be invoked whenever an undefined collation
-sequence is required.
+为避免在数据库能使用前必须注册所有排序规则，可向数据库连接注册单个回调函数，每当需要未定义的排序
+规则时调用它。
 
-If the function is registered using the sqlite3_collation_needed() API,
-then it is passed the names of undefined collation sequences as strings
-encoded in UTF-8. If sqlite3_collation_needed16() is used,
-the names are passed as UTF-16 in machine native byte order.
-A call to either function replaces the existing collation-needed callback.
+若用 `sqlite3_collation_needed()` API 注册函数，则未定义排序规则的名字以 UTF-8 编码的字符串传入。
+若用 `sqlite3_collation_needed16()`，则名字以机器本机字节序的 UTF-16 传入。对任一函数的调用都会替换
+现有的 collation-needed 回调。
 
-When the callback is invoked, the first argument passed is a copy
-of the second argument to sqlite3_collation_needed() or
-sqlite3_collation_needed16().  The second argument is the database
-connection.  The third argument is one of SQLITE_UTF8, SQLITE_UTF16BE,
-or SQLITE_UTF16LE, indicating the most desirable form of the collation
-sequence function required.  The fourth parameter is the name of the
-required collation sequence.
+调用回调时，第一个传入参数是 `sqlite3_collation_needed()` 或 `sqlite3_collation_needed16()`
+第二个参数的副本。第二个参数是数据库连接。第三个参数是 `SQLITE_UTF8`、`SQLITE_UTF16BE` 或
+`SQLITE_UTF16LE` 之一，指示所需排序规则函数最理想的形式。第四个参数是所需排序规则的名字。
 
-The callback function should register the desired collation using
-sqlite3_create_collation(), sqlite3_create_collation16(), or
-sqlite3_create_collation_v2().
+回调函数应使用 `sqlite3_create_collation()`、`sqlite3_create_collation16()` 或
+`sqlite3_create_collation_v2()` 注册所需的排序规则。
 
 ---
 
-## Source Of Data In A Query Result
+## 查询结果中数据的来源（Source Of Data In A Query Result）
 
 ```
-
 const char *sqlite3_column_database_name(sqlite3_stmt*,int);
 const void *sqlite3_column_database_name16(sqlite3_stmt*,int);
 const char *sqlite3_column_table_name(sqlite3_stmt*,int);
 const void *sqlite3_column_table_name16(sqlite3_stmt*,int);
 const char *sqlite3_column_origin_name(sqlite3_stmt*,int);
 const void *sqlite3_column_origin_name16(sqlite3_stmt*,int);
-
 ```
 
-These routines provide a means to determine the database, table, and
-table column that is the origin of a particular result column in a
-SELECT statement.
-The name of the database or table or column can be returned as
-either a UTF-8 or UTF-16 string.  The _database_ routines return
-the database name, the _table_ routines return the table name, and
-the origin_ routines return the column name.
-The returned string is valid until the prepared statement is destroyed
-using sqlite3_finalize() or until the statement is automatically
-reprepared by the first call to sqlite3_step() for a particular run
-or until the same information is requested
-again in a different encoding.
+这些例程提供一种方法，确定 SELECT 语句中特定结果列的来源数据库、表和表列。数据库、表或列的名字
+可以作为 UTF-8 或 UTF-16 字符串返回。_database_ 例程返回数据库名，_table_ 例程返回表名，origin_
+例程返回列名。返回的字符串在预编译语句用 `sqlite3_finalize()` 销毁之前、或在语句被某次运行的第一次
+`sqlite3_step()` 调用自动重新准备之前、或在再次以不同编码请求相同信息之前有效。
 
-The names returned are the original un-aliased names of the
-database, table, and column.
+返回的名字是数据库、表和列的原始未别名名字。
 
-The first argument to these interfaces is a prepared statement.
-These functions return information about the Nth result column returned by
-the statement, where N is the second function argument.
-The left-most column is column 0 for these routines.
+这些接口的第一个参数是预编译语句。这些函数返回关于语句返回的第 N 个结果列的信息，其中 N 是函数的
+第二个参数。对这些例程，最左边的列是列 0。
 
-If the Nth column returned by the statement is an expression or
-subquery and is not a column value, then all of these functions return
-NULL.  These routines might also return NULL if a memory allocation error
-occurs.  Otherwise, they return the name of the attached database, table,
-or column that query result column was extracted from.
+若语句返回的第 N 列是表达式或子查询、不是列值，则所有这些函数返回 NULL。若发生内存分配错误，这些
+例程也可能返回 NULL。否则，它们返回查询结果列从中提取的附加数据库、表或列的名字。
 
-As with all other SQLite APIs, those whose names end with "16" return
-UTF-16 encoded strings and the other functions return UTF-8.
+与所有其它 SQLite API 一样，名字以 "16" 结尾的返回 UTF-16 编码字符串，其它函数返回 UTF-8。
 
-These APIs are only available if the library was compiled with the
-SQLITE_ENABLE_COLUMN_METADATA C-preprocessor symbol.
+这些 API 仅在库用 `SQLITE_ENABLE_COLUMN_METADATA` C 预处理符号编译时可用。
 
-If two or more threads call one or more
-column metadata interfaces
-for the same prepared statement and result column
-at the same time then the results are undefined.
+若两个或多个线程同时为同一个预编译语句和结果列调用一个或多个列元数据接口，则结果未定义。
 
 ---
 
-## Declared Datatype Of A Query Result
+## 查询结果的声明数据类型（Declared Datatype Of A Query Result）
 
 ```
-
 const char *sqlite3_column_decltype(sqlite3_stmt*,int);
 const void *sqlite3_column_decltype16(sqlite3_stmt*,int);
-
 ```
 
-The first parameter is a prepared statement.
-If this statement is a SELECT statement and the Nth column of the
-returned result set of that SELECT is a table column (not an
-expression or subquery) then the declared type of the table
-column is returned.  If the Nth column of the result set is an
-expression or subquery, then a NULL pointer is returned.
-The returned string is always UTF-8 encoded.
+第一个参数是预编译语句。若此语句是 SELECT 语句、且该 SELECT 返回结果集的第 N 列是表列（不是表达式
+或子查询），则返回该表列的声明类型。若结果集的第 N 列是表达式或子查询，则返回 NULL 指针。返回的
+字符串总是 UTF-8 编码。
 
-For example, given the database schema:
+例如，给定数据库 schema：
 
 CREATE TABLE t1(c1 VARIANT);
 
-and the following statement to be compiled:
+以及要编译的以下语句：
 
 SELECT c1 + 1, c1 FROM t1;
 
-this routine would return the string "VARIANT" for the second result
-column (i==1), and a NULL pointer for the first result column (i==0).
+此例程将为第二个结果列（i==1）返回字符串 "VARIANT"，为第一个结果列（i==0）返回 NULL 指针。
 
-SQLite uses dynamic run-time typing.  So just because a column
-is declared to contain a particular type does not mean that the
-data stored in that column is of the declared type.  SQLite is
-strongly typed, but the typing is dynamic not static.  Type
-is associated with individual values, not with the containers
-used to hold those values.
+SQLite 使用动态运行时类型。因此仅仅因为某列声明为包含特定类型，并不意味着存储在该列中的数据是该
+声明类型。SQLite 是强类型的，但类型是动态的而非静态的。类型与单个值关联，而非与容纳这些值的容器
+关联。
 
 ---
 
-## Column Names In A Result Set
+## 结果集中的列名（Column Names In A Result Set）
 
 ```
-
 const char *sqlite3_column_name(sqlite3_stmt*, int N);
 const void *sqlite3_column_name16(sqlite3_stmt*, int N);
-
 ```
 
-These routines return the name assigned to a particular column
-in the result set of a SELECT statement.  The sqlite3_column_name()
-interface returns a pointer to a zero-terminated UTF-8 string
-and sqlite3_column_name16() returns a pointer to a zero-terminated
-UTF-16 string.  The first parameter is the prepared statement
-that implements the SELECT statement. The second parameter is the
-column number.  The leftmost column is number 0.
+这些例程返回分配给 SELECT 语句结果集中特定列的名字。`sqlite3_column_name()` 接口返回指向零结尾
+UTF-8 字符串的指针，`sqlite3_column_name16()` 返回指向零结尾 UTF-16 字符串的指针。第一个参数是
+实现该 SELECT 语句的预编译语句。第二个参数是列号。最左边的列是 0。
 
-The returned string pointer is valid until either the prepared statement
-is destroyed by sqlite3_finalize() or until the statement is automatically
-reprepared by the first call to sqlite3_step() for a particular run
-or until the next call to
-sqlite3_column_name() or sqlite3_column_name16() on the same column.
+返回的字符串指针在预编译语句被 `sqlite3_finalize()` 销毁之前、或语句被某次运行的第一次
+`sqlite3_step()` 调用自动重新准备之前、或下一次对同一列调用 `sqlite3_column_name()` 或
+`sqlite3_column_name16()` 之前有效。
 
-If sqlite3_malloc() fails during the processing of either routine
-(for example during a conversion from UTF-8 to UTF-16) then a
-NULL pointer is returned.
+若 `sqlite3_malloc()` 在处理任一例程期间失败（例如在 UTF-8 到 UTF-16 转换期间），则返回 NULL 指针。
 
-The name of a result column is the value of the "AS" clause for
-that column, if there is an AS clause.  If there is no AS clause
-then the name of the column is unspecified and may change from
-one release of SQLite to the next.
+结果列的名字是该列的 "AS" 子句的值（若有 AS 子句）。若无 AS 子句，则列名未指定、可能随 SQLite
+版本而变。
 
 ---
 
-## Commit And Rollback Notification Callbacks
+## 提交和回滚通知回调（Commit And Rollback Notification Callbacks）
 
 ```
-
 void *sqlite3_commit_hook(sqlite3*, int(*)(void*), void*);
 void *sqlite3_rollback_hook(sqlite3*, void(*)(void *), void*);
-
 ```
 
-The sqlite3_commit_hook() interface registers a callback
-function to be invoked whenever a transaction is committed.
-Any callback set by a previous call to sqlite3_commit_hook()
-for the same database connection is overridden.
-The sqlite3_rollback_hook() interface registers a callback
-function to be invoked whenever a transaction is rolled back.
-Any callback set by a previous call to sqlite3_rollback_hook()
-for the same database connection is overridden.
-The pArg argument is passed through to the callback.
-If the callback on a commit hook function returns non-zero,
-then the commit is converted into a rollback.
+`sqlite3_commit_hook()` 接口注册回调函数，每当事务被提交时调用。先前对同一数据库连接调用
+`sqlite3_commit_hook()` 设置的任何回调都被覆盖。`sqlite3_rollback_hook()` 接口注册回调函数，每当
+事务被回滚时调用。先前对同一数据库连接调用 `sqlite3_rollback_hook()` 设置的任何回调都被覆盖。pArg
+参数被传递到回调。若提交钩子函数的回调返回非零，则提交被转换为回滚。
 
-The sqlite3_commit_hook(D,C,P) and sqlite3_rollback_hook(D,C,P) functions
-return the P argument from the previous call of the same function
-on the same database connection D, or NULL for
-the first call for each function on D.
+`sqlite3_commit_hook(D,C,P)` 和 `sqlite3_rollback_hook(D,C,P)` 函数返回同一数据库连接 D 上先前
+调用同一函数的 P 参数；若是对 D 上每个函数的第一次调用，则返回 NULL。
 
-The commit and rollback hook callbacks are not reentrant.
-The callback implementation must not do anything that will modify
-the database connection that invoked the callback.  Any actions
-to modify the database connection must be deferred until after the
-completion of the sqlite3_step() call that triggered the commit
-or rollback hook in the first place.
-Note that running any other SQL statements, including SELECT statements,
-or merely calling sqlite3_prepare_v2() and sqlite3_step() will modify
-the database connections for the meaning of "modify" in this paragraph.
+提交和回滚钩子回调不可重入。回调实现不得做任何会修改调用它的数据库连接的事情。任何修改数据库连接的
+动作必须推迟到最初触发提交或回滚钩子的 `sqlite3_step()` 调用完成之后。注意：运行任何其它 SQL 语句
+（包括 SELECT 语句）、或仅仅调用 `sqlite3_prepare_v2()` 和 `sqlite3_step()`，都会就本段中的"修改"
+而言修改数据库连接。
 
-Registering a NULL function disables the callback.
+注册 NULL 函数会禁用回调。
 
-When the commit hook callback routine returns zero, the COMMIT
-operation is allowed to continue normally.  If the commit hook
-returns non-zero, then the COMMIT is converted into a ROLLBACK.
-The rollback hook is invoked on a rollback that results from a commit
-hook returning non-zero, just as it would be with any other rollback.
+当提交钩子回调例程返回零时，允许 COMMIT 操作正常继续。若提交钩子返回非零，则 COMMIT 被转换为
+ROLLBACK。因提交钩子返回非零而导致的回滚会调用回滚钩子，就像任何其它回滚一样。
 
-For the purposes of this API, a transaction is said to have been
-rolled back if an explicit "ROLLBACK" statement is executed, or
-an error or constraint causes an implicit rollback to occur.
-The rollback callback is not invoked if a transaction is
-automatically rolled back because the database connection is closed.
+就此 API 而言，若执行显式 "ROLLBACK" 语句、或错误或约束导致隐式回滚发生，则称事务已被回滚。若事务
+因数据库连接被关闭而自动回滚，则不调用回滚回调。
 
-See also the sqlite3_update_hook() interface.
+另见 `sqlite3_update_hook()` 接口。
 
 ---
 
-## Run-Time Library Compilation Options Diagnostics
+## 运行时库编译期选项诊断（Run-Time Library Compilation Options Diagnostics）
 
 ```
-
 #ifndef SQLITE_OMIT_COMPILEOPTION_DIAGS
 int sqlite3_compileoption_used(const char *zOptName);
 const char *sqlite3_compileoption_get(int N);
@@ -10675,75 +6683,48 @@ const char *sqlite3_compileoption_get(int N);
 # define sqlite3_compileoption_used(X) 0
 # define sqlite3_compileoption_get(X)  ((void*)0)
 #endif
-
 ```
 
-The sqlite3_compileoption_used() function returns 0 or 1
-indicating whether the specified option was defined at
-compile time.  The SQLITE_ prefix may be omitted from the
-option name passed to sqlite3_compileoption_used().
+`sqlite3_compileoption_used()` 函数返回 0 或 1，指示指定选项是否在编译期被定义。传给
+`sqlite3_compileoption_used()` 的选项名可省略 `SQLITE_` 前缀。
 
-The sqlite3_compileoption_get() function allows iterating
-over the list of options that were defined at compile time by
-returning the N-th compile time option string.  If N is out of range,
-sqlite3_compileoption_get() returns a NULL pointer.  The SQLITE_
-prefix is omitted from any strings returned by
-sqlite3_compileoption_get().
+`sqlite3_compileoption_get()` 函数通过返回第 N 个编译期选项字符串，允许遍历编译期定义的选项列表。
+若 N 越界，`sqlite3_compileoption_get()` 返回 NULL 指针。`sqlite3_compileoption_get()` 返回的任何
+字符串都省略 `SQLITE_` 前缀。
 
-Support for the diagnostic functions sqlite3_compileoption_used()
-and sqlite3_compileoption_get() may be omitted by specifying the
-SQLITE_OMIT_COMPILEOPTION_DIAGS option at compile time.
+可通过在编译期指定 `SQLITE_OMIT_COMPILEOPTION_DIAGS` 选项省略对诊断函数
+`sqlite3_compileoption_used()` 和 `sqlite3_compileoption_get()` 的支持。
 
-See also: SQL functions sqlite_compileoption_used() and
-sqlite_compileoption_get() and the compile_options pragma.
+## 运行时库编译期选项诊断
+
+另见：SQL 函数 `sqlite3_compileoption_used()` 和 `sqlite3_compileoption_get()` 以及 `compile_options` pragma。
 
 ---
 
-## Determine If An SQL Statement Is Complete
+## 判断一条 SQL 语句是否完整（Determine If An SQL Statement Is Complete）
 
 ```
-
 int sqlite3_complete(const char *sql);
 int sqlite3_complete16(const void *sql);
-
 ```
 
-These routines are useful during command-line input to determine if the
-currently entered text seems to form a complete SQL statement or
-if additional input is needed before sending the text into
-SQLite for parsing.  These routines return 1 if the input string
-appears to be a complete SQL statement.  A statement is judged to be
-complete if it ends with a semicolon token and is not a prefix of a
-well-formed CREATE TRIGGER statement.  Semicolons that are embedded within
-string literals or quoted identifier names or comments are not
-independent tokens (they are part of the token in which they are
-embedded) and thus do not count as a statement terminator.  Whitespace
-and comments that follow the final semicolon are ignored.
+这些例程在命令行输入期间很有用，用于判断当前输入的文本是否构成完整的 SQL 语句，或是否需要在把文本送入 SQLite 解析之前补充更多输入。若输入字符串构成完整的 SQL 语句，这些例程返回 1。若语句以分号记号结尾、且不是结构良好的 CREATE TRIGGER 语句的前缀，则判定该语句完整。嵌入在字符串字面量、带引号的标识符名或注释中的分号不是独立记号（它们是嵌入所在记号的一部分），因此不计为语句终止符。跟在末尾分号之后的空白和注释被忽略。
 
-These routines return 0 if the statement is incomplete.  If a
-memory allocation fails, then SQLITE_NOMEM is returned.
+若语句不完整，这些例程返回 0。若内存分配失败，则返回 `SQLITE_NOMEM`。
 
-These routines do not parse the SQL statements and thus
-will not detect syntactically incorrect SQL.
+这些例程不解析 SQL 语句，因此不会检测语法错误的 SQL。
 
-If SQLite has not been initialized using sqlite3_initialize() prior
-to invoking sqlite3_complete16() then sqlite3_initialize() is invoked
-automatically by sqlite3_complete16().  If that initialization fails,
-then the return value from sqlite3_complete16() will be non-zero
-regardless of whether or not the input SQL is complete.
+若在调用 `sqlite3_complete16()` 之前未用 `sqlite3_initialize()` 初始化 SQLite，则 `sqlite3_complete16()` 自动调用 `sqlite3_initialize()`。若该初始化失败，则无论输入 SQL 是否完整，`sqlite3_complete16()` 的返回值都非零。
 
-The input to sqlite3_complete() must be a zero-terminated
-UTF-8 string.
+`sqlite3_complete()` 的输入必须是零结尾的 UTF-8 字符串。
 
-The input to sqlite3_complete16() must be a zero-terminated
-UTF-16 string in native byte order.
+`sqlite3_complete16()` 的输入必须是本机字节序的零结尾 UTF-16 字符串。
 
 ---
 
-## Define New Collating Sequences
+## 定义新的排序规则（Define New Collating Sequences）
 
 ```
-
 int sqlite3_create_collation(
   sqlite3*,
   const char *zName,
@@ -10766,97 +6747,53 @@ int sqlite3_create_collation16(
   void *pArg,
   int(*xCompare)(void*,int,const void*,int,const void*)
 );
-
 ```
 
-These functions add, remove, or modify a collation associated
-with the database connection specified as the first argument.
+这些函数添加、移除或修改与第一参数指定的数据库连接关联的排序规则。
 
-The name of the collation is a UTF-8 string
-for sqlite3_create_collation() and sqlite3_create_collation_v2()
-and a UTF-16 string in native byte order for sqlite3_create_collation16().
-Collation names that compare equal according to sqlite3_strnicmp() are
-considered to be the same name.
+排序规则的名字对 `sqlite3_create_collation()` 和 `sqlite3_create_collation_v2()` 是 UTF-8 字符串，对 `sqlite3_create_collation16()` 是本机字节序的 UTF-16 字符串。按 `sqlite3_strnicmp()` 比较相等的排序规则名视为相同名字。
 
-The third argument (eTextRep) must be one of the constants:
+第三参数（eTextRep）必须是以下常量之一：
 
--  SQLITE_UTF8,
+-  `SQLITE_UTF8`，
 
--  SQLITE_UTF16LE,
+-  `SQLITE_UTF16LE`，
 
--  SQLITE_UTF16BE,
+-  `SQLITE_UTF16BE`，
 
--  SQLITE_UTF16, or
+-  `SQLITE_UTF16`，或
 
--  SQLITE_UTF16_ALIGNED.
+-  `SQLITE_UTF16_ALIGNED`。
 
-The eTextRep argument determines the encoding of strings passed
-to the collating function callback, xCompare.
-The SQLITE_UTF16 and SQLITE_UTF16_ALIGNED values for eTextRep
-force strings to be UTF16 with native byte order.
-The SQLITE_UTF16_ALIGNED value for eTextRep forces strings to begin
-on an even byte address.
+eTextRep 参数决定传给排序函数回调 xCompare 的字符串编码。eTextRep 取 `SQLITE_UTF16` 和 `SQLITE_UTF16_ALIGNED` 值时强制字符串为本机字节序的 UTF-16。eTextRep 取 `SQLITE_UTF16_ALIGNED` 时强制字符串从偶数字节地址开始。
 
-The fourth argument, pArg, is an application data pointer that is passed
-through as the first argument to the collating function callback.
+第四参数 pArg 是应用数据指针，作为第一参数传给排序函数回调。
 
-The fifth argument, xCompare, is a pointer to the collating function.
-Multiple collating functions can be registered using the same name but
-with different eTextRep parameters and SQLite will use whichever
-function requires the least amount of data transformation.
-If the xCompare argument is NULL then the collating function is
-deleted.  When all collating functions having the same name are deleted,
-that collation is no longer usable.
+第五参数 xCompare 是指向排序函数的指针。可以相同名字但不同 eTextRep 参数注册多个排序函数，SQLite 将使用需要最少数据转换的那个函数。若 xCompare 参数为 NULL，则删除排序函数。当同名的所有排序函数都被删除时，该排序规则不再可用。
 
-The collating function callback is invoked with a copy of the pArg
-application data pointer and with two strings in the encoding specified
-by the eTextRep argument.  The two integer parameters to the collating
-function callback are the length of the two strings, in bytes. The collating
-function must return an integer that is negative, zero, or positive
-if the first string is less than, equal to, or greater than the second,
-respectively.  A collating function must always return the same answer
-given the same inputs.  If two or more collating functions are registered
-to the same collation name (using different eTextRep values) then all
-must give an equivalent answer when invoked with equivalent strings.
-The collating function must obey the following properties for all
-strings A, B, and C:
+排序函数回调以 pArg 应用数据指针的副本、以及 eTextRep 参数指定编码的两个字符串调用。排序函数回调的两个整型参数是两个字符串以字节计的长度。若第一个字符串小于、等于或大于第二个字符串，排序函数必须分别返回负数、零或正数。给定相同输入，排序函数必须总是返回相同答案。若两个或多个排序函数以同一排序规则名注册（使用不同 eTextRep 值），则当以等价字符串调用时，它们必须给出等价答案。排序函数必须对所有字符串 A、B 和 C 遵守以下性质：
 
-1.  If A==B then B==A.
+1.  若 A==B 则 B==A。
 
-2.  If A==B and B==C then A==C.
+2.  若 A==B 且 B==C 则 A==C。
 
-3.  If A<B THEN B>A.
+3.  若 A<B 则 B>A。
 
-4.  If A<B and B<C then A<C.
+4.  若 A<B 且 B<C 则 A<C。
 
-If a collating function fails any of the above constraints and that
-collating function is registered and used, then the behavior of SQLite
-is undefined.
+若排序函数违反上述任一约束、且该排序函数被注册并使用，则 SQLite 的行为未定义。
 
-The sqlite3_create_collation_v2() works like sqlite3_create_collation()
-with the addition that the xDestroy callback is invoked on pArg when
-the collating function is deleted.
-Collating functions are deleted when they are overridden by later
-calls to the collation creation functions or when the
-database connection is closed using sqlite3_close().
+`sqlite3_create_collation_v2()` 的工作方式与 `sqlite3_create_collation()` 相同，区别在于当排序函数被删除时，对 pArg 调用 xDestroy 回调。当排序函数被后续的排序规则创建函数调用覆盖、或用 `sqlite3_close()` 关闭数据库连接时，排序函数被删除。
 
-The xDestroy callback is not called if the
-sqlite3_create_collation_v2() function fails.  Applications that invoke
-sqlite3_create_collation_v2() with a non-NULL xDestroy argument should
-check the return code and dispose of the application data pointer
-themselves rather than expecting SQLite to deal with it for them.
-This is different from every other SQLite interface.  The inconsistency
-is unfortunate but cannot be changed without breaking backwards
-compatibility.
+若 `sqlite3_create_collation_v2()` 函数失败，则不调用 xDestroy 回调。以非 NULL 的 xDestroy 参数调用 `sqlite3_create_collation_v2()` 的应用应检查返回码，自行处理应用数据指针的释放，而不是指望 SQLite 替它们处理。这与所有其它 SQLite 接口不同。这种不一致令人遗憾，但无法在不破坏向后兼容性的情况下改变。
 
-See also:  sqlite3_collation_needed() and sqlite3_collation_needed16().
+另见：`sqlite3_collation_needed()` 和 `sqlite3_collation_needed16()`。
 
 ---
 
-## Create and Destroy VFS Filenames
+## 创建和销毁 VFS 文件名（Create and Destroy VFS Filenames）
 
 ```
-
 sqlite3_filename sqlite3_create_filename(
   const char *zDatabase,
   const char *zJournal,
@@ -10865,457 +6802,242 @@ sqlite3_filename sqlite3_create_filename(
   const char **azParam
 );
 void sqlite3_free_filename(sqlite3_filename);
-
 ```
 
-These interfaces are provided for use by VFS shim implementations and
-are not useful outside of that context.
+这些接口供 VFS 垫片实现使用，在此上下文之外没有用处。
 
-The sqlite3_create_filename(D,J,W,N,P) allocates memory to hold a version of
-database filename D with corresponding journal file J and WAL file W and
-an array P of N URI Key/Value pairs.  The result from
-sqlite3_create_filename(D,J,W,N,P) is a pointer to a database filename that
-is safe to pass to routines like:
+`sqlite3_create_filename(D,J,W,N,P)` 分配内存，保存数据库文件名 D 及其对应的日志文件 J 和 WAL 文件 W 的版本，以及 N 个 URI 键/值对的数组 P。`sqlite3_create_filename(D,J,W,N,P)` 的结果是指向数据库文件名的指针，可安全地传给如下例程：
 
--  sqlite3_uri_parameter(),
+-  `sqlite3_uri_parameter()`，
 
--  sqlite3_uri_boolean(),
+-  `sqlite3_uri_boolean()`，
 
--  sqlite3_uri_int64(),
+-  `sqlite3_uri_int64()`，
 
--  sqlite3_uri_key(),
+-  `sqlite3_uri_key()`，
 
--  sqlite3_filename_database(),
+-  `sqlite3_filename_database()`，
 
--  sqlite3_filename_journal(), or
+-  `sqlite3_filename_journal()`，或
 
--  sqlite3_filename_wal().
+-  `sqlite3_filename_wal()`。
 
-If a memory allocation error occurs, sqlite3_create_filename() might
-return a NULL pointer.  The memory obtained from sqlite3_create_filename(X)
-must be released by a corresponding call to sqlite3_free_filename(Y).
+若发生内存分配错误，`sqlite3_create_filename()` 可能返回 NULL 指针。`sqlite3_create_filename(X)` 获得的内存必须由对应的 `sqlite3_free_filename(Y)` 调用释放。
 
-The P parameter in sqlite3_create_filename(D,J,W,N,P) should be an array
-of 2*N pointers to strings.  Each pair of pointers in this array corresponds
-to a key and value for a query parameter.  The P parameter may be a NULL
-pointer if N is zero.  None of the 2*N pointers in the P array may be
-NULL pointers and key pointers should not be empty strings.
-None of the D, J, or W parameters to sqlite3_create_filename(D,J,W,N,P) may
-be NULL pointers, though they can be empty strings.
+`sqlite3_create_filename(D,J,W,N,P)` 中的 P 参数应是 2*N 个字符串指针的数组。该数组中的每对指针对应查询参数的一个键和值。若 N 为零，P 参数可为 NULL 指针。P 数组中的 2*N 个指针不能有 NULL 指针，键指针不应是空字符串。`sqlite3_create_filename(D,J,W,N,P)` 的 D、J、W 参数不能有 NULL 指针，尽管它们可以是空字符串。
 
-The sqlite3_free_filename(Y) routine releases a memory allocation
-previously obtained from sqlite3_create_filename().  Invoking
-sqlite3_free_filename(Y) where Y is a NULL pointer is a harmless no-op.
+`sqlite3_free_filename(Y)` 例程释放先前从 `sqlite3_create_filename()` 获得的内存分配。对 Y 为 NULL 指针调用 `sqlite3_free_filename(Y)` 是无害的空操作。
 
-If the Y parameter to sqlite3_free_filename(Y) is anything other
-than a NULL pointer or a pointer previously acquired from
-sqlite3_create_filename(), then bad things such as heap
-corruption or segfaults may occur. The value Y should not be
-used again after sqlite3_free_filename(Y) has been called.  This means
-that if the sqlite3_vfs.xOpen() method of a VFS has been called using Y,
-then the corresponding [sqlite3_module.xClose() method should also be
-invoked prior to calling sqlite3_free_filename(Y).
+若传给 `sqlite3_free_filename(Y)` 的 Y 参数不是 NULL 指针、也不是先前从 `sqlite3_create_filename()` 获得的指针，则可能发生堆损坏或段错误等严重后果。调用 `sqlite3_free_filename(Y)` 之后不应再使用 Y。这意味着，若某 VFS 的 `sqlite3_vfs.xOpen()` 方法已用 Y 调用，则应在调用 `sqlite3_free_filename(Y)` 之前也调用对应的 `sqlite3_module.xClose()` 方法。
 
 ---
 
-## Register A Virtual Table Implementation
+## 注册虚拟表实现（Register A Virtual Table Implementation）
 
 ```
-
 int sqlite3_create_module(
-  sqlite3 *db,               /* SQLite connection to register module with */
-  const char *zName,         /* Name of the module */
-  const sqlite3_module *p,   /* Methods for the module */
-  void *pClientData          /* Client data for xCreate/xConnect */
+  sqlite3 *db,               /* 注册模块所用的 SQLite 连接 */
+  const char *zName,         /* 模块名 */
+  const sqlite3_module *p,   /* 模块的方法表 */
+  void *pClientData          /* 传给 xCreate/xConnect 的客户端数据 */
 );
 int sqlite3_create_module_v2(
-  sqlite3 *db,               /* SQLite connection to register module with */
-  const char *zName,         /* Name of the module */
-  const sqlite3_module *p,   /* Methods for the module */
-  void *pClientData,         /* Client data for xCreate/xConnect */
-  void(*xDestroy)(void*)     /* Module destructor function */
+  sqlite3 *db,               /* 注册模块所用的 SQLite 连接 */
+  const char *zName,         /* 模块名 */
+  const sqlite3_module *p,   /* 模块的方法表 */
+  void *pClientData,         /* 传给 xCreate/xConnect 的客户端数据 */
+  void(*xDestroy)(void*)     /* 模块析构函数 */
 );
-
 ```
 
-These routines are used to register a new virtual table module name.
-Module names must be registered before
-creating a new virtual table using the module and before using a
-preexisting virtual table for the module.
+这些例程用于注册新的虚拟表模块名。使用该模块创建新的虚拟表之前、以及使用该模块的既有虚拟表之前，都必须先注册模块名。
 
-The module name is registered on the database connection specified
-by the first parameter.  The name of the module is given by the
-second parameter.  The third parameter is a pointer to
-the implementation of the virtual table module.   The fourth
-parameter is an arbitrary client data pointer that is passed through
-into the xCreate and xConnect methods of the virtual table module
-when a new virtual table is being created or reinitialized.
+模块名注册在第一参数指定的数据库连接上。模块名由第二参数给出。第三参数是指向虚拟表模块实现的指针。第四参数是任意客户端数据指针，当新虚拟表被创建或重新初始化时，它被传入虚拟表模块的 xCreate 和 xConnect 方法。
 
-The sqlite3_create_module_v2() interface has a fifth parameter which
-is a pointer to a destructor for the pClientData.  SQLite will
-invoke the destructor function (if it is not NULL) when SQLite
-no longer needs the pClientData pointer.  The destructor will also
-be invoked if the call to sqlite3_create_module_v2() fails.
-The sqlite3_create_module()
-interface is equivalent to sqlite3_create_module_v2() with a NULL
-destructor.
+`sqlite3_create_module_v2()` 接口有第五参数，是指向 pClientData 析构函数的指针。当 SQLite 不再需要 pClientData 指针时，SQLite 调用析构函数（若非 NULL）。若 `sqlite3_create_module_v2()` 调用失败，析构函数也会被调用。`sqlite3_create_module()` 接口等价于析构函数为 NULL 的 `sqlite3_create_module_v2()`。
 
-If the third parameter (the pointer to the sqlite3_module object) is
-NULL then no new module is created and any existing modules with the
-same name are dropped.
+若第三参数（指向 sqlite3_module 对象的指针）为 NULL，则不创建新模块，任何同名的既有模块被移除。
 
-See also: sqlite3_drop_modules()
+另见：`sqlite3_drop_modules()`
 
 ---
 
-## Database Connection Status
+## 数据库连接状态（Database Connection Status）
 
 ```
-
 int sqlite3_db_status(sqlite3*, int op, int *pCur, int *pHiwtr, int resetFlg);
 int sqlite3_db_status64(sqlite3*,int,sqlite3_int64*,sqlite3_int64*,int);
-
 ```
 
-This interface is used to retrieve runtime status information
-about a single database connection.  The first argument is the
-database connection object to be interrogated.  The second argument
-is an integer constant, taken from the set of
-SQLITE_DBSTATUS options, that
-determines the parameter to interrogate.  The set of
-SQLITE_DBSTATUS options is likely
-to grow in future releases of SQLite.
+此接口用于取回单个数据库连接上的运行时状态信息。第一参数是要查询的数据库连接对象。第二参数是取自 `SQLITE_DBSTATUS` 选项集合的整型常量，决定要查询的参数。`SQLITE_DBSTATUS` 选项集合很可能在 SQLite 未来的版本中增长。
 
-The current value of the requested parameter is written into *pCur
-and the highest instantaneous value is written into *pHiwtr.  If
-the resetFlg is true, then the highest instantaneous value is
-reset back down to the current value.
+所请求参数的当前值写入 *pCur，最高瞬时值写入 *pHiwtr。若 resetFlg 为 true，则最高瞬时值被重置回当前值。
 
-The sqlite3_db_status() routine returns SQLITE_OK on success and a
-non-zero error code on failure.
+`sqlite3_db_status()` 例程在成功时返回 `SQLITE_OK`，失败时返回非零错误码。
 
-The sqlite3_db_status64(D,O,C,H,R) routine works exactly the same
-way as sqlite3_db_status(D,O,C,H,R) routine except that the C and H
-parameters are pointer to 64-bit integers (type: sqlite3_int64) instead
-of pointers to 32-bit integers, which allows larger status values
-to be returned.  If a status value exceeds 2,147,483,647 then
-sqlite3_db_status() will truncate the value whereas sqlite3_db_status64()
-will return the full value.
+## 数据库连接状态
 
-See also: sqlite3_status() and sqlite3_stmt_status().
+`sqlite3_db_status64(D,O,C,H,R)` 例程的工作方式与 `sqlite3_db_status(D,O,C,H,R)` 例程完全相同，区别仅在于 C 和 H 参数是指向 64 位整数（类型 `sqlite3_int64`）的指针，而非指向 32 位整数的指针，这允许返回更大的状态值。若状态值超过 2,147,483,647，则 `sqlite3_db_status()` 会截断该值，而 `sqlite3_db_status64()` 返回完整值。
+
+另见：`sqlite3_status()` 和 `sqlite3_stmt_status()`。
 
 ---
 
-## Error Codes And Messages
+## 错误码和错误消息（Error Codes And Messages）
 
 ```
-
 int sqlite3_errcode(sqlite3 *db);
 int sqlite3_extended_errcode(sqlite3 *db);
 const char *sqlite3_errmsg(sqlite3*);
 const void *sqlite3_errmsg16(sqlite3*);
 const char *sqlite3_errstr(int);
 int sqlite3_error_offset(sqlite3 *db);
-
 ```
 
-If the most recent sqlite3_* API call associated with
-database connection D failed, then the sqlite3_errcode(D) interface
-returns the numeric result code or extended result code for that
-API call.
-The sqlite3_extended_errcode()
-interface is the same except that it always returns the
-extended result code even when extended result codes are
-disabled.
+若与数据库连接 D 关联的最近一次 sqlite3_* API 调用失败，则 `sqlite3_errcode(D)` 接口返回该 API 调用的数值结果码或扩展结果码。`sqlite3_extended_errcode()` 接口相同，区别在于即使扩展结果码被禁用，它也总是返回扩展结果码。
 
-The values returned by sqlite3_errcode() and/or
-sqlite3_extended_errcode() might change with each API call.
-Except, there are some interfaces that are guaranteed to never
-change the value of the error code.  The error-code preserving
-interfaces include the following:
+`sqlite3_errcode()` 和/或 `sqlite3_extended_errcode()` 返回的值可能随每次 API 调用而改变。不过，有些接口保证从不改变错误码的值。这些保持错误码不变的接口包括：
 
--  sqlite3_errcode()
+-  `sqlite3_errcode()`
 
--  sqlite3_extended_errcode()
+-  `sqlite3_extended_errcode()`
 
--  sqlite3_errmsg()
+-  `sqlite3_errmsg()`
 
--  sqlite3_errmsg16()
+-  `sqlite3_errmsg16()`
 
--  sqlite3_error_offset()
+-  `sqlite3_error_offset()`
 
--  sqlite3_db_handle()
+-  `sqlite3_db_handle()`
 
-The sqlite3_errmsg() and sqlite3_errmsg16() return English-language
-text that describes the error, as either UTF-8 or UTF-16 respectively,
-or NULL if no error message is available.
-(See how SQLite handles invalid UTF for exceptions to this rule.)
-Memory to hold the error message string is managed internally.
-The application does not need to worry about freeing the result.
-However, the error string might be overwritten or deallocated by
-subsequent calls to other SQLite interface functions.
+`sqlite3_errmsg()` 和 `sqlite3_errmsg16()` 返回描述错误的英文文本，分别为 UTF-8 或 UTF-16 编码，若无错误消息可用则返回 NULL。（关于此规则的例外情况，参见 SQLite 如何处理无效 UTF。）存放错误消息字符串的内存由内部管理。应用无需操心释放结果。不过，后续对其它 SQLite 接口函数的调用可能覆盖或释放该错误字符串。
 
-The sqlite3_errstr(E) interface returns the English-language text
-that describes the result code E, as UTF-8, or NULL if E is not a
-result code for which a text error message is available.
-Memory to hold the error message string is managed internally
-and must not be freed by the application.
+`sqlite3_errstr(E)` 接口返回描述结果码 E 的英文文本（UTF-8 编码），若 E 不是有文本错误消息可用的结果码则返回 NULL。存放错误消息字符串的内存由内部管理，应用不得释放。
 
-If the most recent error references a specific token in the input
-SQL, the sqlite3_error_offset() interface returns the byte offset
-of the start of that token.  The byte offset returned by
-sqlite3_error_offset() assumes that the input SQL is UTF-8.
-If the most recent error does not reference a specific token in the input
-SQL, then the sqlite3_error_offset() function returns -1.
+若最近一次错误引用了输入 SQL 中的特定记号，则 `sqlite3_error_offset()` 接口返回该记号起点的字节偏移。`sqlite3_error_offset()` 返回的字节偏移假定输入 SQL 是 UTF-8。若最近一次错误未引用输入 SQL 中的特定记号，则 `sqlite3_error_offset()` 函数返回 -1。
 
-When the serialized threading mode is in use, it might be the
-case that a second error occurs on a separate thread in between
-the time of the first error and the call to these interfaces.
-When that happens, the second error will be reported since these
-interfaces always report the most recent result.  To avoid
-this, each thread can obtain exclusive use of the database connection D
-by invoking sqlite3_mutex_enter(sqlite3_db_mutex(D)) before beginning
-to use D and invoking sqlite3_mutex_leave(sqlite3_db_mutex(D)) after
-all calls to the interfaces listed here are completed.
+使用串行化线程模式时，可能在第一次错误发生之后、对这些接口的调用之前，另一线程上发生第二个错误。发生这种情况时，会报告第二个错误，因为这些接口总是报告最近的结果。为避免此问题，每个线程可先调用 `sqlite3_mutex_enter(sqlite3_db_mutex(D))` 独占使用数据库连接 D，在完成此处列出的所有接口调用后调用 `sqlite3_mutex_leave(sqlite3_db_mutex(D))`。
 
-If an interface fails with SQLITE_MISUSE, that means the interface
-was invoked incorrectly by the application.  In that case, the
-error code and message may or may not be set.
+若某接口以 `SQLITE_MISUSE` 失败，表示应用错误地调用了该接口。此时可能设置也可能不设置错误码和错误消息。
 
 ---
 
-## Retrieving Statement SQL
+## 取回语句 SQL（Retrieving Statement SQL）
 
 ```
-
 const char *sqlite3_sql(sqlite3_stmt *pStmt);
 char *sqlite3_expanded_sql(sqlite3_stmt *pStmt);
 #ifdef SQLITE_ENABLE_NORMALIZE
 const char *sqlite3_normalized_sql(sqlite3_stmt *pStmt);
 #endif
-
 ```
 
-The sqlite3_sql(P) interface returns a pointer to a copy of the UTF-8
-SQL text used to create prepared statement P if P was
-created by sqlite3_prepare_v2(), sqlite3_prepare_v3(),
-sqlite3_prepare16_v2(), or sqlite3_prepare16_v3().
-The sqlite3_expanded_sql(P) interface returns a pointer to a UTF-8
-string containing the SQL text of prepared statement P with
-bound parameters expanded.
-The sqlite3_normalized_sql(P) interface returns a pointer to a UTF-8
-string containing the normalized SQL text of prepared statement P.  The
-semantics used to normalize a SQL statement are unspecified and subject
-to change.  At a minimum, literal values will be replaced with suitable
-placeholders.
+若预编译语句 P 由 `sqlite3_prepare_v2()`、`sqlite3_prepare_v3()`、`sqlite3_prepare16_v2()` 或 `sqlite3_prepare16_v3()` 创建，则 `sqlite3_sql(P)` 接口返回指向用于创建预编译语句 P 的 UTF-8 SQL 文本副本的指针。`sqlite3_expanded_sql(P)` 接口返回指向 UTF-8 字符串的指针，该字符串包含预编译语句 P 的 SQL 文本，其中已展开绑定的参数。`sqlite3_normalized_sql(P)` 接口返回指向 UTF-8 字符串的指针，该字符串包含预编译语句 P 的规范化 SQL 文本。用于规范化 SQL 语句的语义未指定，且可能发生变化。至少，字面量值会被替换为合适的占位符。
 
-For example, if a prepared statement is created using the SQL
-text "SELECT $abc,:xyz" and if parameter $abc is bound to integer 2345
-and parameter :xyz is unbound, then sqlite3_sql() will return
-the original string, "SELECT $abc,:xyz" but sqlite3_expanded_sql()
-will return "SELECT 2345,NULL".
+例如，若用 SQL 文本 "SELECT $abc,:xyz" 创建预编译语句，且参数 $abc 绑定到整数 2345、参数 :xyz 未绑定，则 `sqlite3_sql()` 返回原始字符串 "SELECT $abc,:xyz"，但 `sqlite3_expanded_sql()` 返回 "SELECT 2345,NULL"。
 
-The sqlite3_expanded_sql() interface returns NULL if insufficient memory
-is available to hold the result, or if the result would exceed the
-maximum string length determined by the SQLITE_LIMIT_LENGTH.
+若内存不足无法容纳结果、或结果会超过 `SQLITE_LIMIT_LENGTH` 确定的最大字符串长度，则 `sqlite3_expanded_sql()` 接口返回 NULL。
 
-The SQLITE_TRACE_SIZE_LIMIT compile-time option limits the size of
-bound parameter expansions.  The SQLITE_OMIT_TRACE compile-time
-option causes sqlite3_expanded_sql() to always return NULL.
+`SQLITE_TRACE_SIZE_LIMIT` 编译期选项限制绑定参数展开的大小。`SQLITE_OMIT_TRACE` 编译期选项使 `sqlite3_expanded_sql()` 始终返回 NULL。
 
-The strings returned by sqlite3_sql(P) and sqlite3_normalized_sql(P)
-are managed by SQLite and are automatically freed when the prepared
-statement is finalized.
-The string returned by sqlite3_expanded_sql(P), on the other hand,
-is obtained from sqlite3_malloc() and must be freed by the application
-by passing it to sqlite3_free().
+`sqlite3_sql(P)` 和 `sqlite3_normalized_sql(P)` 返回的字符串由 SQLite 管理，在预编译语句被终结时自动释放。另一方面，`sqlite3_expanded_sql(P)` 返回的字符串从 `sqlite3_malloc()` 获得，必须由应用传给 `sqlite3_free()` 释放。
 
-The sqlite3_normalized_sql() interface is only available if
-the SQLITE_ENABLE_NORMALIZE compile-time option is defined.
+`sqlite3_normalized_sql()` 接口仅在定义了 `SQLITE_ENABLE_NORMALIZE` 编译期选项时可用。
 
 ---
 
-## Translate filenames
+## 翻译文件名（Translate filenames）
 
 ```
-
 const char *sqlite3_filename_database(sqlite3_filename);
 const char *sqlite3_filename_journal(sqlite3_filename);
 const char *sqlite3_filename_wal(sqlite3_filename);
-
 ```
 
-These routines are available to custom VFS implementations for
-translating filenames between the main database file, the journal file,
-and the WAL file.
+这些例程可供自定义 VFS 实现在主数据库文件、日志文件和 WAL 文件之间翻译文件名。
 
-If F is the name of an sqlite database file, journal file, or WAL file
-passed by the SQLite core into the VFS, then sqlite3_filename_database(F)
-returns the name of the corresponding database file.
+若 F 是 SQLite 核心传入 VFS 的 sqlite 数据库文件、日志文件或 WAL 文件的名字，则 `sqlite3_filename_database(F)` 返回对应的数据库文件名。
 
-If F is the name of an sqlite database file, journal file, or WAL file
-passed by the SQLite core into the VFS, or if F is a database filename
-obtained from sqlite3_db_filename(), then sqlite3_filename_journal(F)
-returns the name of the corresponding rollback journal file.
+若 F 是 SQLite 核心传入 VFS 的 sqlite 数据库文件、日志文件或 WAL 文件的名字，或 F 是从 `sqlite3_db_filename()` 获得的数据库文件名，则 `sqlite3_filename_journal(F)` 返回对应的回滚日志文件名。
 
-If F is the name of an sqlite database file, journal file, or WAL file
-that was passed by the SQLite core into the VFS, or if F is a database
-filename obtained from sqlite3_db_filename(), then
-sqlite3_filename_wal(F) returns the name of the corresponding
-WAL file.
+若 F 是 SQLite 核心传入 VFS 的 sqlite 数据库文件、日志文件或 WAL 文件的名字，或 F 是从 `sqlite3_db_filename()` 获得的数据库文件名，则 `sqlite3_filename_wal(F)` 返回对应的 WAL 文件名。
 
-In all of the above, if F is not the name of a database, journal or WAL
-filename passed into the VFS from the SQLite core and F is not the
-return value from sqlite3_db_filename(), then the result is
-undefined and is likely a memory access violation.
+在上述所有情况下，若 F 不是 SQLite 核心传入 VFS 的数据库、日志或 WAL 文件名，且 F 不是 `sqlite3_db_filename()` 的返回值，则结果未定义，且很可能是内存访问违规。
 
 ---
 
-## Memory Allocation Subsystem
+## 内存分配子系统（Memory Allocation Subsystem）
 
 ```
-
 void *sqlite3_malloc(int);
 void *sqlite3_malloc64(sqlite3_uint64);
 void *sqlite3_realloc(void*, int);
 void *sqlite3_realloc64(void*, sqlite3_uint64);
 void sqlite3_free(void*);
 sqlite3_uint64 sqlite3_msize(void*);
-
 ```
 
-The SQLite core uses these three routines for all of its own
-internal memory allocation needs. "Core" in the previous sentence
-does not include operating-system specific VFS implementation.  The
-Windows VFS uses native malloc() and free() for some operations.
+SQLite 核心把全部内部内存分配需求都用这三个例程实现。"核心"一词在前一句中不包括操作系统特有的 VFS 实现。Windows VFS 的部分操作使用原生 malloc() 和 free()。
 
-The sqlite3_malloc() routine returns a pointer to a block
-of memory at least N bytes in length, where N is the parameter.
-If sqlite3_malloc() is unable to obtain sufficient free
-memory, it returns a NULL pointer.  If the parameter N to
-sqlite3_malloc() is zero or negative then sqlite3_malloc() returns
-a NULL pointer.
+`sqlite3_malloc()` 例程返回指向长度至少 N 字节内存块的指针，其中 N 是参数。若 `sqlite3_malloc()` 无法获得足够的空闲内存，则返回 NULL 指针。若传给 `sqlite3_malloc()` 的参数 N 为零或负数，则 `sqlite3_malloc()` 返回 NULL 指针。
 
-The sqlite3_malloc64(N) routine works just like
-sqlite3_malloc(N) except that N is an unsigned 64-bit integer instead
-of a signed 32-bit integer.
+`sqlite3_malloc64(N)` 例程的工作方式与 `sqlite3_malloc(N)` 相同，区别仅在于 N 是无符号 64 位整数，而非有符号 32 位整数。
 
-Calling sqlite3_free() with a pointer previously returned
-by sqlite3_malloc() or sqlite3_realloc() releases that memory so
-that it might be reused.  The sqlite3_free() routine is
-a no-op if it is called with a NULL pointer.  Passing a NULL pointer
-to sqlite3_free() is harmless.  After being freed, memory
-should neither be read nor written.  Even reading previously freed
-memory might result in a segmentation fault or other severe error.
-Memory corruption, a segmentation fault, or other severe error
-might result if sqlite3_free() is called with a non-NULL pointer that
-was not obtained from sqlite3_malloc() or sqlite3_realloc().
+用先前从 `sqlite3_malloc()` 或 `sqlite3_realloc()` 获得的指针调用 `sqlite3_free()`，会释放该内存以便复用。`sqlite3_free()` 例程以 NULL 指针调用时是空操作。向 `sqlite3_free()` 传 NULL 指针无害。释放后，内存既不应被读也不应被写。即使读取先前已释放的内存也可能导致段错误或其它严重错误。若用非 NULL、且不是从 `sqlite3_malloc()` 或 `sqlite3_realloc()` 获得的指针调用 `sqlite3_free()`，可能导致内存损坏、段错误或其它严重错误。
 
-The sqlite3_realloc(X,N) interface attempts to resize a
-prior memory allocation X to be at least N bytes.
-If the X parameter to sqlite3_realloc(X,N)
-is a NULL pointer then its behavior is identical to calling
-sqlite3_malloc(N).
-If the N parameter to sqlite3_realloc(X,N) is zero or
-negative then the behavior is exactly the same as calling
-sqlite3_free(X).
-sqlite3_realloc(X,N) returns a pointer to a memory allocation
-of at least N bytes in size or NULL if insufficient memory is available.
-If M is the size of the prior allocation, then min(N,M) bytes of the
-prior allocation are copied into the beginning of the buffer returned
-by sqlite3_realloc(X,N) and the prior allocation is freed.
-If sqlite3_realloc(X,N) returns NULL and N is positive, then the
-prior allocation is not freed.
+`sqlite3_realloc(X,N)` 接口尝试把先前的内存分配 X 调整为至少 N 字节。若 `sqlite3_realloc(X,N)` 的 X 参数是 NULL 指针，则其行为与调用 `sqlite3_malloc(N)` 相同。若 `sqlite3_realloc(X,N)` 的 N 参数为零或负数，则行为与调用 `sqlite3_free(X)` 完全相同。`sqlite3_realloc(X,N)` 返回指向至少 N 字节内存分配的指针，若可用内存不足则返回 NULL。若 M 是先前分配的大小，则先前分配的 min(N,M) 字节被复制到 `sqlite3_realloc(X,N)` 返回缓冲区的开头，先前分配被释放。若 `sqlite3_realloc(X,N)` 返回 NULL 且 N 为正数，则先前分配不被释放。
 
-The sqlite3_realloc64(X,N) interface works the same as
-sqlite3_realloc(X,N) except that N is a 64-bit unsigned integer instead
-of a 32-bit signed integer.
+`sqlite3_realloc64(X,N)` 接口的工作方式与 `sqlite3_realloc(X,N)` 相同，区别仅在于 N 是 64 位无符号整数，而非 32 位有符号整数。
 
-If X is a memory allocation previously obtained from sqlite3_malloc(),
-sqlite3_malloc64(), sqlite3_realloc(), or sqlite3_realloc64(), then
-sqlite3_msize(X) returns the size of that memory allocation in bytes.
-The value returned by sqlite3_msize(X) might be larger than the number
-of bytes requested when X was allocated.  If X is a NULL pointer then
-sqlite3_msize(X) returns zero.  If X points to something that is not
-the beginning of memory allocation, or if it points to a formerly
-valid memory allocation that has now been freed, then the behavior
-of sqlite3_msize(X) is undefined and possibly harmful.
+若 X 是先前从 `sqlite3_malloc()`、`sqlite3_malloc64()`、`sqlite3_realloc()` 或 `sqlite3_realloc64()` 获得的内存分配，则 `sqlite3_msize(X)` 返回该内存分配的字节大小。`sqlite3_msize(X)` 返回的值可能大于 X 被分配时请求的字节数。若 X 是 NULL 指针，则 `sqlite3_msize(X)` 返回零。若 X 指向不是内存分配起点的地方，或指向现已释放的先前有效内存分配，则 `sqlite3_msize(X)` 的行为未定义且可能有害。
 
-The memory returned by sqlite3_malloc(), sqlite3_realloc(),
-sqlite3_malloc64(), and sqlite3_realloc64()
-is always aligned to at least an 8 byte boundary, or to a
-4 byte boundary if the SQLITE_4_BYTE_ALIGNED_MALLOC compile-time
-option is used.
+`sqlite3_malloc()`、`sqlite3_realloc()`、`sqlite3_malloc64()` 和 `sqlite3_realloc64()` 返回的内存总是至少按 8 字节边界对齐，若使用 `SQLITE_4_BYTE_ALIGNED_MALLOC` 编译期选项则按 4 字节边界对齐。
 
-The pointer arguments to sqlite3_free() and sqlite3_realloc()
-must be either NULL or else pointers obtained from a prior
-invocation of sqlite3_malloc() or sqlite3_realloc() that have
-not yet been released.
+传给 `sqlite3_free()` 和 `sqlite3_realloc()` 的指针参数必须是 NULL、或先前调用 `sqlite3_malloc()` 或 `sqlite3_realloc()` 获得且尚未释放的指针。
 
-The application must not read or write any part of
-a block of memory after it has been released using
-sqlite3_free() or sqlite3_realloc().
+应用不得在通过 `sqlite3_free()` 或 `sqlite3_realloc()` 释放某内存块后，读或写该内存块的任何部分。
 
 ---
 
-## Convenience Routines For Running Queries
+## 运行查询的便捷例程（Convenience Routines For Running Queries）
 
 ```
-
 int sqlite3_get_table(
-  sqlite3 *db,          /* An open database */
-  const char *zSql,     /* SQL to be evaluated */
-  char ***pazResult,    /* Results of the query */
-  int *pnRow,           /* Number of result rows written here */
-  int *pnColumn,        /* Number of result columns written here */
-  char **pzErrmsg       /* Error msg written here */
+  sqlite3 *db,          /* 打开的数据库 */
+  const char *zSql,     /* 要执行的 SQL */
+  char ***pazResult,    /* 查询结果 */
+  int *pnRow,           /* 写入此处的结果行数 */
+  int *pnColumn,        /* 写入此处的结果列数 */
+  char **pzErrmsg       /* 写入此处的错误消息 */
 );
 void sqlite3_free_table(char **result);
-
 ```
 
-This is a legacy interface that is preserved for backwards compatibility.
-Use of this interface is not recommended.
+这是为向后兼容保留的旧接口。不建议使用此接口。
 
-Definition: A result table is a memory data structure created by the
-sqlite3_get_table() interface.  A result table records the
-complete query results from one or more queries.
+定义：结果表是 `sqlite3_get_table()` 接口创建的内存数据结构。结果表记录一条或多条查询的完整查询结果。
 
-The table conceptually has a number of rows and columns.  But
-these numbers are not part of the result table itself.  These
-numbers are obtained separately.  Let N be the number of rows
-and M be the number of columns.
+该表概念上有一个行数和列数。但这些数字不是结果表本身的一部分。这些数字被单独获取。设 N 为行数、M 为列数。
 
-A result table is an array of pointers to zero-terminated UTF-8 strings.
-There are (N+1)*M elements in the array.  The first M pointers point
-to zero-terminated strings that  contain the names of the columns.
-The remaining entries all point to query results.  NULL values result
-in NULL pointers.  All other values are in their UTF-8 zero-terminated
-string representation as returned by sqlite3_column_text().
+结果表是指向零结尾 UTF-8 字符串的指针数组。该数组有 (N+1)*M 个元素。前 M 个指针指向包含列名的零结尾字符串。其余条目都指向查询结果。NULL 值导致 NULL 指针。所有其它值以其 UTF-8 零结尾字符串表示形式存在，如 `sqlite3_column_text()` 返回的那样。
 
-A result table might consist of one or more memory allocations.
-It is not safe to pass a result table directly to sqlite3_free().
-A result table should be deallocated using sqlite3_free_table().
+## 运行查询的便捷例程
 
-As an example of the result table format, suppose a query result
-is as follows:
+结果表可能由一个或多个内存分配组成。把结果表直接传给 `sqlite3_free()` 不安全。结果表应用 `sqlite3_free_table()` 释放。
+
+作为结果表格式的示例，假设某查询结果如下：
 
 ```
-
 Name        | Age
 -----------------------
 Alice       | 43
 Bob         | 28
 Cindy       | 21
-
 ```
 
-There are two columns (M==2) and three rows (N==3).  Thus the
-result table has 8 entries.  Suppose the result table is stored
-in an array named azResult.  Then azResult holds this content:
+有两列（M==2）三行（N==3）。因此结果表有 8 个条目。假设结果表存储在名为 azResult 的数组中。则 azResult 持有如下内容：
 
 ```
-
 azResult[0] = "Name";
 azResult[1] = "Age";
 azResult[2] = "Alice";
@@ -11324,967 +7046,451 @@ azResult[4] = "Bob";
 azResult[5] = "28";
 azResult[6] = "Cindy";
 azResult[7] = "21";
-
 ```
 
-The sqlite3_get_table() function evaluates one or more
-semicolon-separated SQL statements in the zero-terminated UTF-8
-string of its 2nd parameter and returns a result table to the
-pointer given in its 3rd parameter.
+`sqlite3_get_table()` 函数在其第二参数的零结尾 UTF-8 字符串中执行一条或多条以分号分隔的 SQL 语句，并把结果表返回给其第三参数给定的指针。
 
-After the application has finished with the result from sqlite3_get_table(),
-it must pass the result table pointer to sqlite3_free_table() in order to
-release the memory that was malloced.  Because of the way the
-sqlite3_malloc() happens within sqlite3_get_table(), the calling
-function must not try to call sqlite3_free() directly.  Only
-sqlite3_free_table() is able to release the memory properly and safely.
+应用用完 `sqlite3_get_table()` 的结果后，必须把结果表指针传给 `sqlite3_free_table()` 以释放被 malloc 的内存。由于 `sqlite3_get_table()` 内部发生 `sqlite3_malloc()` 的方式，调用函数不得尝试直接调用 `sqlite3_free()`。只有 `sqlite3_free_table()` 能正确且安全地释放内存。
 
-The sqlite3_get_table() interface is implemented as a wrapper around
-sqlite3_exec().  The sqlite3_get_table() routine does not have access
-to any internal data structures of SQLite.  It uses only the public
-interface defined here.  As a consequence, errors that occur in the
-wrapper layer outside of the internal sqlite3_exec() call are not
-reflected in subsequent calls to sqlite3_errcode() or
-sqlite3_errmsg().
+`sqlite3_get_table()` 接口作为 `sqlite3_exec()` 的包装器实现。`sqlite3_get_table()` 例程无权访问 SQLite 的任何内部数据结构。它只使用此处定义的公共接口。因此，包装层在内部 `sqlite3_exec()` 调用之外发生的错误，不会反映在后续对 `sqlite3_errcode()` 或 `sqlite3_errmsg()` 的调用中。
 
 ---
 
-## Function Auxiliary Data
+## 函数辅助数据（Function Auxiliary Data）
 
 ```
-
 void *sqlite3_get_auxdata(sqlite3_context*, int N);
 void sqlite3_set_auxdata(sqlite3_context*, int N, void*, void (*)(void*));
-
 ```
 
-These functions may be used by (non-aggregate) SQL functions to
-associate auxiliary data with argument values. If the same argument
-value is passed to multiple invocations of the same SQL function during
-query execution, under some circumstances the associated auxiliary data
-might be preserved.  An example of where this might be useful is in a
-regular-expression matching function. The compiled version of the regular
-expression can be stored as auxiliary data associated with the pattern
-string. Then as long as the pattern string remains the same,
-the compiled regular expression can be reused on multiple
-invocations of the same function.
+这些函数可供（非聚合）SQL 函数把辅助数据与参数值关联。若在查询执行期间，同一参数值被传给同一 SQL 函数的多次调用，则某些情况下关联的辅助数据可能被保留。一个可能有用的例子是正则表达式匹配函数。正则表达式的编译版本可存储为与模式字符串关联的辅助数据。然后只要模式字符串保持不变，编译后的正则表达式可在同一函数的多次调用中复用。
 
-The sqlite3_get_auxdata(C,N) interface returns a pointer to the auxiliary
-data associated by the sqlite3_set_auxdata(C,N,P,X) function with the
-Nth argument value to the application-defined function.  N is zero
-for the left-most function argument.  If there is no auxiliary data
-associated with the function argument, the sqlite3_get_auxdata(C,N)
-interface returns a NULL pointer.
+`sqlite3_get_auxdata(C,N)` 接口返回与 `sqlite3_set_auxdata(C,N,P,X)` 函数关联到应用定义函数第 N 个参数值的辅助数据指针。对最左边的函数参数，N 为零。若没有与该函数参数关联的辅助数据，则 `sqlite3_get_auxdata(C,N)` 接口返回 NULL 指针。
 
-The sqlite3_set_auxdata(C,N,P,X) interface saves P as auxiliary data for the
-N-th argument of the application-defined function.  Subsequent
-calls to sqlite3_get_auxdata(C,N) return P from the most recent
-sqlite3_set_auxdata(C,N,P,X) call if the auxiliary data is still valid or
-NULL if the auxiliary data has been discarded.
-After each call to sqlite3_set_auxdata(C,N,P,X) where X is not NULL,
-SQLite will invoke the destructor function X with parameter P exactly
-once, when the auxiliary data is discarded.
-SQLite is free to discard the auxiliary data at any time, including:
+`sqlite3_set_auxdata(C,N,P,X)` 接口把 P 保存为应用定义函数第 N 个参数的辅助数据。若辅助数据仍然有效，则后续对 `sqlite3_get_auxdata(C,N)` 的调用返回最近一次 `sqlite3_set_auxdata(C,N,P,X)` 调用的 P；若辅助数据已被丢弃则返回 NULL。每次调用 X 非 NULL 的 `sqlite3_set_auxdata(C,N,P,X)` 后，SQLite 会在辅助数据被丢弃时用参数 P 恰好调用一次析构函数 X。SQLite 可随时丢弃辅助数据，包括：
 
--  when the corresponding function parameter changes, or
+-  当对应的函数参数改变时，或
 
--  when sqlite3_reset() or sqlite3_finalize() is called for the
-SQL statement, or
+-  当为 SQL 语句调用 `sqlite3_reset()` 或 `sqlite3_finalize()` 时，或
 
--  when sqlite3_set_auxdata() is invoked again on the same
-parameter, or
+-  当对同一参数再次调用 `sqlite3_set_auxdata()` 时，或
 
--  during the original sqlite3_set_auxdata() call when a memory
-allocation error occurs.
+-  在最初的 `sqlite3_set_auxdata()` 调用期间发生内存分配错误时。
 
--  during the original sqlite3_set_auxdata() call if the function
-is evaluated during query planning instead of during query execution,
-as sometimes happens with SQLITE_ENABLE_STAT4.
+-  在最初的 `sqlite3_set_auxdata()` 调用期间，若函数在查询规划期间而非查询执行期间被求值，正如使用 `SQLITE_ENABLE_STAT4` 时偶尔发生的情况。
 
-Note the last two bullets in particular.  The destructor X in
-sqlite3_set_auxdata(C,N,P,X) might be called immediately, before the
-sqlite3_set_auxdata() interface even returns.  Hence sqlite3_set_auxdata()
-should be called near the end of the function implementation and the
-function implementation should not make any use of P after
-sqlite3_set_auxdata() has been called.  Furthermore, a call to
-sqlite3_get_auxdata() that occurs immediately after a corresponding call
-to sqlite3_set_auxdata() might still return NULL if an out-of-memory
-condition occurred during the sqlite3_set_auxdata() call or if the
-function is being evaluated during query planning rather than during
-query execution.
+特别注意最后两项。`sqlite3_set_auxdata(C,N,P,X)` 中的析构函数 X 可能立即被调用，甚至在 `sqlite3_set_auxdata()` 接口返回之前。因此 `sqlite3_set_auxdata()` 应在函数实现接近结尾处调用，且函数实现不得在 `sqlite3_set_auxdata()` 被调用后使用 P。此外，若在 `sqlite3_set_auxdata()` 调用期间发生内存不足、或函数在查询规划期间而非查询执行期间被求值，则紧接在对应 `sqlite3_set_auxdata()` 调用之后的 `sqlite3_get_auxdata()` 调用仍可能返回 NULL。
 
-In practice, auxiliary data is preserved between function calls for
-function parameters that are compile-time constants, including literal
-values and parameters and expressions composed from the same.
+实际上，对编译期常量的函数参数（包括字面量值、参数及由它们组成的表达式），辅助数据会在函数调用之间被保留。
 
-The value of the N parameter to these interfaces should be non-negative.
-Future enhancements may make use of negative N values to define new
-kinds of function caching behavior.
+这些接口的 N 参数值应为非负。未来的增强可能利用负的 N 值定义新种类的函数缓存行为。
 
-These routines must be called from the same thread in which
-the SQL function is running.
+这些例程必须从 SQL 函数运行的同一线程调用。
 
-See also: sqlite3_get_clientdata() and sqlite3_set_clientdata().
+另见：`sqlite3_get_clientdata()` 和 `sqlite3_set_clientdata()`。
 
 ---
 
-## Database Connection Client Data
+## 数据库连接客户端数据（Database Connection Client Data）
 
 ```
-
 void *sqlite3_get_clientdata(sqlite3*,const char*);
 int sqlite3_set_clientdata(sqlite3*, const char*, void*, void(*)(void*));
-
 ```
 
-These functions are used to associate one or more named pointers
-with a database connection.
-A call to sqlite3_set_clientdata(D,N,P,X) causes the pointer P
-to be attached to database connection D using name N.  Subsequent
-calls to sqlite3_get_clientdata(D,N) will return a copy of pointer P
-or a NULL pointer if there were no prior calls to
-sqlite3_set_clientdata() with the same values of D and N.
-Names are compared using strcmp() and are thus case sensitive.
-It returns 0 on success and SQLITE_NOMEM on allocation failure.
+这些函数用于把一个或多个命名指针与数据库连接关联。调用 `sqlite3_set_clientdata(D,N,P,X)` 使指针 P 以名字 N 附着到数据库连接 D。后续对 `sqlite3_get_clientdata(D,N)` 的调用返回指针 P 的副本；若先前没有用相同的 D 和 N 调用过 `sqlite3_set_clientdata()`，则返回 NULL 指针。名字用 strcmp() 比较，因此区分大小写。成功时返回 0，分配失败时返回 `SQLITE_NOMEM`。
 
-If P and X are both non-NULL, then the destructor X is invoked with
-argument P on the first of the following occurrences:
+若 P 和 X 都非 NULL，则在以下首次发生时用参数 P 调用析构函数 X：
 
--  An out-of-memory error occurs during the call to
-sqlite3_set_clientdata() which attempts to register pointer P.
+-  调用 `sqlite3_set_clientdata()` 试图注册指针 P 期间发生内存不足错误。
 
--  A subsequent call to sqlite3_set_clientdata(D,N,P,X) is made
-with the same D and N parameters.
+-  之后用相同的 D 和 N 参数再次调用 `sqlite3_set_clientdata(D,N,P,X)`。
 
--  The database connection closes.  SQLite does not make any guarantees
-about the order in which destructors are called, only that all
-destructors will be called exactly once at some point during the
-database connection closing process.
+-  数据库连接关闭。SQLite 对析构函数的调用顺序不做任何保证，只保证在数据库连接关闭过程的某个时刻，所有析构函数都将被恰好调用一次。
 
-SQLite does not do anything with client data other than invoke
-destructors on the client data at the appropriate time.  The intended
-use for client data is to provide a mechanism for wrapper libraries
-to store additional information about an SQLite database connection.
+除在适当时候对客户端数据调用析构函数外，SQLite 对客户端数据不做任何其它处理。客户端数据的预期用途是提供一种机制，让包装库存储关于 SQLite 数据库连接的附加信息。
 
-There is no limit (other than available memory) on the number of different
-client data pointers (with different names) that can be attached to a
-single database connection.  However, the current implementation stores
-the content on a linked list.  Insert and retrieval performance will
-be proportional to the number of entries.  The design use case, and
-the use case for which the implementation is optimized, is
-that an application will store only small number of client data names,
-typically just one or two.  This interface is not intended to be a
-generalized key/value store for thousands or millions of keys.  It
-will work for that, but performance might be disappointing.
+可附着到单个数据库连接的不同客户端数据指针（名字不同）的数量没有限制（受可用内存约束）。不过，当前实现把内容存储在链表上。插入和取回性能与条目数成正比。设计用例、也是实现针对其优化的用例，是应用只存储少量客户端数据名，通常只有一两个。此接口并非设计为容纳数千或数百万个键的通用键/值存储。它能这样用，但性能可能令人失望。
 
-There is no way to enumerate the client data pointers
-associated with a database connection.  The N parameter can be thought
-of as a secret key such that only code that knows the secret key is able
-to access the associated data.
+无法枚举与数据库连接关联的客户端数据指针。N 参数可视为秘密钥匙，只有知道该秘密钥匙的代码才能访问关联数据。
 
-Security Warning:  These interfaces should not be exposed in scripting
-languages or in other circumstances where it might be possible for an
-attacker to invoke them.  Any agent that can invoke these interfaces
-can probably also take control of the process.
+安全警告：这些接口不应暴露在脚本语言或其它可能让攻击者调用它们的环境中。任何能调用这些接口的代理很可能也能控制进程。
 
-Database connection client data is only available for SQLite
-version 3.44.0 (2023-11-01) and later.
+数据库连接客户端数据仅对 SQLite 3.44.0（2023-11-01）及更高版本可用。
 
-See also: sqlite3_set_auxdata() and sqlite3_get_auxdata().
+另见：`sqlite3_set_auxdata()` 和 `sqlite3_get_auxdata()`。
 
 ---
 
-## Impose A Limit On Heap Size
+## 对堆大小施加限制（Impose A Limit On Heap Size）
 
 ```
-
 sqlite3_int64 sqlite3_soft_heap_limit64(sqlite3_int64 N);
 sqlite3_int64 sqlite3_hard_heap_limit64(sqlite3_int64 N);
-
 ```
 
-These interfaces impose limits on the amount of heap memory that will be
-used by all database connections within a single process.
+这些接口对单个进程内所有数据库连接将使用的堆内存总量施加限制。
 
-The sqlite3_soft_heap_limit64() interface sets and/or queries the
-soft limit on the amount of heap memory that may be allocated by SQLite.
-SQLite strives to keep heap memory utilization below the soft heap
-limit by reducing the number of pages held in the page cache
-as heap memory usages approaches the limit.
-The soft heap limit is "soft" because even though SQLite strives to stay
-below the limit, it will exceed the limit rather than generate
-an SQLITE_NOMEM error.  In other words, the soft heap limit
-is advisory only.
+`sqlite3_soft_heap_limit64()` 接口设置和/或查询 SQLite 可能分配的堆内存量的软限制。SQLite 通过缩减页缓存中持有的页数来努力使堆内存利用率低于软堆限制，因为堆内存使用量接近该限制。软堆限制是"软"的，因为即使 SQLite 努力保持低于限制，它也会超过该限制，而不是产生 `SQLITE_NOMEM` 错误。换句话说，软堆限制只是建议性的。
 
-The sqlite3_hard_heap_limit64(N) interface sets a hard upper bound of
-N bytes on the amount of memory that will be allocated.  The
-sqlite3_hard_heap_limit64(N) interface is similar to
-sqlite3_soft_heap_limit64(N) except that memory allocations will fail
-when the hard heap limit is reached.
+`sqlite3_hard_heap_limit64(N)` 接口把将分配的内存量设置为 N 字节的硬上限。`sqlite3_hard_heap_limit64(N)` 接口与 `sqlite3_soft_heap_limit64(N)` 类似，区别在于达到硬堆限制时内存分配会失败。
 
-The return value from both sqlite3_soft_heap_limit64() and
-sqlite3_hard_heap_limit64() is the size of
-the heap limit prior to the call, or negative in the case of an
-error.  If the argument N is negative
-then no change is made to the heap limit.  Hence, the current
-size of heap limits can be determined by invoking
-sqlite3_soft_heap_limit64(-1) or sqlite3_hard_heap_limit(-1).
+`sqlite3_soft_heap_limit64()` 和 `sqlite3_hard_heap_limit64()` 两者的返回值都是调用前堆限制的大小，出错时为负数。若参数 N 为负数，则堆限制不做任何更改。因此，可通过调用 `sqlite3_soft_heap_limit64(-1)` 或 `sqlite3_hard_heap_limit(-1)` 确定当前堆限制的大小。
 
-Setting the heap limits to zero disables the heap limiter mechanism.
+把堆限制设为零会禁用堆限制机制。
 
-The soft heap limit may not be greater than the hard heap limit.
-If the hard heap limit is enabled and if sqlite3_soft_heap_limit(N)
-is invoked with a value of N that is greater than the hard heap limit,
-the soft heap limit is set to the value of the hard heap limit.
-The soft heap limit is automatically enabled whenever the hard heap
-limit is enabled. When sqlite3_hard_heap_limit64(N) is invoked and
-the soft heap limit is outside the range of 1..N, then the soft heap
-limit is set to N.  Invoking sqlite3_soft_heap_limit64(0) when the
-hard heap limit is enabled makes the soft heap limit equal to the
-hard heap limit.
+软堆限制不得大于硬堆限制。若硬堆限制已启用、且 `sqlite3_soft_heap_limit(N)` 以大于硬堆限制的 N 值被调用，则软堆限制被设置为硬堆限制的值。只要硬堆限制被启用，软堆限制就被自动启用。当 `sqlite3_hard_heap_limit64(N)` 被调用且软堆限制在 1..N 范围之外时，软堆限制被设置为 N。硬堆限制启用时调用 `sqlite3_soft_heap_limit64(0)` 会使软堆限制等于硬堆限制。
 
-The memory allocation limits can also be adjusted using
-PRAGMA soft_heap_limit and PRAGMA hard_heap_limit.
+内存分配限制也可用 `PRAGMA soft_heap_limit` 和 `PRAGMA hard_heap_limit` 调整。
 
-The heap limits are not enforced in the current implementation
-if one or more of following conditions are true:
+若以下一个或多个条件成立，当前实现不强制堆限制：
 
--  The limit value is set to zero.
+-  限制值设为零。
 
--  Memory accounting is disabled using a combination of the
-sqlite3_config(SQLITE_CONFIG_MEMSTATUS,...) start-time option and
-the SQLITE_DEFAULT_MEMSTATUS compile-time option.
+-  内存统计被禁用，通过 `sqlite3_config(SQLITE_CONFIG_MEMSTATUS,...)` 启动期选项与 `SQLITE_DEFAULT_MEMSTATUS` 编译期选项组合实现。
 
--  An alternative page cache implementation is specified using
-sqlite3_config(SQLITE_CONFIG_PCACHE2,...).
+-  用 `sqlite3_config(SQLITE_CONFIG_PCACHE2,...)` 指定了替代页缓存实现。
 
--  The page cache allocates from its own memory pool supplied
-by sqlite3_config(SQLITE_CONFIG_PAGECACHE,...) rather than
-from the heap.
+-  页缓存从 `sqlite3_config(SQLITE_CONFIG_PAGECACHE,...)` 提供的自身内存池分配，而非从堆分配。
 
-The circumstances under which SQLite will enforce the heap limits may
-change in future releases of SQLite.
+SQLite 将强制堆限制的情形可能在未来版本中改变。
 
 ---
 
-## Initialize The SQLite Library
+## 初始化 SQLite 库（Initialize The SQLite Library）
 
 ```
-
 int sqlite3_initialize(void);
 int sqlite3_shutdown(void);
 int sqlite3_os_init(void);
 int sqlite3_os_end(void);
-
 ```
 
-The sqlite3_initialize() routine initializes the
-SQLite library.  The sqlite3_shutdown() routine
-deallocates any resources that were allocated by sqlite3_initialize().
-These routines are designed to aid in process initialization and
-shutdown on embedded systems.  Workstation applications using
-SQLite normally do not need to invoke either of these routines.
+`sqlite3_initialize()` 例程初始化 SQLite 库。`sqlite3_shutdown()` 例程释放 `sqlite3_initialize()` 分配的任何资源。这些例程旨在帮助嵌入式系统上的进程初始化和关闭。使用 SQLite 的工作站应用通常不需要调用这两个例程中的任何一个。
 
-A call to sqlite3_initialize() is an "effective" call if it is
-the first time sqlite3_initialize() is invoked during the lifetime of
-the process, or if it is the first time sqlite3_initialize() is invoked
-following a call to sqlite3_shutdown().  Only an effective call
-of sqlite3_initialize() does any initialization.  All other calls
-are harmless no-ops.
+若 `sqlite3_initialize()` 是进程生存期内第一次被调用，或是在调用 `sqlite3_shutdown()` 之后第一次被调用，则对该 `sqlite3_initialize()` 的调用是"有效"调用。只有 `sqlite3_initialize()` 的有效调用做初始化。所有其它调用都是无害的空操作。
 
-A call to sqlite3_shutdown() is an "effective" call if it is the first
-call to sqlite3_shutdown() since the last sqlite3_initialize().  Only
-an effective call to sqlite3_shutdown() does any deinitialization.
-All other valid calls to sqlite3_shutdown() are harmless no-ops.
+## 初始化 SQLite 库
 
-The sqlite3_initialize() interface is threadsafe, but sqlite3_shutdown()
-is not.  The sqlite3_shutdown() interface must only be called from a
-single thread.  All open database connections must be closed and all
-other SQLite resources must be deallocated prior to invoking
-sqlite3_shutdown().
+对 `sqlite3_shutdown()` 的调用，若它是自上次 `sqlite3_initialize()` 以来的第一次调用，则是"有效"调用。只有 `sqlite3_shutdown()` 的有效调用做反初始化。对 `sqlite3_shutdown()` 的所有其它有效调用都是无害的空操作。
 
-Among other things, sqlite3_initialize() will invoke
-sqlite3_os_init().  Similarly, sqlite3_shutdown()
-will invoke sqlite3_os_end().
+`sqlite3_initialize()` 接口是线程安全的，但 `sqlite3_shutdown()` 不是。`sqlite3_shutdown()` 接口只能从单个线程调用。调用 `sqlite3_shutdown()` 之前，所有打开的数据库连接都必须关闭，所有其它 SQLite 资源都必须释放。
 
-The sqlite3_initialize() routine returns SQLITE_OK on success.
-If for some reason, sqlite3_initialize() is unable to initialize
-the library (perhaps it is unable to allocate a needed resource such
-as a mutex) it returns an error code other than SQLITE_OK.
+除其它事项外，`sqlite3_initialize()` 会调用 `sqlite3_os_init()`。类似地，`sqlite3_shutdown()` 会调用 `sqlite3_os_end()`。
 
-The sqlite3_initialize() routine is called internally by many other
-SQLite interfaces so that an application usually does not need to
-invoke sqlite3_initialize() directly.  For example, sqlite3_open()
-calls sqlite3_initialize() so the SQLite library will be automatically
-initialized when sqlite3_open() is called if it has not been initialized
-already.  However, if SQLite is compiled with the SQLITE_OMIT_AUTOINIT
-compile-time option, then the automatic calls to sqlite3_initialize()
-are omitted and the application must call sqlite3_initialize() directly
-prior to using any other SQLite interface.  For maximum portability,
-it is recommended that applications always invoke sqlite3_initialize()
-directly prior to using any other SQLite interface.  Future releases
-of SQLite may require this.  In other words, the behavior exhibited
-when SQLite is compiled with SQLITE_OMIT_AUTOINIT might become the
-default behavior in some future release of SQLite.
+`sqlite3_initialize()` 例程成功时返回 `SQLITE_OK`。若由于某种原因 `sqlite3_initialize()` 无法初始化库（也许无法分配所需资源，如互斥锁），则返回 `SQLITE_OK` 之外的错误码。
 
-The sqlite3_os_init() routine does operating-system specific
-initialization of the SQLite library.  The sqlite3_os_end()
-routine undoes the effect of sqlite3_os_init().  Typical tasks
-performed by these routines include allocation or deallocation
-of static resources, initialization of global variables,
-setting up a default sqlite3_vfs module, or setting up
-a default configuration using sqlite3_config().
+`sqlite3_initialize()` 例程被许多其它 SQLite 接口在内部调用，因此应用通常无需直接调用 `sqlite3_initialize()`。例如，`sqlite3_open()` 调用 `sqlite3_initialize()`，因此若 SQLite 库尚未初始化，调用 `sqlite3_open()` 时会被自动初始化。不过，若 SQLite 以 `SQLITE_OMIT_AUTOINIT` 编译期选项编译，则省略对 `sqlite3_initialize()` 的自动调用，应用必须在使用任何其它 SQLite 接口之前直接调用 `sqlite3_initialize()`。为获得最大可移植性，建议应用在使用任何其它 SQLite 接口之前总是直接调用 `sqlite3_initialize()`。SQLite 的未来版本可能要求这样做。换句话说，SQLite 以 `SQLITE_OMIT_AUTOINIT` 编译时表现出的行为，可能成为未来某个 SQLite 版本的默认行为。
 
-The application should never invoke either sqlite3_os_init()
-or sqlite3_os_end() directly.  The application should only invoke
-sqlite3_initialize() and sqlite3_shutdown().  The sqlite3_os_init()
-interface is called automatically by sqlite3_initialize() and
-sqlite3_os_end() is called by sqlite3_shutdown().  Appropriate
-implementations for sqlite3_os_init() and sqlite3_os_end()
-are built into SQLite when it is compiled for Unix, Windows, or OS/2.
-When built for other platforms
-(using the SQLITE_OS_OTHER=1 compile-time
-option) the application must supply a suitable implementation for
-sqlite3_os_init() and sqlite3_os_end().  An application-supplied
-implementation of sqlite3_os_init() or sqlite3_os_end()
-must return SQLITE_OK on success and some other error code upon
-failure.
+`sqlite3_os_init()` 例程对 SQLite 库做操作系统特有的初始化。`sqlite3_os_end()` 例程撤销 `sqlite3_os_init()` 的效果。这些例程执行的典型任务包括分配或释放静态资源、初始化全局变量、设置默认 sqlite3_vfs 模块，或使用 `sqlite3_config()` 设置默认配置。
+
+应用永远不应直接调用 `sqlite3_os_init()` 或 `sqlite3_os_end()`。应用只应调用 `sqlite3_initialize()` 和 `sqlite3_shutdown()`。`sqlite3_os_init()` 接口由 `sqlite3_initialize()` 自动调用，`sqlite3_os_end()` 由 `sqlite3_shutdown()` 调用。为 Unix、Windows 或 OS/2 编译 SQLite 时，内置 `sqlite3_os_init()` 和 `sqlite3_os_end()` 的适当实现。为其它平台编译时（使用 `SQLITE_OS_OTHER=1` 编译期选项），应用必须为 `sqlite3_os_init()` 和 `sqlite3_os_end()` 提供适当实现。应用提供的 `sqlite3_os_init()` 或 `sqlite3_os_end()` 实现成功时须返回 `SQLITE_OK`，失败时返回其它错误码。
 
 ---
 
-## Interrupt A Long-Running Query
+## 中断长时间运行的查询（Interrupt A Long-Running Query）
 
 ```
-
 void sqlite3_interrupt(sqlite3*);
 int sqlite3_is_interrupted(sqlite3*);
-
 ```
 
-This function causes any pending database operation to abort and
-return at its earliest opportunity. This routine is typically
-called in response to a user action such as pressing "Cancel"
-or Ctrl-C where the user wants a long query operation to halt
-immediately.
+此函数使任何挂起的数据库操作尽早中止并返回。此例程通常在响应用户操作时调用，如按下 "Cancel" 或 Ctrl-C，用户希望长时间运行的查询操作立即停止。
 
-It is safe to call this routine from a thread different from the
-thread that is currently running the database operation.  But it
-is not safe to call this routine with a database connection that
-is closed or might close before sqlite3_interrupt() returns.
+从当前正在运行数据库操作的线程之外的线程调用此例程是安全的。但用已关闭或可能在该 `sqlite3_interrupt()` 返回之前关闭的数据库连接调用此例程不安全。
 
-If an SQL operation is very nearly finished at the time when
-sqlite3_interrupt() is called, then it might not have an opportunity
-to be interrupted and might continue to completion.
+若调用 `sqlite3_interrupt()` 时某 SQL 操作几乎完成，则它可能没有机会被中断，可能继续运行到完成。
 
-An SQL operation that is interrupted will return SQLITE_INTERRUPT.
-If the interrupted SQL operation is an INSERT, UPDATE, or DELETE
-that is inside an explicit transaction, then the entire transaction
-will be rolled back automatically.
+被中断的 SQL 操作返回 `SQLITE_INTERRUPT`。若被中断的 SQL 操作是显式事务内的 INSERT、UPDATE 或 DELETE，则整个事务被自动回滚。
 
-The sqlite3_interrupt(D) call is in effect until all currently running
-SQL statements on database connection D complete.  Any new SQL statements
-that are started after the sqlite3_interrupt() call and before the
-running statement count reaches zero are interrupted as if they had been
-running prior to the sqlite3_interrupt() call.  New SQL statements
-that are started after the running statement count reaches zero are
-not effected by the sqlite3_interrupt().
-A call to sqlite3_interrupt(D) that occurs when there are no running
-SQL statements is a no-op and has no effect on SQL statements
-that are started after the sqlite3_interrupt() call returns.
+`sqlite3_interrupt(D)` 调用的效果持续到数据库连接 D 上所有正在运行的 SQL 语句完成为止。在 `sqlite3_interrupt()` 调用之后、运行中语句计数达到零之前启动的任何新 SQL 语句，都会像它们在 `sqlite3_interrupt()` 调用之前运行一样被中断。运行中语句计数达到零之后启动的新 SQL 语句不受该 `sqlite3_interrupt()` 影响。没有运行中的 SQL 语句时对 `sqlite3_interrupt(D)` 的调用是空操作，对该 `sqlite3_interrupt()` 调用返回后启动的 SQL 语句没有影响。
 
-The sqlite3_is_interrupted(D) interface can be used to determine whether
-or not an interrupt is currently in effect for database connection D.
-It returns 1 if an interrupt is currently in effect, or 0 otherwise.
+`sqlite3_is_interrupted(D)` 接口可用于判断数据库连接 D 当前是否处于中断生效状态。当前生效返回 1，否则返回 0。
 
 ---
 
-## SQL Keyword Checking
+## SQL 关键字检查（SQL Keyword Checking）
 
 ```
-
 int sqlite3_keyword_count(void);
 int sqlite3_keyword_name(int,const char**,int*);
 int sqlite3_keyword_check(const char*,int);
-
 ```
 
-These routines provide access to the set of SQL language keywords
-recognized by SQLite.  Applications can use these routines to determine
-whether or not a specific identifier needs to be escaped (for example,
-by enclosing in double-quotes) so as not to confuse the parser.
+这些例程提供对 SQLite 识别的一组 SQL 语言关键字的访问。应用可用这些例程判断特定标识符是否需要转义（例如用双引号括起来），以免混淆解析器。
 
-The sqlite3_keyword_count() interface returns the number of distinct
-keywords understood by SQLite.
+`sqlite3_keyword_count()` 接口返回 SQLite 理解的独特关键字个数。
 
-The sqlite3_keyword_name(N,Z,L) interface finds the 0-based N-th keyword and
-makes *Z point to that keyword expressed as UTF8 and writes the number
-of bytes in the keyword into *L.  The string that *Z points to is not
-zero-terminated.  The sqlite3_keyword_name(N,Z,L) routine returns
-SQLITE_OK if N is within bounds and SQLITE_ERROR if not. If either Z
-or L are NULL or invalid pointers then calls to
-sqlite3_keyword_name(N,Z,L) result in undefined behavior.
+`sqlite3_keyword_name(N,Z,L)` 接口找到从 0 起算的第 N 个关键字，使 *Z 指向该关键字（以 UTF8 表示），并把关键字的字节数写入 *L。*Z 指向的字符串不是零结尾的。若 N 在界内，`sqlite3_keyword_name(N,Z,L)` 例程返回 `SQLITE_OK`，否则返回 `SQLITE_ERROR`。若 Z 或 L 是 NULL 或无效指针，则调用 `sqlite3_keyword_name(N,Z,L)` 导致未定义行为。
 
-The sqlite3_keyword_check(Z,L) interface checks to see whether or not
-the L-byte UTF8 identifier that Z points to is a keyword, returning non-zero
-if it is and zero if not.
+`sqlite3_keyword_check(Z,L)` 接口检查 Z 指向的 L 字节 UTF8 标识符是否是关键字，是则返回非零，否则返回零。
 
-The parser used by SQLite is forgiving.  It is often possible to use
-a keyword as an identifier as long as such use does not result in a
-parsing ambiguity.  For example, the statement
-"CREATE TABLE BEGIN(REPLACE,PRAGMA,END);" is accepted by SQLite, and
-creates a new table named "BEGIN" with three columns named
-"REPLACE", "PRAGMA", and "END".  Nevertheless, best practice is to avoid
-using keywords as identifiers.  Common techniques used to avoid keyword
-name collisions include:
+SQLite 使用的解析器是宽容的。只要不会导致解析歧义，通常可以把关键字用作标识符。例如，语句 "CREATE TABLE BEGIN(REPLACE,PRAGMA,END);" 被 SQLite 接受，创建一个名为 "BEGIN" 的新表，含三列 "REPLACE"、"PRAGMA" 和 "END"。尽管如此，最佳实践是避免把关键字用作标识符。避免关键字名冲突的常用技术包括：
 
--  Put all identifier names inside double-quotes.  This is the official
-SQL way to escape identifier names.
+-  把所有标识符名放在双引号内。这是官方 SQL 转义标识符名的方式。
 
--  Put identifier names inside [...].  This is not standard SQL,
-but it is what SQL Server does and so lots of programmers use this
-technique.
+-  把标识符名放在 [...] 内。这不是标准 SQL，但 SQL Server 这么做，所以很多程序员使用这种技术。
 
--  Begin every identifier with the letter "Z" as no SQL keywords start
-with "Z".
+-  让每个标识符以字母 "Z" 开头，因为没有 SQL 关键字以 "Z" 开头。
 
--  Include a digit somewhere in every identifier name.
+-  在每个标识符名中某个位置包含一个数字。
 
-Note that the number of keywords understood by SQLite can depend on
-compile-time options.  For example, "VACUUM" is not a keyword if
-SQLite is compiled with the -DSQLITE_OMIT_VACUUM option.  Also,
-new keywords may be added to future releases of SQLite.
+注意 SQLite 理解的关键字个数可能取决于编译期选项。例如，若 SQLite 以 `-DSQLITE_OMIT_VACUUM` 选项编译，则 "VACUUM" 不是关键字。另外，SQLite 的未来版本可能增加新关键字。
 
 ---
 
-## Run-Time Library Version Numbers
+## 运行时库版本号（Run-Time Library Version Numbers）
 
 ```
-
 SQLITE_EXTERN const char sqlite3_version[];
 const char *sqlite3_libversion(void);
 const char *sqlite3_sourceid(void);
 int sqlite3_libversion_number(void);
-
 ```
 
-These interfaces provide the same information as the SQLITE_VERSION,
-SQLITE_VERSION_NUMBER, and SQLITE_SOURCE_ID C preprocessor macros
-but are associated with the library instead of the header file.  Cautious
-programmers might include assert() statements in their application to
-verify that values returned by these interfaces match the macros in
-the header, and thus ensure that the application is
-compiled with matching library and header files.
+这些接口提供与 `SQLITE_VERSION`、`SQLITE_VERSION_NUMBER` 和 `SQLITE_SOURCE_ID` C 预处理宏相同的信息，但关联到库而非头文件。谨慎的程序员可能在应用中包含 assert() 语句，验证这些接口返回的值与头文件中的宏匹配，从而确保应用是用匹配的库和头文件编译的。
 
 ```
-
 assert( sqlite3_libversion_number()==SQLITE_VERSION_NUMBER );
 assert( strncmp(sqlite3_sourceid(),SQLITE_SOURCE_ID,80)==0 );
 assert( strcmp(sqlite3_libversion(),SQLITE_VERSION)==0 );
-
 ```
 
-The sqlite3_version[] string constant contains the text of the
-SQLITE_VERSION macro.  The sqlite3_libversion() function returns a
-pointer to the sqlite3_version[] string constant.  The sqlite3_libversion()
-function is provided for use in DLLs since DLL users usually do not have
-direct access to string constants within the DLL.  The
-sqlite3_libversion_number() function returns an integer equal to
-SQLITE_VERSION_NUMBER.  The sqlite3_sourceid() function returns
-a pointer to a string constant whose value is the same as the
-SQLITE_SOURCE_ID C preprocessor macro.  Except if SQLite is built
-using an edited copy of the amalgamation, then the last four characters
-of the hash might be different from SQLITE_SOURCE_ID.
+`sqlite3_version[]` 字符串常量包含 `SQLITE_VERSION` 宏的文本。`sqlite3_libversion()` 函数返回指向 `sqlite3_version[]` 字符串常量的指针。`sqlite3_libversion()` 函数供 DLL 使用，因为 DLL 用户通常无法直接访问 DLL 内的字符串常量。`sqlite3_libversion_number()` 函数返回等于 `SQLITE_VERSION_NUMBER` 的整数。`sqlite3_sourceid()` 函数返回指向字符串常量的指针，其值与 `SQLITE_SOURCE_ID` C 预处理宏相同。除非 SQLite 是用合并文件的编辑副本构建的，此时哈希的最后四个字符可能与 `SQLITE_SOURCE_ID` 不同。
 
-See also: sqlite_version() and sqlite_source_id().
+另见：`sqlite_version()` 和 `sqlite_source_id()`。
 
 ---
 
-## Memory Allocator Statistics
+## 内存分配器统计（Memory Allocator Statistics）
 
 ```
-
 sqlite3_int64 sqlite3_memory_used(void);
 sqlite3_int64 sqlite3_memory_highwater(int resetFlag);
-
 ```
 
-SQLite provides these two interfaces for reporting on the status
-of the sqlite3_malloc(), sqlite3_free(), and sqlite3_realloc()
-routines, which form the built-in memory allocation subsystem.
+SQLite 提供这两个接口，报告构成内置内存分配子系统的 `sqlite3_malloc()`、`sqlite3_free()` 和 `sqlite3_realloc()` 例程的状态。
 
-The sqlite3_memory_used() routine returns the number of bytes
-of memory currently outstanding (malloced but not freed).
-The sqlite3_memory_highwater() routine returns the maximum
-value of sqlite3_memory_used() since the high-water mark
-was last reset.  The values returned by sqlite3_memory_used() and
-sqlite3_memory_highwater() include any overhead
-added by SQLite in its implementation of sqlite3_malloc(),
-but not overhead added by any underlying system library
-routines that sqlite3_malloc() may call.
+`sqlite3_memory_used()` 例程返回当前未释放（已 malloc 但未 free）的字节数。`sqlite3_memory_highwater()` 例程返回自上次重置高水位标记以来 `sqlite3_memory_used()` 的最大值。`sqlite3_memory_used()` 和 `sqlite3_memory_highwater()` 返回的值包括 SQLite 在其 `sqlite3_malloc()` 实现中增加的任何开销，但不包括 `sqlite3_malloc()` 可能调用的任何底层系统库例程增加的开销。
 
-The memory high-water mark is reset to the current value of
-sqlite3_memory_used() if and only if the parameter to
-sqlite3_memory_highwater() is true.  The value returned
-by sqlite3_memory_highwater(1) is the high-water mark
-prior to the reset.
+当且仅当 `sqlite3_memory_highwater()` 的参数为真时，内存高水位标记被重置为 `sqlite3_memory_used()` 的当前值。`sqlite3_memory_highwater(1)` 返回的值是重置之前的高水位标记。
 
 ---
 
-## Formatted String Printing Functions
+## 格式化字符串打印函数（Formatted String Printing Functions）
 
 ```
-
 char *sqlite3_mprintf(const char*,...);
 char *sqlite3_vmprintf(const char*, va_list);
 char *sqlite3_snprintf(int,char*,const char*, ...);
 char *sqlite3_vsnprintf(int,char*,const char*, va_list);
-
 ```
 
-These routines are work-alikes of the "printf()" family of functions
-from the standard C library.
-These routines understand most of the common formatting options from
-the standard library printf()
-plus some additional non-standard formats (%q, %Q, %w, and %z).
-See the built-in printf() documentation for details.
+这些例程是标准 C 库 "printf()" 函数家族的同类实现。这些例程理解标准库 printf() 的大部分常见格式化选项，外加一些非标准的额外格式（%q、%Q、%w 和 %z）。详细信息参见内置 printf() 文档。
 
-The sqlite3_mprintf() and sqlite3_vmprintf() routines write their
-results into memory obtained from sqlite3_malloc64().
-The strings returned by these two routines should be
-released by sqlite3_free().  Both routines return a
-NULL pointer if sqlite3_malloc64() is unable to allocate enough
-memory to hold the resulting string.
+`sqlite3_mprintf()` 和 `sqlite3_vmprintf()` 例程把结果写入从 `sqlite3_malloc64()` 获得的内存。这两个例程返回的字符串应由 `sqlite3_free()` 释放。若 `sqlite3_malloc64()` 无法分配足够内存容纳结果字符串，两个例程都返回 NULL 指针。
 
-The sqlite3_snprintf() routine is similar to "snprintf()" from
-the standard C library.  The result is written into the
-buffer supplied as the second parameter whose size is given by
-the first parameter. Note that the order of the
-first two parameters is reversed from snprintf().  This is an
-historical accident that cannot be fixed without breaking
-backwards compatibility.  Note also that sqlite3_snprintf()
-returns a pointer to its buffer instead of the number of
-characters actually written into the buffer.  We admit that
-the number of characters written would be a more useful return
-value but we cannot change the implementation of sqlite3_snprintf()
-now without breaking compatibility.
+`sqlite3_snprintf()` 例程类似标准 C 库的 "snprintf()"。结果写入第二参数提供的缓冲区，缓冲区大小由第一参数给定。注意前两个参数的顺序与 snprintf() 相反。这是历史意外，无法在不破坏向后兼容性的情况下修正。还要注意 `sqlite3_snprintf()` 返回指向其缓冲区的指针，而非实际写入缓冲区的字符数。我们承认写入的字符数是更有用的返回值，但我们不能在不破坏兼容性的情况下现在改变 `sqlite3_snprintf()` 的实现。
 
-As long as the buffer size is greater than zero, sqlite3_snprintf()
-guarantees that the buffer is always zero-terminated.  The first
-parameter "n" is the total size of the buffer, including space for
-the zero terminator.  So the longest string that can be completely
-written will be n-1 characters.
+只要缓冲区大小大于零，`sqlite3_snprintf()` 保证缓冲区总是零结尾的。第一参数 "n" 是缓冲区的总大小，包括零终止符的空间。因此能完整写入的最长字符串是 n-1 个字符。
 
-The sqlite3_vsnprintf() routine is a varargs version of sqlite3_snprintf().
+`sqlite3_vsnprintf()` 例程是 `sqlite3_snprintf()` 的变参版本。
 
-See also:  built-in printf(), printf() SQL function
+另见：内置 printf()、printf() SQL 函数
 
 ---
 
-## Mutexes
+## 互斥锁（Mutexes）
 
 ```
-
 sqlite3_mutex *sqlite3_mutex_alloc(int);
 void sqlite3_mutex_free(sqlite3_mutex*);
 void sqlite3_mutex_enter(sqlite3_mutex*);
 int sqlite3_mutex_try(sqlite3_mutex*);
 void sqlite3_mutex_leave(sqlite3_mutex*);
 
+## 互斥锁
+
 ```
 
-The SQLite core uses these routines for thread
-synchronization. Though they are intended for internal
-use by SQLite, code that links against SQLite is
-permitted to use any of these routines.
+SQLite 核心用这些例程做线程同步。虽然它们是为 SQLite 内部使用而设计，但链接 SQLite 的代码允许使用这些例程中的任何一个。
 
-The SQLite source code contains multiple implementations
-of these mutex routines.  An appropriate implementation
-is selected automatically at compile-time.  The following
-implementations are available in the SQLite core:
+SQLite 源码包含这些互斥锁例程的多个实现。编译期自动选择适当的实现。SQLite 核心提供以下实现：
 
--    SQLITE_MUTEX_PTHREADS
+-   `SQLITE_MUTEX_PTHREADS`
 
--    SQLITE_MUTEX_W32
+-   `SQLITE_MUTEX_W32`
 
--    SQLITE_MUTEX_NOOP
+-   `SQLITE_MUTEX_NOOP`
 
-The SQLITE_MUTEX_NOOP implementation is a set of routines
-that does no real locking and is appropriate for use in
-a single-threaded application.  The SQLITE_MUTEX_PTHREADS and
-SQLITE_MUTEX_W32 implementations are appropriate for use on Unix
-and Windows.
+`SQLITE_MUTEX_NOOP` 实现是一组不做真实加锁的例程，适合在单线程应用中使用。`SQLITE_MUTEX_PTHREADS` 和 `SQLITE_MUTEX_W32` 实现适合在 Unix 和 Windows 上使用。
 
-The sqlite3_mutex_alloc() routine allocates a new
-mutex and returns a pointer to it. The sqlite3_mutex_alloc()
-routine returns NULL if it is unable to allocate the requested
-mutex.  The argument to sqlite3_mutex_alloc() must be one of these
-integer constants:
+`sqlite3_mutex_alloc()` 例程分配新互斥锁并返回指向它的指针。若 `sqlite3_mutex_alloc()` 无法分配所请求的互斥锁，则返回 NULL。`sqlite3_mutex_alloc()` 的参数必须是以下整型常量之一：
 
--   SQLITE_MUTEX_FAST
+-   `SQLITE_MUTEX_FAST`
 
--   SQLITE_MUTEX_RECURSIVE
+-   `SQLITE_MUTEX_RECURSIVE`
 
--   SQLITE_MUTEX_STATIC_MAIN
+-   `SQLITE_MUTEX_STATIC_MAIN`
 
--   SQLITE_MUTEX_STATIC_MEM
+-   `SQLITE_MUTEX_STATIC_MEM`
 
--   SQLITE_MUTEX_STATIC_OPEN
+-   `SQLITE_MUTEX_STATIC_OPEN`
 
--   SQLITE_MUTEX_STATIC_PRNG
+-   `SQLITE_MUTEX_STATIC_PRNG`
 
--   SQLITE_MUTEX_STATIC_LRU
+-   `SQLITE_MUTEX_STATIC_LRU`
 
--   SQLITE_MUTEX_STATIC_PMEM
+-   `SQLITE_MUTEX_STATIC_PMEM`
 
--   SQLITE_MUTEX_STATIC_APP1
+-   `SQLITE_MUTEX_STATIC_APP1`
 
--   SQLITE_MUTEX_STATIC_APP2
+-   `SQLITE_MUTEX_STATIC_APP2`
 
--   SQLITE_MUTEX_STATIC_APP3
+-   `SQLITE_MUTEX_STATIC_APP3`
 
--   SQLITE_MUTEX_STATIC_VFS1
+-   `SQLITE_MUTEX_STATIC_VFS1`
 
--   SQLITE_MUTEX_STATIC_VFS2
+-   `SQLITE_MUTEX_STATIC_VFS2`
 
--   SQLITE_MUTEX_STATIC_VFS3
+-   `SQLITE_MUTEX_STATIC_VFS3`
 
-The first two constants (SQLITE_MUTEX_FAST and SQLITE_MUTEX_RECURSIVE)
-cause sqlite3_mutex_alloc() to create
-a new mutex.  The new mutex is recursive when SQLITE_MUTEX_RECURSIVE
-is used but not necessarily so when SQLITE_MUTEX_FAST is used.
-The mutex implementation does not need to make a distinction
-between SQLITE_MUTEX_RECURSIVE and SQLITE_MUTEX_FAST if it does
-not want to.  SQLite will only request a recursive mutex in
-cases where it really needs one.  If a faster non-recursive mutex
-implementation is available on the host platform, the mutex subsystem
-might return such a mutex in response to SQLITE_MUTEX_FAST.
+前两个常量（`SQLITE_MUTEX_FAST` 和 `SQLITE_MUTEX_RECURSIVE`）使 `sqlite3_mutex_alloc()` 创建新互斥锁。使用 `SQLITE_MUTEX_RECURSIVE` 时新互斥锁是递归的，但使用 `SQLITE_MUTEX_FAST` 时不一定。若互斥锁实现不想区分 `SQLITE_MUTEX_RECURSIVE` 和 `SQLITE_MUTEX_FAST`，则无需区分。SQLite 只在确实需要递归互斥锁时才请求它。若宿主平台有更快的非递归互斥锁实现，互斥锁子系统可能对 `SQLITE_MUTEX_FAST` 返回这样的互斥锁。
 
-The other allowed parameters to sqlite3_mutex_alloc() (anything other
-than SQLITE_MUTEX_FAST and SQLITE_MUTEX_RECURSIVE) each return
-a pointer to a static preexisting mutex.  Nine static mutexes are
-used by the current version of SQLite.  Future versions of SQLite
-may add additional static mutexes.  Static mutexes are for internal
-use by SQLite only.  Applications that use SQLite mutexes should
-use only the dynamic mutexes returned by SQLITE_MUTEX_FAST or
-SQLITE_MUTEX_RECURSIVE.
+对 `sqlite3_mutex_alloc()` 的其它允许参数（`SQLITE_MUTEX_FAST` 和 `SQLITE_MUTEX_RECURSIVE` 之外的任何东西）都返回指向预存在静态互斥锁的指针。当前版本的 SQLite 使用九个静态互斥锁。SQLite 的未来版本可能增加更多静态互斥锁。静态互斥锁仅供 SQLite 内部使用。使用 SQLite 互斥锁的应用应只使用 `SQLITE_MUTEX_FAST` 或 `SQLITE_MUTEX_RECURSIVE` 返回的动态互斥锁。
 
-Note that if one of the dynamic mutex parameters (SQLITE_MUTEX_FAST
-or SQLITE_MUTEX_RECURSIVE) is used then sqlite3_mutex_alloc()
-returns a different mutex on every call.  For the static
-mutex types, the same mutex is returned on every call that has
-the same type number.
+注意，若使用动态互斥锁参数之一（`SQLITE_MUTEX_FAST` 或 `SQLITE_MUTEX_RECURSIVE`），则每次调用 `sqlite3_mutex_alloc()` 都返回不同的互斥锁。对静态互斥锁类型，每次调用都返回类型号相同的同一互斥锁。
 
-The sqlite3_mutex_free() routine deallocates a previously
-allocated dynamic mutex.  Attempting to deallocate a static
-mutex results in undefined behavior.
+`sqlite3_mutex_free()` 例程释放先前分配的动态互斥锁。尝试释放静态互斥锁导致未定义行为。
 
-The sqlite3_mutex_enter() and sqlite3_mutex_try() routines attempt
-to enter a mutex.  If another thread is already within the mutex,
-sqlite3_mutex_enter() will block and sqlite3_mutex_try() will return
-SQLITE_BUSY.  The sqlite3_mutex_try() interface returns SQLITE_OK
-upon successful entry.  Mutexes created using
-SQLITE_MUTEX_RECURSIVE can be entered multiple times by the same thread.
-In such cases, the
-mutex must be exited an equal number of times before another thread
-can enter.  If the same thread tries to enter any mutex other
-than an SQLITE_MUTEX_RECURSIVE more than once, the behavior is undefined.
+`sqlite3_mutex_enter()` 和 `sqlite3_mutex_try()` 例程尝试进入互斥锁。若另一线程已在该互斥锁内，`sqlite3_mutex_enter()` 会阻塞，`sqlite3_mutex_try()` 返回 `SQLITE_BUSY`。`sqlite3_mutex_try()` 接口成功进入时返回 `SQLITE_OK`。用 `SQLITE_MUTEX_RECURSIVE` 创建的互斥锁可被同一线程多次进入。此时，必须退出互斥锁同样多的次数，另一线程才能进入。若同一线程尝试多次进入非 `SQLITE_MUTEX_RECURSIVE` 的互斥锁，则行为未定义。
 
-Some systems (for example, Windows 95) do not support the operation
-implemented by sqlite3_mutex_try().  On those systems, sqlite3_mutex_try()
-will always return SQLITE_BUSY. In most cases the SQLite core only uses
-sqlite3_mutex_try() as an optimization, so this is acceptable
-behavior. The exceptions are unix builds that set the
-SQLITE_ENABLE_SETLK_TIMEOUT build option. In that case a working
-sqlite3_mutex_try() is required.
+某些系统（如 Windows 95）不支持 `sqlite3_mutex_try()` 实现的操作。在这些系统上，`sqlite3_mutex_try()` 总是返回 `SQLITE_BUSY`。大多数情况下 SQLite 核心只把 `sqlite3_mutex_try()` 用作优化，因此这是可接受的行为。例外是设置 `SQLITE_ENABLE_SETLK_TIMEOUT` 构建选项的 unix 构建。此时需要可用的 `sqlite3_mutex_try()`。
 
-The sqlite3_mutex_leave() routine exits a mutex that was
-previously entered by the same thread.   The behavior
-is undefined if the mutex is not currently entered by the
-calling thread or is not currently allocated.
+`sqlite3_mutex_leave()` 例程退出先前由同一线程进入的互斥锁。若该互斥锁当前未被调用线程进入、或当前未分配，则行为未定义。
 
-If the argument to sqlite3_mutex_enter(), sqlite3_mutex_try(),
-sqlite3_mutex_leave(), or sqlite3_mutex_free() is a NULL pointer,
-then any of the four routines behaves as a no-op.
+若传给 `sqlite3_mutex_enter()`、`sqlite3_mutex_try()`、`sqlite3_mutex_leave()` 或 `sqlite3_mutex_free()` 的参数是 NULL 指针，则这四个例程中的任何一个都表现为空操作。
 
-See also: sqlite3_mutex_held() and sqlite3_mutex_notheld().
+另见：`sqlite3_mutex_held()` 和 `sqlite3_mutex_notheld()`。
 
 ---
 
-## Mutex Verification Routines
+## 互斥锁验证例程（Mutex Verification Routines）
 
 ```
-
 #ifndef NDEBUG
 int sqlite3_mutex_held(sqlite3_mutex*);
 int sqlite3_mutex_notheld(sqlite3_mutex*);
 #endif
-
 ```
 
-The sqlite3_mutex_held() and sqlite3_mutex_notheld() routines
-are intended for use inside assert() statements.  The SQLite core
-never uses these routines except inside an assert() and applications
-are advised to follow the lead of the core.  The SQLite core only
-provides implementations for these routines when it is compiled
-with the SQLITE_DEBUG flag.  External mutex implementations
-are only required to provide these routines if SQLITE_DEBUG is
-defined and if NDEBUG is not defined.
+`sqlite3_mutex_held()` 和 `sqlite3_mutex_notheld()` 例程用于 assert() 语句内部。SQLite 核心除在 assert() 内从不使用这些例程，建议应用效仿核心的做法。SQLite 核心仅在以 `SQLITE_DEBUG` 标志编译时提供这些例程的实现。只有在定义了 `SQLITE_DEBUG` 且未定义 `NDEBUG` 时，才要求外部互斥锁实现提供这些例程。
 
-These routines should return true if the mutex in their argument
-is held or not held, respectively, by the calling thread.
+这些例程应返回真，当且仅当参数中的互斥锁分别被调用线程持有或未持有。
 
-The implementation is not required to provide versions of these
-routines that actually work. If the implementation does not provide working
-versions of these routines, it should at least provide stubs that always
-return true so that one does not get spurious assertion failures.
+实现不要求提供真正能用的这些例程版本。若实现不提供可用版本，它至少应提供总是返回真的桩，这样就不会出现虚假的断言失败。
 
-If the argument to sqlite3_mutex_held() is a NULL pointer then
-the routine should return 1.   This seems counter-intuitive since
-clearly the mutex cannot be held if it does not exist.  But
-the reason the mutex does not exist is because the build is not
-using mutexes.  And we do not want the assert() containing the
-call to sqlite3_mutex_held() to fail, so a non-zero return is
-the appropriate thing to do.  The sqlite3_mutex_notheld()
-interface should also return 1 when given a NULL pointer.
+若传给 `sqlite3_mutex_held()` 的参数是 NULL 指针，则该例程应返回 1。这似乎有悖直觉，因为显然不存在的互斥锁不可能被持有。但互斥锁不存在的原因是该构建不使用互斥锁。我们不希望包含 `sqlite3_mutex_held()` 调用的 assert() 失败，因此返回非零是适当的做法。给 `sqlite3_mutex_notheld()` 接口传 NULL 指针时也应返回 1。
 
 ---
 
-## Opening A New Database Connection
+## 打开新数据库连接（Opening A New Database Connection）
 
 ```
-
 int sqlite3_open(
-  const char *filename,   /* Database filename (UTF-8) */
-  sqlite3 **ppDb          /* OUT: SQLite db handle */
+  const char *filename,   /* 数据库文件名（UTF-8） */
+  sqlite3 **ppDb          /* OUT: SQLite 数据库句柄 */
 );
 int sqlite3_open16(
-  const void *filename,   /* Database filename (UTF-16) */
-  sqlite3 **ppDb          /* OUT: SQLite db handle */
+  const void *filename,   /* 数据库文件名（UTF-16） */
+  sqlite3 **ppDb          /* OUT: SQLite 数据库句柄 */
 );
 int sqlite3_open_v2(
-  const char *filename,   /* Database filename (UTF-8) */
-  sqlite3 **ppDb,         /* OUT: SQLite db handle */
-  int flags,              /* Flags */
-  const char *zVfs        /* Name of VFS module to use */
+  const char *filename,   /* 数据库文件名（UTF-8） */
+  sqlite3 **ppDb,         /* OUT: SQLite 数据库句柄 */
+  int flags,              /* 标志 */
+  const char *zVfs        /* 要使用的 VFS 模块名 */
 );
-
 ```
 
-These routines open an SQLite database file as specified by the
-filename argument. The filename argument is interpreted as UTF-8 for
-sqlite3_open() and sqlite3_open_v2() and as UTF-16 in the native byte
-order for sqlite3_open16(). A database connection handle is usually
-returned in *ppDb, even if an error occurs.  The only exception is that
-if SQLite is unable to allocate memory to hold the sqlite3 object,
-a NULL will be written into *ppDb instead of a pointer to the sqlite3
-object. If the database is opened (and/or created) successfully, then
-SQLITE_OK is returned.  Otherwise an error code is returned. The
-sqlite3_errmsg() or sqlite3_errmsg16() routines can be used to obtain
-an English language description of the error following a failure of any
-of the sqlite3_open() routines.
+这些例程按 filename 参数的指定打开 SQLite 数据库文件。对 `sqlite3_open()` 和 `sqlite3_open_v2()`，filename 参数解释为 UTF-8；对 `sqlite3_open16()`，解释为本机字节序的 UTF-16。即使出错，数据库连接句柄通常也返回在 *ppDb 中。唯一例外是，若 SQLite 无法分配内存容纳 sqlite3 对象，则向 *ppDb 写入 NULL 而非指向 sqlite3 对象的指针。若数据库成功打开（和/或创建），则返回 `SQLITE_OK`。否则返回错误码。任一 `sqlite3_open()` 例程失败后，可用 `sqlite3_errmsg()` 或 `sqlite3_errmsg16()` 例程获得错误的英文描述。
 
-The default encoding will be UTF-8 for databases created using
-sqlite3_open() or sqlite3_open_v2().  The default encoding for databases
-created using sqlite3_open16() will be UTF-16 in the native byte order.
+用 `sqlite3_open()` 或 `sqlite3_open_v2()` 创建的数据库，默认编码为 UTF-8。用 `sqlite3_open16()` 创建的数据库默认编码为本机字节序的 UTF-16。
 
-Whether or not an error occurs when it is opened, resources
-associated with the database connection handle should be released by
-passing it to sqlite3_close() when it is no longer required.
+无论打开时是否出错，不再需要数据库连接句柄时，都应把它传给 `sqlite3_close()` 释放其关联的资源。
 
-The sqlite3_open_v2() interface works like sqlite3_open()
-except that it accepts two additional parameters for additional control
-over the new database connection.  The flags parameter to
-sqlite3_open_v2() must include, at a minimum, one of the following
-three flag combinations:
+`sqlite3_open_v2()` 接口的工作方式与 `sqlite3_open()` 相同，区别在于它接受两个附加参数，用于对新的数据库连接做额外控制。传给 `sqlite3_open_v2()` 的 flags 参数至少须包含以下三种标志组合之一：
 
-SQLITE_OPEN_READONLY
-The database is opened in read-only mode.  If the database does
-not already exist, an error is returned.
+`SQLITE_OPEN_READONLY`
+以只读模式打开数据库。若数据库不存在，则返回错误。
 
-SQLITE_OPEN_READWRITE
-The database is opened for reading and writing if possible, or
-reading only if the file is write protected by the operating
-system.  In either case the database must already exist, otherwise
-an error is returned.  For historical reasons, if opening in
-read-write mode fails due to OS-level permissions, an attempt is
-made to open it in read-only mode. sqlite3_db_readonly() can be
-used to determine whether the database is actually
-read-write.
+`SQLITE_OPEN_READWRITE`
+尽可能以读写方式打开数据库；若文件被操作系统写保护，则只读方式打开。无论哪种情况数据库都必须已存在，否则返回错误。由于历史原因，若以读写方式打开因 OS 级权限失败，则尝试以只读方式打开。可用 `sqlite3_db_readonly()` 判断数据库是否实际可读写。
 
-SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
-The database is opened for reading and writing, and is created if
-it does not already exist. This is the behavior that is always used for
-sqlite3_open() and sqlite3_open16().
+`SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE`
+以读写方式打开数据库，若不存在则创建。这是 `sqlite3_open()` 和 `sqlite3_open16()` 总是使用的行为。
 
-In addition to the required flags, the following optional flags are
-also supported:
+除必需标志外，还支持以下可选标志：
 
-SQLITE_OPEN_URI
-The filename can be interpreted as a URI if this flag is set.
+`SQLITE_OPEN_URI`
+设置此标志后，文件名可解释为 URI。
 
-SQLITE_OPEN_MEMORY
-The database will be opened as an in-memory database.  The database
-is named by the "filename" argument for the purposes of cache-sharing,
-if shared cache mode is enabled, but the "filename" is otherwise ignored.
+`SQLITE_OPEN_MEMORY`
+以内存数据库方式打开数据库。为共享缓存的目的，数据库以 "filename" 参数命名（若启用共享缓存模式），但否则忽略 "filename"。
 
-SQLITE_OPEN_NOMUTEX
-The new database connection will use the "multi-thread"
-threading mode.  This means that separate threads are allowed
-to use SQLite at the same time, as long as each thread is using
-a different database connection.
+`SQLITE_OPEN_NOMUTEX`
+新的数据库连接将使用 "multi-thread" 线程模式。这意味着只要每个线程使用不同的数据库连接，不同线程可同时使用 SQLite。
 
-SQLITE_OPEN_FULLMUTEX
-The new database connection will use the "serialized"
-threading mode.  This means the multiple threads can safely
-attempt to use the same database connection at the same time.
-(Mutexes will block any actual concurrency, but in this mode
-there is no harm in trying.)
+`SQLITE_OPEN_FULLMUTEX`
+新的数据库连接将使用 "serialized" 线程模式。这意味着多个线程可安全地同时尝试使用同一数据库连接。（互斥锁会阻塞任何实际并发，但在此模式下尝试无害。）
 
-SQLITE_OPEN_SHAREDCACHE
-The database is opened with shared cache enabled, overriding
-the default shared cache setting provided by
-sqlite3_enable_shared_cache().
-The use of shared cache mode is discouraged and hence shared cache
-capabilities may be omitted from many builds of SQLite.  In such cases,
-this option is a no-op.
+`SQLITE_OPEN_SHAREDCACHE`
+启用共享缓存方式打开数据库，覆盖 `sqlite3_enable_shared_cache()` 提供的默认共享缓存设置。不鼓励使用共享缓存模式，因此许多 SQLite 构建可能省略共享缓存能力。此时此选项是空操作。
 
-SQLITE_OPEN_PRIVATECACHE
-The database is opened with shared cache disabled, overriding
-the default shared cache setting provided by
-sqlite3_enable_shared_cache().
+`SQLITE_OPEN_PRIVATECACHE`
+禁用共享缓存方式打开数据库，覆盖 `sqlite3_enable_shared_cache()` 提供的默认共享缓存设置。
 
- SQLITE_OPEN_EXRESCODE
-The database connection comes up in "extended result code mode".
-In other words, the database behaves as if
-sqlite3_extended_result_codes(db,1) were called on the database
-connection as soon as the connection is created. In addition to setting
-the extended result code mode, this flag also causes sqlite3_open_v2()
-to return an extended result code.
+ `SQLITE_OPEN_EXRESCODE`
+数据库连接以 "extended result code mode"（扩展结果码模式）建立。换句话说，数据库的行为就像在连接创建后立即对该连接调用 `sqlite3_extended_result_codes(db,1)`。除设置扩展结果码模式外，此标志还使 `sqlite3_open_v2()` 返回扩展结果码。
 
- SQLITE_OPEN_NOFOLLOW
-The database filename is not allowed to contain a symbolic link
+ `SQLITE_OPEN_NOFOLLOW`
+数据库文件名不允许包含符号链接。
 
-If the 3rd parameter to sqlite3_open_v2() is not one of the
-required combinations shown above optionally combined with other
-SQLITE_OPEN_* bits
-then the behavior is undefined.  Historic versions of SQLite
-have silently ignored surplus bits in the flags parameter to
-sqlite3_open_v2(), however that behavior might not be carried through
-into future versions of SQLite and so applications should not rely
-upon it.  Note in particular that the SQLITE_OPEN_EXCLUSIVE flag is a no-op
-for sqlite3_open_v2().  The SQLITE_OPEN_EXCLUSIVE does *not* cause
-the open to fail if the database already exists.  The SQLITE_OPEN_EXCLUSIVE
-flag is intended for use by the VFS interface only, and not
-by sqlite3_open_v2().
+若传给 `sqlite3_open_v2()` 的第三参数不是上面所示、可选地结合其它 `SQLITE_OPEN_*` 位的必需组合之一，则行为未定义。SQLite 的历史版本一直静默忽略 `sqlite3_open_v2()` 的 flags 参数中的多余位，但该行为可能不会延续到 SQLite 的未来版本，因此应用不应依赖它。特别注意，`SQLITE_OPEN_EXCLUSIVE` 标志对 `sqlite3_open_v2()` 是空操作。`SQLITE_OPEN_EXCLUSIVE` 不会因数据库已存在而使打开失败。`SQLITE_OPEN_EXCLUSIVE` 标志仅供 VFS 接口使用，而非 `sqlite3_open_v2()`。
 
-The fourth parameter to sqlite3_open_v2() is the name of the
-sqlite3_vfs object that defines the operating system interface that
-the new database connection should use.  If the fourth parameter is
-a NULL pointer then the default sqlite3_vfs object is used.
+传给 `sqlite3_open_v2()` 的第四参数是 sqlite3_vfs 对象的名字，该对象定义新数据库连接应使用的操作系统接口。若第四参数是 NULL 指针，则使用默认的 sqlite3_vfs 对象。
 
-If the filename is ":memory:", then a private, temporary in-memory database
-is created for the connection.  This in-memory database will vanish when
-the database connection is closed.  Future versions of SQLite might
-make use of additional special filenames that begin with the ":" character.
-It is recommended that when a database filename actually does begin with
-a ":" character you should prefix the filename with a pathname such as
-"./" to avoid ambiguity.
+若文件名是 ":memory:"，则为连接创建私有的临时内存数据库。关闭数据库连接时该内存数据库消失。SQLite 的未来版本可能利用以 ":" 字符开头的其它特殊文件名。建议当数据库文件名确实以 ":" 字符开头时，给文件名加 "./" 之类的前缀路径，以避免歧义。
 
-If the filename is an empty string, then a private, temporary
-on-disk database will be created.  This private database will be
-automatically deleted as soon as the database connection is closed.
+## 打开新数据库连接
 
-### URI Filenames
+若文件名是空字符串，则创建私有的临时磁盘数据库。关闭数据库连接后，该私有数据库被自动删除。
 
-If URI filename interpretation is enabled, and the filename argument
-begins with "file:", then the filename is interpreted as a URI. URI
-filename interpretation is enabled if the SQLITE_OPEN_URI flag is
-set in the third argument to sqlite3_open_v2(), or if it has
-been enabled globally using the SQLITE_CONFIG_URI option with the
-sqlite3_config() method or by the SQLITE_USE_URI compile-time option.
-URI filename interpretation is turned off
-by default, but future releases of SQLite might enable URI filename
-interpretation by default.  See "URI filenames" for additional
-information.
+### URI 文件名（URI Filenames）
 
-URI filenames are parsed according to RFC 3986. If the URI contains an
-authority, then it must be either an empty string or the string
-"localhost". If the authority is not an empty string or "localhost", an
-error is returned to the caller. The fragment component of a URI, if
-present, is ignored.
+若启用了 URI 文件名解释，且 filename 参数以 "file:" 开头，则文件名解释为 URI。当 `sqlite3_open_v2()` 第三参数设置了 `SQLITE_OPEN_URI` 标志、或已用 `sqlite3_config()` 方法的 `SQLITE_CONFIG_URI` 选项全局启用、或通过 `SQLITE_USE_URI` 编译期选项启用时，URI 文件名解释被启用。URI 文件名解释默认关闭，但 SQLite 的未来版本可能默认启用 URI 文件名解释。参见 "URI filenames" 了解更多信息。
 
-SQLite uses the path component of the URI as the name of the disk file
-which contains the database. If the path begins with a '/' character,
-then it is interpreted as an absolute path. If the path does not begin
-with a '/' (meaning that the authority section is omitted from the URI)
-then the path is interpreted as a relative path.
-On windows, the first component of an absolute path
-is a drive specification (e.g. "C:").
+URI 文件名按 RFC 3986 解析。若 URI 包含 authority，则它必须是空字符串或字符串 "localhost"。若 authority 不是空字符串或 "localhost"，则向调用者返回错误。URI 的 fragment 部分（若存在）被忽略。
 
-The query component of a URI may contain parameters that are interpreted
-either by SQLite itself, or by a custom VFS implementation.
-SQLite and its built-in VFSes interpret the
-following query parameters:
+SQLite 把 URI 的 path 组件用作包含数据库的磁盘文件的名字。若 path 以 '/' 字符开头，则解释为绝对路径。若 path 不以 '/' 开头（意味着 URI 中省略了 authority 段），则解释为相对路径。在 Windows 上，绝对路径的第一部分是驱动器说明（如 "C:"）。
 
--  vfs: The "vfs" parameter may be used to specify the name of
-a VFS object that provides the operating system interface that should
-be used to access the database file on disk. If this option is set to
-an empty string the default VFS object is used. Specifying an unknown
-VFS is an error. If sqlite3_open_v2() is used and the vfs option is
-present, then the VFS specified by the option takes precedence over
-the value passed as the fourth parameter to sqlite3_open_v2().
+URI 的 query 组件可能包含由 SQLite 自身、或由自定义 VFS 实现解释的参数。SQLite 及其内置 VFS 解释以下查询参数：
 
--  mode: The mode parameter may be set to either "ro", "rw",
-"rwc", or "memory". Attempting to set it to any other value is
-an error.
-If "ro" is specified, then the database is opened for read-only
-access, just as if the SQLITE_OPEN_READONLY flag had been set in the
-third argument to sqlite3_open_v2(). If the mode option is set to
-"rw", then the database is opened for read-write (but not create)
-access, as if SQLITE_OPEN_READWRITE (but not SQLITE_OPEN_CREATE) had
-been set. Value "rwc" is equivalent to setting both
-SQLITE_OPEN_READWRITE and SQLITE_OPEN_CREATE.  If the mode option is
-set to "memory" then a pure in-memory database that never reads
-or writes from disk is used. It is an error to specify a value for
-the mode parameter that is less restrictive than that specified by
-the flags passed in the third parameter to sqlite3_open_v2().
+-  vfs： "vfs" 参数可用于指定 VFS 对象的名字，该对象提供访问磁盘上数据库文件应使用的操作系统接口。若此选项设为空字符串，则使用默认 VFS 对象。指定未知的 VFS 是错误。若使用 `sqlite3_open_v2()` 且存在 vfs 选项，则该选项指定的 VFS 优先于传给 `sqlite3_open_v2()` 的第四参数的值。
 
--  cache: The cache parameter may be set to either "shared" or
-"private". Setting it to "shared" is equivalent to setting the
-SQLITE_OPEN_SHAREDCACHE bit in the flags argument passed to
-sqlite3_open_v2(). Setting the cache parameter to "private" is
-equivalent to setting the SQLITE_OPEN_PRIVATECACHE bit.
-If sqlite3_open_v2() is used and the "cache" parameter is present in
-a URI filename, its value overrides any behavior requested by setting
-SQLITE_OPEN_PRIVATECACHE or SQLITE_OPEN_SHAREDCACHE flag.
+-  mode： mode 参数可设为 "ro"、"rw"、"rwc" 或 "memory" 之一。尝试设为任何其它值是错误。指定 "ro" 时，以只读访问打开数据库，就像在 `sqlite3_open_v2()` 第三参数设置了 `SQLITE_OPEN_READONLY` 标志一样。mode 选项设为 "rw" 时，以读写（但不创建）访问打开数据库，就像设置了 `SQLITE_OPEN_READWRITE`（但不设置 `SQLITE_OPEN_CREATE`）一样。值 "rwc" 等价于同时设置 `SQLITE_OPEN_READWRITE` 和 `SQLITE_OPEN_CREATE`。mode 选项设为 "memory" 时，使用永不对磁盘读写或读写的纯内存数据库。指定比 `sqlite3_open_v2()` 第三参数传入的标志所指定更宽松的 mode 参数值是错误。
 
--  psow: The psow parameter indicates whether or not the
-powersafe overwrite property does or does not apply to the
-storage media on which the database file resides.
+-  cache： cache 参数可设为 "shared" 或 "private" 之一。设为 "shared" 等价于在传给 `sqlite3_open_v2()` 的 flags 参数中设置 `SQLITE_OPEN_SHAREDCACHE` 位。把 cache 参数设为 "private" 等价于设置 `SQLITE_OPEN_PRIVATECACHE` 位。若使用 `sqlite3_open_v2()` 且 URI 文件名中存在 "cache" 参数，其值覆盖设置 `SQLITE_OPEN_PRIVATECACHE` 或 `SQLITE_OPEN_SHAREDCACHE` 标志请求的任何行为。
 
--  nolock: The nolock parameter is a boolean query parameter
-which if set disables file locking in rollback journal modes.  This
-is useful for accessing a database on a filesystem that does not
-support locking.  Caution:  Database corruption might result if two
-or more processes write to the same database and any one of those
-processes uses nolock=1.
+-  psow： psow 参数指示断电安全覆盖属性是否适用于数据库文件所在的存储介质。
 
--  immutable: The immutable parameter is a boolean query
-parameter that indicates that the database file is stored on
-read-only media.  When immutable is set, SQLite assumes that the
-database file cannot be changed, even by a process with higher
-privilege, and so the database is opened read-only and all locking
-and change detection is disabled.  Caution: Setting the immutable
-property on a database file that does in fact change can result
-in incorrect query results and/or SQLITE_CORRUPT errors.
-See also: SQLITE_IOCAP_IMMUTABLE.
+-  nolock： nolock 参数是布尔查询参数，设置后禁用回滚日志模式下的文件锁定。这用于访问不支持锁定的文件系统上的数据库。注意：若两个或多个进程写入同一数据库、且其中任何一个进程使用 nolock=1，则可能导致数据库损坏。
 
-Specifying an unknown parameter in the query component of a URI is not an
-error.  Future versions of SQLite might understand additional query
-parameters.  See "query parameters with special meaning to SQLite" for
-additional information.
+-  immutable： immutable 参数是布尔查询参数，指示数据库文件存储在只读介质上。设置 immutable 时，SQLite 假定数据库文件不能改变，即使被更高权限的进程也不能，因此以只读方式打开数据库，并禁用所有锁定和变更检测。注意：对实际确实会改变的数据库文件设置 immutable 属性，可能导致错误的查询结果和/或 `SQLITE_CORRUPT` 错误。另见：`SQLITE_IOCAP_IMMUTABLE`。
 
-### URI filename examples
+在 URI 的 query 组件中指定未知参数不是错误。SQLite 的未来版本可能理解更多查询参数。参见 "query parameters with special meaning to SQLite" 了解更多信息。
+
+### URI 文件名示例（URI filename examples）
 
  URI filenames  Results
  file:data.db
@@ -12315,44 +7521,30 @@ that uses dot-files in place of posix advisory locking.
 An error. "readonly" is not a valid option for the "mode" parameter.
 Use "ro" instead:  "file:data.db?mode=ro".
 
-URI hexadecimal escape sequences (%HH) are supported within the path and
-query components of a URI. A hexadecimal escape sequence consists of a
-percent sign - "%" - followed by exactly two hexadecimal digits
-specifying an octet value. Before the path or query components of a
-URI filename are interpreted, they are encoded using UTF-8 and all
-hexadecimal escape sequences replaced by a single byte containing the
-corresponding octet. If this process generates an invalid UTF-8 encoding,
-the results are undefined.
+URI 十六进制转义序列（%HH）在 URI 的 path 和 query 组件内受支持。十六进制转义序列由百分号 "%" 加恰好两位十六进制数字组成，指定一个八位组值。在 URI 文件名的 path 或 query 组件被解释之前，先用 UTF-8 编码，所有十六进制转义序列被替换为包含相应八位组的单字节。若此过程产生无效的 UTF-8 编码，则结果未定义。
 
-Note to Windows users:  The encoding used for the filename argument
-of sqlite3_open() and sqlite3_open_v2() must be UTF-8, not whatever
-codepage is currently defined.  Filenames containing international
-characters must be converted to UTF-8 prior to passing them into
-sqlite3_open() or sqlite3_open_v2().
+Windows 用户注意：`sqlite3_open()` 和 `sqlite3_open_v2()` 的 filename 参数使用的编码必须是 UTF-8，而非当前定义的任何代码页。含国际字符的文件名在传入 `sqlite3_open()` 或 `sqlite3_open_v2()` 之前必须转换为 UTF-8。
 
-Note to Windows Runtime users:  The temporary directory must be set
-prior to calling sqlite3_open() or sqlite3_open_v2().  Otherwise, various
-features that require the use of temporary files may fail.
+Windows Runtime 用户注意：调用 `sqlite3_open()` 或 `sqlite3_open_v2()` 之前必须设置临时目录。否则，需要临时文件的各种特性可能失败。
 
-See also: sqlite3_temp_directory
+另见：`sqlite3_temp_directory`
 
 ---
 
-## The pre-update hook.
+## 预更新钩子（The pre-update hook）
 
 ```
-
 #if defined(SQLITE_ENABLE_PREUPDATE_HOOK)
 void *sqlite3_preupdate_hook(
   sqlite3 *db,
   void(*xPreUpdate)(
-    void *pCtx,                   /* Copy of third arg to preupdate_hook() */
-    sqlite3 *db,                  /* Database handle */
-    int op,                       /* SQLITE_UPDATE, DELETE or INSERT */
-    char const *zDb,              /* Database name */
-    char const *zName,            /* Table name */
-    sqlite3_int64 iKey1,          /* Rowid of row about to be deleted/updated */
-    sqlite3_int64 iKey2           /* New rowid value (for a rowid UPDATE) */
+    void *pCtx,                   /* 传给 preupdate_hook() 第三参数的副本 */
+    sqlite3 *db,                  /* 数据库句柄 */
+    int op,                       /* SQLITE_UPDATE、DELETE 或 INSERT */
+    char const *zDb,              /* 数据库名 */
+    char const *zName,            /* 表名 */
+    sqlite3_int64 iKey1,          /* 即将被删除/更新的行的 rowid */
+    sqlite3_int64 iKey2           /* 新 rowid 值（用于 rowid UPDATE） */
   ),
   void*
 );
@@ -12362,148 +7554,64 @@ int sqlite3_preupdate_depth(sqlite3 *);
 int sqlite3_preupdate_new(sqlite3 *, int, sqlite3_value **);
 int sqlite3_preupdate_blobwrite(sqlite3 *);
 #endif
-
 ```
 
-These interfaces are only available if SQLite is compiled using the
-SQLITE_ENABLE_PREUPDATE_HOOK compile-time option.
+这些接口仅在 SQLite 用 `SQLITE_ENABLE_PREUPDATE_HOOK` 编译期选项编译时可用。
 
-The sqlite3_preupdate_hook() interface registers a callback function
-that is invoked prior to each INSERT, UPDATE, and DELETE operation
-on a database table.
-At most one preupdate hook may be registered at a time on a single
-database connection; each call to sqlite3_preupdate_hook() overrides
-the previous setting.
-The preupdate hook is disabled by invoking sqlite3_preupdate_hook()
-with a NULL pointer as the second parameter.
-The third parameter to sqlite3_preupdate_hook() is passed through as
-the first parameter to callbacks.
+`sqlite3_preupdate_hook()` 接口注册回调函数，在数据库表上的每次 INSERT、UPDATE 和 DELETE 操作之前调用。单个数据库连接上最多可同时注册一个预更新钩子；每次调用 `sqlite3_preupdate_hook()` 都覆盖先前的设置。用 NULL 指针作为第二参数调用 `sqlite3_preupdate_hook()` 会禁用预更新钩子。`sqlite3_preupdate_hook()` 的第三参数作为第一参数传给回调。
 
-The preupdate hook only fires for changes to real database tables; the
-preupdate hook is not invoked for changes to virtual tables or to
-system tables like sqlite_sequence or sqlite_stat1.
+预更新钩子只对真实数据库表的更改触发；对虚拟表、或 sqlite_sequence 或 sqlite_stat1 之类的系统表的更改，不调用预更新钩子。
 
-The second parameter to the preupdate callback is a pointer to
-the database connection that registered the preupdate hook.
-The third parameter to the preupdate callback is one of the constants
-SQLITE_INSERT, SQLITE_DELETE, or SQLITE_UPDATE to identify the
-kind of update operation that is about to occur.
-The fourth parameter to the preupdate callback is the name of the
-database within the database connection that is being modified.  This
-will be "main" for the main database or "temp" for TEMP tables or
-the name given after the AS keyword in the ATTACH statement for attached
-databases.
-The fifth parameter to the preupdate callback is the name of the
-table that is being modified.
+预更新回调的第二参数是指向注册该预更新钩子的数据库连接的指针。预更新回调的第三参数是 `SQLITE_INSERT`、`SQLITE_DELETE` 或 `SQLITE_UPDATE` 常量之一，用于标识即将发生的更新操作种类。预更新回调的第四参数是正在被修改的数据库连接内数据库的名字。对主数据库这是 "main"，对 TEMP 表是 "temp"，对附加数据库是 ATTACH 语句中 AS 关键字之后给出的名字。预更新回调的第五参数是正在被修改的表名。
 
-For an UPDATE or DELETE operation on a rowid table, the sixth
-parameter passed to the preupdate callback is the initial rowid of the
-row being modified or deleted. For an INSERT operation on a rowid table,
-or any operation on a WITHOUT ROWID table, the value of the sixth
-parameter is undefined. For an INSERT or UPDATE on a rowid table the
-seventh parameter is the final rowid value of the row being inserted
-or updated. The value of the seventh parameter passed to the callback
-function is not defined for operations on WITHOUT ROWID tables, or for
-DELETE operations on rowid tables.
+对 rowid 表上的 UPDATE 或 DELETE 操作，传给预更新回调的第六参数是被修改或删除行的初始 rowid。对 rowid 表上的 INSERT 操作、或 WITHOUT ROWID 表上的任何操作，第六参数的值未定义。对 rowid 表上的 INSERT 或 UPDATE，第七参数是正在被插入或更新的行的最终 rowid 值。对 WITHOUT ROWID 表上的操作、或 rowid 表上的 DELETE 操作，传给回调函数的第七参数的值未定义。
 
-The sqlite3_preupdate_hook(D,C,P) function returns the P argument from
-the previous call on the same database connection D, or NULL for
-the first call on D.
+`sqlite3_preupdate_hook(D,C,P)` 函数返回同一数据库连接 D 上先前调用的 P 参数；若是对 D 的第一次调用则返回 NULL。
 
-The sqlite3_preupdate_old(), sqlite3_preupdate_new(),
-sqlite3_preupdate_count(), and sqlite3_preupdate_depth() interfaces
-provide additional information about a preupdate event. These routines
-may only be called from within a preupdate callback.  Invoking any of
-these routines from outside of a preupdate callback or with a
-database connection pointer that is different from the one supplied
-to the preupdate callback results in undefined and probably undesirable
-behavior.
+`sqlite3_preupdate_old()`、`sqlite3_preupdate_new()`、`sqlite3_preupdate_count()` 和 `sqlite3_preupdate_depth()` 接口提供关于预更新事件的附加信息。这些例程只能在预更新回调内调用。在预更新回调之外、或用与传给预更新回调的数据库连接指针不同的指针调用这些例程中的任何一个，都会导致未定义、且很可能不受欢迎的行为。
 
-The sqlite3_preupdate_count(D) interface returns the number of columns
-in the row that is being inserted, updated, or deleted.
+`sqlite3_preupdate_count(D)` 接口返回正在被插入、更新或删除的行中的列数。
 
-The sqlite3_preupdate_old(D,N,P) interface writes into P a pointer to
-a protected sqlite3_value that contains the value of the Nth column of
-the table row before it is updated.  The N parameter must be between 0
-and one less than the number of columns or the behavior will be
-undefined. This must only be used within SQLITE_UPDATE and SQLITE_DELETE
-preupdate callbacks; if it is used by an SQLITE_INSERT callback then the
-behavior is undefined.  The sqlite3_value that P points to
-will be destroyed when the preupdate callback returns.
+`sqlite3_preupdate_old(D,N,P)` 接口把指向受保护 sqlite3_value 的指针写入 P，该值包含表行被更新之前第 N 列的值。N 参数必须在 0 到列数减一之间，否则行为未定义。这只能在 `SQLITE_UPDATE` 和 `SQLITE_DELETE` 预更新回调内使用；若在 `SQLITE_INSERT` 回调中使用则行为未定义。P 指向的 sqlite3_value 在预更新回调返回时被销毁。
 
-The sqlite3_preupdate_new(D,N,P) interface writes into P a pointer to
-a protected sqlite3_value that contains the value of the Nth column of
-the table row after it is updated.  The N parameter must be between 0
-and one less than the number of columns or the behavior will be
-undefined. This must only be used within SQLITE_INSERT and SQLITE_UPDATE
-preupdate callbacks; if it is used by an SQLITE_DELETE callback then the
-behavior is undefined.  The sqlite3_value that P points to
-will be destroyed when the preupdate callback returns.
+`sqlite3_preupdate_new(D,N,P)` 接口把指向受保护 sqlite3_value 的指针写入 P，该值包含表行被更新之后第 N 列的值。N 参数必须在 0 到列数减一之间，否则行为未定义。这只能在 `SQLITE_INSERT` 和 `SQLITE_UPDATE` 预更新回调内使用；若在 `SQLITE_DELETE` 回调中使用则行为未定义。P 指向的 sqlite3_value 在预更新回调返回时被销毁。
 
-The sqlite3_preupdate_depth(D) interface returns 0 if the preupdate
-callback was invoked as a result of a direct insert, update, or delete
-operation; or 1 for inserts, updates, or deletes invoked by top-level
-triggers; or 2 for changes resulting from triggers called by top-level
-triggers; and so forth.
+`sqlite3_preupdate_depth(D)` 接口返回：若预更新回调因直接插入、更新或删除操作被调用则返回 0；对顶层触发器调用的插入、更新或删除返回 1；对顶层触发器调用的触发器引起的更改返回 2；依此类推。
 
-When the sqlite3_blob_write() API is used to update a blob column,
-the pre-update hook is invoked with SQLITE_DELETE, because
-the new values are not yet available. In this case, when a
-callback made with op==SQLITE_DELETE is actually a write using the
-sqlite3_blob_write() API, the sqlite3_preupdate_blobwrite() returns
-the index of the column being written. In other cases, where the
-pre-update hook is being invoked for some other reason, including a
-regular DELETE, sqlite3_preupdate_blobwrite() returns -1.
+当用 `sqlite3_blob_write()` API 更新 blob 列时，以 `SQLITE_DELETE` 调用预更新钩子，因为新值尚不可用。此时，当 op==`SQLITE_DELETE` 的回调实际上是用 `sqlite3_blob_write()` API 的写入时，`sqlite3_preupdate_blobwrite()` 返回正在被写入的列索引。在其它情况（包括常规 DELETE）下预更新钩子被调用时，`sqlite3_preupdate_blobwrite()` 返回 -1。
 
-See also:  sqlite3_update_hook()
+另见：`sqlite3_update_hook()`
 
 ---
 
-## Deprecated Tracing And Profiling Functions
+## 已废弃的跟踪和性能分析函数（Deprecated Tracing And Profiling Functions）
 
 ```
-
 void *sqlite3_trace(sqlite3*,
    void(*xTrace)(void*,const char*), void*);
 void *sqlite3_profile(sqlite3*,
    void(*xProfile)(void*,const char*,sqlite3_uint64), void*);
-
 ```
 
-These routines are deprecated. Use the sqlite3_trace_v2() interface
-instead of the routines described here.
+这些例程已废弃。用 `sqlite3_trace_v2()` 接口代替此处描述的例程。
 
-These routines register callback functions that can be used for
-tracing and profiling the execution of SQL statements.
+这些例程注册可用于跟踪和分析 SQL 语句执行情况的回调函数。
 
-The callback function registered by sqlite3_trace() is invoked at
-various times when an SQL statement is being run by sqlite3_step().
-The sqlite3_trace() callback is invoked with a UTF-8 rendering of the
-SQL statement text as the statement first begins executing.
-Additional sqlite3_trace() callbacks might occur
-as each triggered subprogram is entered.  The callbacks for triggers
-contain a UTF-8 SQL comment that identifies the trigger.
+`sqlite3_trace()` 注册的回调函数在 `sqlite3_step()` 运行 SQL 语句的不同时刻被调用。当语句首次开始执行时，用该 SQL 语句文本的 UTF-8 渲染调用 `sqlite3_trace()` 回调。进入每个触发的子程序时可能发生额外的 `sqlite3_trace()` 回调。触发器的回调包含标识触发器的 UTF-8 SQL 注释。
 
-The SQLITE_TRACE_SIZE_LIMIT compile-time option can be used to limit
-the length of bound parameter expansion in the output of sqlite3_trace().
+`SQLITE_TRACE_SIZE_LIMIT` 编译期选项可用于限制 `sqlite3_trace()` 输出中绑定参数展开的长度。
 
-The callback function registered by sqlite3_profile() is invoked
-as each SQL statement finishes.  The profile callback contains
-the original statement text and an estimate of wall-clock time
-of how long that statement took to run.  The profile callback
-time is in units of nanoseconds, however the current implementation
-is only capable of millisecond resolution so the six least significant
-digits in the time are meaningless.  Future versions of SQLite
-might provide greater resolution on the profiler callback.  Invoking
-either sqlite3_trace() or sqlite3_trace_v2() will cancel the
-profile callback.
+`sqlite3_profile()` 注册的回调函数在每条 SQL 语句完成时被调用。
+
+## 已废弃的跟踪和性能分析函数
+
+profile 回调包含原始语句文本、以及该语句运行所需墙钟时间的估计值。profile 回调的时间以纳秒为单位，但当前实现只能达到毫秒分辨率，因此时间中最低的六位数字无意义。SQLite 的未来版本可能为性能分析回调提供更高分辨率。调用 `sqlite3_trace()` 或 `sqlite3_trace_v2()` 会取消该 profile 回调。
 
 ---
 
-## Setting The Result Of An SQL Function
+## 设置 SQL 函数的结果（Setting The Result Of An SQL Function）
 
 ```
-
 void sqlite3_result_blob(sqlite3_context*, const void*, int, void(*)(void*));
 void sqlite3_result_blob64(sqlite3_context*,const void*,
                            sqlite3_uint64,void(*)(void*));
@@ -12526,162 +7634,45 @@ void sqlite3_result_value(sqlite3_context*, sqlite3_value*);
 void sqlite3_result_pointer(sqlite3_context*, void*,const char*,void(*)(void*));
 void sqlite3_result_zeroblob(sqlite3_context*, int n);
 int sqlite3_result_zeroblob64(sqlite3_context*, sqlite3_uint64 n);
-
 ```
 
-These routines are used by the xFunc or xFinal callbacks that
-implement SQL functions and aggregates.  See
-sqlite3_create_function() and sqlite3_create_function16()
-for additional information.
+这些例程由实现 SQL 函数和聚合函数的 xFunc 或 xFinal 回调使用。更多信息参见 `sqlite3_create_function()` 和 `sqlite3_create_function16()`。
 
-These functions work very much like the parameter binding family of
-functions used to bind values to host parameters in prepared statements.
-Refer to the SQL parameter documentation for additional information.
+这些函数的工作方式非常类似用于把值绑定到预编译语句宿主参数的参数绑定函数家族。更多信息参见 SQL 参数文档。
 
-The sqlite3_result_blob() interface sets the result from
-an application-defined function to be the BLOB whose content is pointed
-to by the second parameter and which is N bytes long where N is the
-third parameter.
+`sqlite3_result_blob()` 接口把应用定义函数的结果设置为 BLOB，其内容由第二参数指向、长度为 N 字节，其中 N 是第三参数。
 
-The sqlite3_result_zeroblob(C,N) and sqlite3_result_zeroblob64(C,N)
-interfaces set the result of the application-defined function to be
-a BLOB containing all zero bytes and N bytes in size.
+`sqlite3_result_zeroblob(C,N)` 和 `sqlite3_result_zeroblob64(C,N)` 接口把应用定义函数的结果设置为包含全零字节、大小为 N 字节的 BLOB。
 
-The sqlite3_result_double() interface sets the result from
-an application-defined function to be a floating point value specified
-by its 2nd argument.
+`sqlite3_result_double()` 接口把应用定义函数的结果设置为其第二参数指定的浮点值。
 
-The sqlite3_result_error() and sqlite3_result_error16() functions
-cause the implemented SQL function to throw an exception.
-SQLite uses the string pointed to by the
-2nd parameter of sqlite3_result_error() or sqlite3_result_error16()
-as the text of an error message.  SQLite interprets the error
-message string from sqlite3_result_error() as UTF-8. SQLite
-interprets the string from sqlite3_result_error16() as UTF-16 using
-the same byte-order determination rules as sqlite3_bind_text16().
-If the third parameter to sqlite3_result_error()
-or sqlite3_result_error16() is negative then SQLite takes as the error
-message all text up through the first zero character.
-If the third parameter to sqlite3_result_error() or
-sqlite3_result_error16() is non-negative then SQLite takes that many
-bytes (not characters) from the 2nd parameter as the error message.
-The sqlite3_result_error() and sqlite3_result_error16()
-routines make a private copy of the error message text before
-they return.  Hence, the calling function can deallocate or
-modify the text after they return without harm.
-The sqlite3_result_error_code() function changes the error code
-returned by SQLite as a result of an error in a function.  By default,
-the error code is SQLITE_ERROR.  A subsequent call to sqlite3_result_error()
-or sqlite3_result_error16() resets the error code to SQLITE_ERROR.
+`sqlite3_result_error()` 和 `sqlite3_result_error16()` 函数使实现的 SQL 函数抛出异常。SQLite 用 `sqlite3_result_error()` 或 `sqlite3_result_error16()` 第二参数指向的字符串作为错误消息文本。SQLite 把 `sqlite3_result_error()` 的错误消息字符串解释为 UTF-8。SQLite 用与 `sqlite3_bind_text16()` 相同的字节序判定规则，把 `sqlite3_result_error16()` 的字符串解释为 UTF-16。若 `sqlite3_result_error()` 或 `sqlite3_result_error16()` 的第三参数为负，则 SQLite 把直到第一个零字符之前的所有文本作为错误消息。若第三参数非负，则 SQLite 从第二参数取那么多字节（非字符）作为错误消息。`sqlite3_result_error()` 和 `sqlite3_result_error16()` 例程在返回前制作错误消息文本的私有副本。因此，调用函数可在它们返回后释放或修改该文本而无害。`sqlite3_result_error_code()` 函数改变 SQLite 因函数错误而返回的错误码。默认错误码是 `SQLITE_ERROR`。之后调用 `sqlite3_result_error()` 或 `sqlite3_result_error16()` 会把错误码重置为 `SQLITE_ERROR`。
 
-The sqlite3_result_error_toobig() interface causes SQLite to throw an
-error indicating that a string or BLOB is too long to represent.
+`sqlite3_result_error_toobig()` 接口使 SQLite 抛出错误，指示字符串或 BLOB 太长而无法表示。
 
-The sqlite3_result_error_nomem() interface causes SQLite to throw an
-error indicating that a memory allocation failed.
+`sqlite3_result_error_nomem()` 接口使 SQLite 抛出错误，指示内存分配失败。
 
-The sqlite3_result_int() interface sets the return value
-of the application-defined function to be the 32-bit signed integer
-value given in the 2nd argument.
-The sqlite3_result_int64() interface sets the return value
-of the application-defined function to be the 64-bit signed integer
-value given in the 2nd argument.
+`sqlite3_result_int()` 接口把应用定义函数的返回值设置为第二参数给出的 32 位有符号整数值。`sqlite3_result_int64()` 接口把应用定义函数的返回值设置为第二参数给出的 64 位有符号整数值。
 
-The sqlite3_result_null() interface sets the return value
-of the application-defined function to be NULL.
+`sqlite3_result_null()` 接口把应用定义函数的返回值设置为 NULL。
 
-The sqlite3_result_text(), sqlite3_result_text16(),
-sqlite3_result_text16le(), and sqlite3_result_text16be() interfaces
-set the return value of the application-defined function to be
-a text string which is represented as UTF-8, UTF-16 native byte order,
-UTF-16 little endian, or UTF-16 big endian, respectively.
-The sqlite3_result_text64(C,Z,N,D,E) interface sets the return value of an
-application-defined function to be a text string in an encoding
-specified the E parameter, which must be one
-of SQLITE_UTF8, SQLITE_UTF8_ZT, SQLITE_UTF16, SQLITE_UTF16BE,
-or SQLITE_UTF16LE.  The special value SQLITE_UTF8_ZT means that
-the result text is both UTF-8 and zero-terminated.  In other words,
-SQLITE_UTF8_ZT means that the Z array holds at least N+1 bytes and that
-the Z[N] is zero.
-SQLite takes the text result from the application from
-the 2nd parameter of the sqlite3_result_text* interfaces.
-If the 3rd parameter to any of the sqlite3_result_text* interfaces
-other than sqlite3_result_text64() is negative, then SQLite computes
-the string length itself by searching the 2nd parameter for the first
-zero character.
-If the 3rd parameter to the sqlite3_result_text* interfaces
-is non-negative, then as many bytes (not characters) of the text
-pointed to by the 2nd parameter are taken as the application-defined
-function result.  If the 3rd parameter is non-negative, then it
-must be the byte offset into the string where the NUL terminator would
-appear if the string were NUL terminated.  If any NUL characters occur
-in the string at a byte offset that is less than the value of the 3rd
-parameter, then the resulting string will contain embedded NULs and the
-result of expressions operating on strings with embedded NULs is undefined.
-If the 4th parameter to the sqlite3_result_text* interfaces
-or sqlite3_result_blob is a non-NULL pointer, then SQLite calls that
-function as the destructor on the text or BLOB result when it has
-finished using that result.
-If the 4th parameter to the sqlite3_result_text* interfaces or to
-sqlite3_result_blob is the special constant SQLITE_STATIC, then SQLite
-assumes that the text or BLOB result is in constant space and does not
-copy the content of the parameter nor call a destructor on the content
-when it has finished using that result.
-If the 4th parameter to the sqlite3_result_text* interfaces
-or sqlite3_result_blob is the special constant SQLITE_TRANSIENT
-then SQLite makes a copy of the result into space obtained
-from sqlite3_malloc() before it returns.
+`sqlite3_result_text()`、`sqlite3_result_text16()`、`sqlite3_result_text16le()` 和 `sqlite3_result_text16be()` 接口把应用定义函数的返回值分别设置为以 UTF-8、UTF-16 本机字节序、UTF-16 小端或 UTF-16 大端表示的文本字符串。`sqlite3_result_text64(C,Z,N,D,E)` 接口把应用定义函数的返回值设置为 E 参数指定编码的文本字符串，E 必须是 `SQLITE_UTF8`、`SQLITE_UTF8_ZT`、`SQLITE_UTF16`、`SQLITE_UTF16BE` 或 `SQLITE_UTF16LE` 之一。特殊值 `SQLITE_UTF8_ZT` 表示结果文本既是 UTF-8 又是零结尾的。换句话说，`SQLITE_UTF8_ZT` 表示 Z 数组至少持有 N+1 字节、且 Z[N] 为零。SQLite 从 `sqlite3_result_text*` 接口的第二参数取得来自应用的文本结果。若除 `sqlite3_result_text64()` 之外的任何 `sqlite3_result_text*` 接口的第三参数为负，则 SQLite 通过搜索第二参数中的第一个零字符自行计算字符串长度。若 `sqlite3_result_text*` 接口的第三参数非负，则取第二参数指向的文本那么多字节（非字符）作为应用定义函数的结果。若第三参数非负，则它必须是字符串中 NUL 终止符会出现位置的字节偏移（若字符串以 NUL 结尾）。若字符串在小于第三参数值的字节偏移处出现任何 NUL 字符，则结果字符串将包含内嵌 NUL，对含内嵌 NUL 字符串操作的结果未定义。若 `sqlite3_result_text*` 接口或 `sqlite3_result_blob` 的第四参数是非 NULL 指针，则 SQLite 在完成使用该结果后调用该函数作为文本或 BLOB 结果的析构函数。若第四参数是特殊常量 `SQLITE_STATIC`，则 SQLite 假定文本或 BLOB 结果位于常量空间，完成使用后不复制参数内容、也不对内容调用析构函数。若第四参数是特殊常量 `SQLITE_TRANSIENT`，则 SQLite 在返回前把结果复制到从 `sqlite3_malloc()` 获得的空间。
 
-For the sqlite3_result_text16(), sqlite3_result_text16le(), and
-sqlite3_result_text16be() routines, and for sqlite3_result_text64()
-when the encoding is not UTF8, if the input UTF16 begins with a
-byte-order mark (BOM, U+FEFF) then the BOM is removed from the
-string and the rest of the string is interpreted according to the
-byte-order specified by the BOM.  The byte-order specified by
-the BOM at the beginning of the text overrides the byte-order
-specified by the interface procedure.  So, for example, if
-sqlite3_result_text16le() is invoked with text that begins
-with bytes 0xfe, 0xff (a big-endian byte-order mark) then the
-first two bytes of input are skipped and the remaining input
-is interpreted as UTF16BE text.
+对 `sqlite3_result_text16()`、`sqlite3_result_text16le()` 和 `sqlite3_result_text16be()` 例程、以及编码非 UTF8 时的 `sqlite3_result_text64()`，若输入 UTF16 以字节序标记（BOM，U+FEFF）开头，则从字符串中移除 BOM，字符串的其余部分按 BOM 指定的字节序解释。文本开头的 BOM 指定的字节序覆盖接口例程指定的字节序。例如，若 `sqlite3_result_text16le()` 以字节 0xfe、0xff（大端字节序标记）开头的文本调用，则跳过输入的前两个字节，其余输入解释为 UTF16BE 文本。
 
-For UTF16 input text to the sqlite3_result_text16(),
-sqlite3_result_text16be(), sqlite3_result_text16le(), and
-sqlite3_result_text64() routines, if the text contains invalid
-UTF16 characters, the invalid characters might be converted
-into the unicode replacement character, U+FFFD.
+对传入 `sqlite3_result_text16()`、`sqlite3_result_text16be()`、`sqlite3_result_text16le()` 和 `sqlite3_result_text64()` 例程的 UTF16 输入文本，若文本包含无效的 UTF16 字符，则无效字符可能被转换为 unicode 替换字符 U+FFFD。
 
-The sqlite3_result_value() interface sets the result of
-the application-defined function to be a copy of the
-unprotected sqlite3_value object specified by the 2nd parameter.  The
-sqlite3_result_value() interface makes a copy of the sqlite3_value
-so that the sqlite3_value specified in the parameter may change or
-be deallocated after sqlite3_result_value() returns without harm.
-A protected sqlite3_value object may always be used where an
-unprotected sqlite3_value object is required, so either
-kind of sqlite3_value object can be used with this interface.
+`sqlite3_result_value()` 接口把应用定义函数的结果设置为第二参数指定的非受保护 sqlite3_value 对象的副本。`sqlite3_result_value()` 接口制作 sqlite3_value 的副本，因此参数中指定的 sqlite3_value 可在 `sqlite3_result_value()` 返回后改变或被释放而无害。需要非受保护 sqlite3_value 对象时，总是可以使用受保护的 sqlite3_value 对象，因此任一类型的 sqlite3_value 对象都可与此接口一起使用。
 
-The sqlite3_result_pointer(C,P,T,D) interface sets the result to an
-SQL NULL value, just like sqlite3_result_null(C), except that it
-also associates the host-language pointer P or type T with that
-NULL value such that the pointer can be retrieved within an
-application-defined SQL function using sqlite3_value_pointer().
-If the D parameter is not NULL, then it is a pointer to a destructor
-for the P parameter.  SQLite invokes D with P as its only argument
-when SQLite is finished with P.  The T parameter should be a static
-string and preferably a string literal. The sqlite3_result_pointer()
-routine is part of the pointer passing interface added for SQLite 3.20.0.
+`sqlite3_result_pointer(C,P,T,D)` 接口把结果设置为 SQL NULL 值，就像 `sqlite3_result_null(C)` 一样，区别在于它还把宿主语言指针 P 或类型 T 与该 NULL 值关联，使得可在应用定义 SQL 函数内用 `sqlite3_value_pointer()` 取回该指针。若 D 参数非 NULL，则它是 P 参数的析构函数指针。SQLite 完成使用 P 后用唯一参数 P 调用 D。T 参数应是静态字符串，最好是字符串字面量。`sqlite3_result_pointer()` 例程是 SQLite 3.20.0 加入的指针传递接口的一部分。
 
-If these routines are called from within a different thread
-than the one containing the application-defined function that received
-the sqlite3_context pointer, the results are undefined.
+若这些例程从包含收到 sqlite3_context 指针的应用定义函数之外的不同线程调用，则结果未定义。
 
 ---
 
-## SQLite Runtime Status
+## SQLite 运行时状态（SQLite Runtime Status）
 
 ```
-
 int sqlite3_status(int op, int *pCurrent, int *pHighwater, int resetFlag);
 int sqlite3_status64(
   int op,
@@ -12689,94 +7680,53 @@ int sqlite3_status64(
   sqlite3_int64 *pHighwater,
   int resetFlag
 );
-
 ```
 
-These interfaces are used to retrieve runtime status information
-about the performance of SQLite, and optionally to reset various
-highwater marks.  The first argument is an integer code for
-the specific parameter to measure.  Recognized integer codes
-are of the form SQLITE_STATUS_....
-The current value of the parameter is returned into *pCurrent.
-The highest recorded value is returned in *pHighwater.  If the
-resetFlag is true, then the highest record value is reset after
-*pHighwater is written.  Some parameters do not record the highest
-value.  For those parameters
-nothing is written into *pHighwater and the resetFlag is ignored.
-Other parameters record only the highwater mark and not the current
-value.  For these latter parameters nothing is written into *pCurrent.
+这些接口用于取回关于 SQLite 性能的运行时状态信息，并可选地重置各种高水位标记。第一参数是要测量的特定参数的整型代码。已识别的整型代码形式为 `SQLITE_STATUS_...`。参数的当前值返回在 *pCurrent 中。记录到的最高值返回在 *pHighwater 中。若 resetFlag 为真，则写入 *pHighwater 后重置最高记录值。某些参数不记录最高值。对这些参数，不向 *pHighwater 写入任何内容，resetFlag 被忽略。其它参数只记录高水位标记、不记录当前值。对后一类参数，不向 *pCurrent 写入任何内容。
 
-The sqlite3_status() and sqlite3_status64() routines return
-SQLITE_OK on success and a non-zero error code on failure.
+`sqlite3_status()` 和 `sqlite3_status64()` 例程成功时返回 `SQLITE_OK`，失败时返回非零错误码。
 
-If either the current value or the highwater mark is too large to
-be represented by a 32-bit integer, then the values returned by
-sqlite3_status() are undefined.
+若当前值或高水位标记太大而无法用 32 位整数表示，则 `sqlite3_status()` 返回的值未定义。
 
-See also: sqlite3_db_status()
+另见：`sqlite3_db_status()`
 
 ---
 
-## Prepared Statement Scan Status
+## 预编译语句扫描状态（Prepared Statement Scan Status）
 
 ```
-
 int sqlite3_stmt_scanstatus(
-  sqlite3_stmt *pStmt,      /* Prepared statement for which info desired */
-  int idx,                  /* Index of loop to report on */
-  int iScanStatusOp,        /* Information desired.  SQLITE_SCANSTAT_* */
-  void *pOut                /* Result written here */
+  sqlite3_stmt *pStmt,      /* 所需信息的预编译语句 */
+  int idx,                  /* 要报告的循环索引 */
+  int iScanStatusOp,        /* 所需信息。SQLITE_SCANSTAT_* */
+  void *pOut                /* 结果写入此处 */
 );
 int sqlite3_stmt_scanstatus_v2(
-  sqlite3_stmt *pStmt,      /* Prepared statement for which info desired */
-  int idx,                  /* Index of loop to report on */
-  int iScanStatusOp,        /* Information desired.  SQLITE_SCANSTAT_* */
-  int flags,                /* Mask of flags defined below */
-  void *pOut                /* Result written here */
+  sqlite3_stmt *pStmt,      /* 所需信息的预编译语句 */
+  int idx,                  /* 要报告的循环索引 */
+  int iScanStatusOp,        /* 所需信息。SQLITE_SCANSTAT_* */
+  int flags,                /* 下面定义的标志掩码 */
+  void *pOut                /* 结果写入此处 */
 );
-
 ```
 
-These interfaces return information about the predicted and measured
-performance for pStmt.  Advanced applications can use this
-interface to compare the predicted and the measured performance and
-issue warnings and/or rerun ANALYZE if discrepancies are found.
+这些接口返回关于 pStmt 预测性能和实测性能的信息。高级应用可用此接口比较预测与实测性能，若发现差异则发出警告和/或重新运行 ANALYZE。
 
-Since this interface is expected to be rarely used, it is only
-available if SQLite is compiled using the SQLITE_ENABLE_STMT_SCANSTATUS
-compile-time option.
+由于预期此接口很少使用，它仅在 SQLite 用 `SQLITE_ENABLE_STMT_SCANSTATUS` 编译期选项编译时可用。
 
-The "iScanStatusOp" parameter determines which status information to return.
-The "iScanStatusOp" must be one of the scanstatus options or the behavior
-of this interface is undefined. The requested measurement is written into
-a variable pointed to by the "pOut" parameter.
+"iScanStatusOp" 参数决定返回哪种状态信息。"iScanStatusOp" 必须是扫描状态选项之一，否则此接口的行为未定义。所请求的度量写入 "pOut" 参数指向的变量。
 
-The "flags" parameter must be passed a mask of flags. At present only
-one flag is defined - SQLITE_SCANSTAT_COMPLEX. If SQLITE_SCANSTAT_COMPLEX
-is specified, then status information is available for all elements
-of a query plan that are reported by "EXPLAIN QUERY PLAN" output. If
-SQLITE_SCANSTAT_COMPLEX is not specified, then only query plan elements
-that correspond to query loops (the "SCAN..." and "SEARCH..." elements of
-the EXPLAIN QUERY PLAN output) are available. Invoking API
-sqlite3_stmt_scanstatus() is equivalent to calling
-sqlite3_stmt_scanstatus_v2() with a zeroed flags parameter.
+"flags" 参数必须传入标志掩码。目前只定义了一个标志——`SQLITE_SCANSTAT_COMPLEX`。指定 `SQLITE_SCANSTAT_COMPLEX` 时，查询计划中由 "EXPLAIN QUERY PLAN" 输出报告的所有元素都有状态信息可用。未指定 `SQLITE_SCANSTAT_COMPLEX` 时，只有对应查询循环的查询计划元素（EXPLAIN QUERY PLAN 输出中的 "SCAN..." 和 "SEARCH..." 元素）可用。调用 `sqlite3_stmt_scanstatus()` API 等价于以清零的 flags 参数调用 `sqlite3_stmt_scanstatus_v2()`。
 
-Parameter "idx" identifies the specific query element to retrieve statistics
-for. Query elements are numbered starting from zero. A value of -1 may
-retrieve statistics for the entire query. If idx is out of range
-- less than -1 or greater than or equal to the total number of query
-elements used to implement the statement - a non-zero value is returned and
-the variable that pOut points to is unchanged.
+参数 "idx" 标识要取回统计信息的特定查询元素。查询元素从零开始编号。值 -1 可取回整个查询的统计信息。若 idx 越界——小于 -1 或大于等于实现该语句所用查询元素的总数——则返回非零值，且 pOut 指向的变量不变。
 
-See also: sqlite3_stmt_scanstatus_reset() and the
-nexec and ncycle columns of the bytecode virtual table.
+另见：`sqlite3_stmt_scanstatus_reset()` 以及 bytecode 虚拟表的 nexec 和 ncycle 列。
 
 ---
 
-## Add Content To A Dynamic String
+## 向动态字符串添加内容（Add Content To A Dynamic String）
 
 ```
-
 void sqlite3_str_appendf(sqlite3_str*, const char *zFormat, ...);
 void sqlite3_str_vappendf(sqlite3_str*, const char *zFormat, va_list);
 void sqlite3_str_append(sqlite3_str*, const char *zIn, int N);
@@ -12784,251 +7734,139 @@ void sqlite3_str_appendall(sqlite3_str*, const char *zIn);
 void sqlite3_str_appendchar(sqlite3_str*, int N, char C);
 void sqlite3_str_reset(sqlite3_str*);
 void sqlite3_str_truncate(sqlite3_str*,int N);
-
 ```
 
-These interfaces add or remove content to an sqlite3_str object
-previously obtained from sqlite3_str_new().
+## 向动态字符串添加内容（Add Content To A Dynamic String）
 
-The sqlite3_str_appendf(X,F,...) and
-sqlite3_str_vappendf(X,F,V) interfaces uses the built-in printf
-functionality of SQLite to append formatted text onto the end of
-sqlite3_str object X.
+这些接口向先前从 `sqlite3_str_new()` 获得的 sqlite3_str 对象添加或移除内容。
 
-The sqlite3_str_append(X,S,N) method appends exactly N bytes from string S
-onto the end of the sqlite3_str object X.  N must be non-negative.
-S must contain at least N non-zero bytes of content.  To append a
-zero-terminated string in its entirety, use the sqlite3_str_appendall()
-method instead.
+`sqlite3_str_appendf(X,F,...)` 和 `sqlite3_str_vappendf(X,F,V)` 接口使用 SQLite 的内置 printf 功能把格式化文本追加到 sqlite3_str 对象 X 的末尾。
 
-The sqlite3_str_appendall(X,S) method appends the complete content of
-zero-terminated string S onto the end of sqlite3_str object X.
+`sqlite3_str_append(X,S,N)` 方法把字符串 S 的恰好 N 字节追加到 sqlite3_str 对象 X 的末尾。N 必须非负。S 必须至少包含 N 个非零字节的内容。要完整追加零结尾字符串，改用 `sqlite3_str_appendall()` 方法。
 
-The sqlite3_str_appendchar(X,N,C) method appends N copies of the
-single-byte character C onto the end of sqlite3_str object X.
-This method can be used, for example, to add whitespace indentation.
+`sqlite3_str_appendall(X,S)` 方法把零结尾字符串 S 的完整内容追加到 sqlite3_str 对象 X 的末尾。
 
-The sqlite3_str_reset(X) method resets the string under construction
-inside sqlite3_str object X back to zero bytes in length.
+`sqlite3_str_appendchar(X,N,C)` 方法把 N 份单字节字符 C 追加到 sqlite3_str 对象 X 的末尾。此方法可用于添加空白缩进等。
 
-The sqlite3_str_truncate(X,N) method changes the length of the string
-under construction to be N bytes or less.  This routine is a no-op if
-N is negative or if the string is already N bytes or smaller in size.
+`sqlite3_str_reset(X)` 方法把 sqlite3_str 对象 X 内正在构造的字符串重置为零字节长度。
 
-These methods do not return a result code.  If an error occurs, that fact
-is recorded in the sqlite3_str object and can be recovered by a
-subsequent call to sqlite3_str_errcode(X).
+`sqlite3_str_truncate(X,N)` 方法把正在构造的字符串的长度改为 N 字节或更少。若 N 为负、或字符串已经为 N 字节或更小，则此例程是空操作。
+
+这些方法不返回结果码。若发生错误，该事实记录在 sqlite3_str 对象中，可通过之后调用 `sqlite3_str_errcode(X)` 取回。
 
 ---
 
-## Status Of A Dynamic String
+## 动态字符串的状态（Status Of A Dynamic String）
 
 ```
-
 int sqlite3_str_errcode(sqlite3_str*);
 int sqlite3_str_length(sqlite3_str*);
 char *sqlite3_str_value(sqlite3_str*);
-
 ```
 
-These interfaces return the current status of an sqlite3_str object.
+这些接口返回 sqlite3_str 对象的当前状态。
 
-If any prior errors have occurred while constructing the dynamic string
-in sqlite3_str X, then the sqlite3_str_errcode(X) method will return
-an appropriate error code.  The sqlite3_str_errcode(X) method returns
-SQLITE_NOMEM following any out-of-memory error, or
-SQLITE_TOOBIG if the size of the dynamic string exceeds
-SQLITE_MAX_LENGTH, or SQLITE_OK if there have been no errors.
+若构造 sqlite3_str X 中的动态字符串期间发生了任何先前错误，则 `sqlite3_str_errcode(X)` 方法返回适当的错误码。任何内存不足错误之后 `sqlite3_str_errcode(X)` 方法返回 `SQLITE_NOMEM`；若动态字符串大小超过 `SQLITE_MAX_LENGTH` 则返回 `SQLITE_TOOBIG`；若无错误则返回 `SQLITE_OK`。
 
-The sqlite3_str_length(X) method returns the current length, in bytes,
-of the dynamic string under construction in sqlite3_str object X.
-The length returned by sqlite3_str_length(X) does not include the
-zero-termination byte.
+`sqlite3_str_length(X)` 方法返回 sqlite3_str 对象 X 中正在构造的动态字符串的当前长度（以字节计）。`sqlite3_str_length(X)` 返回的长度不包括零终止字节。
 
-The sqlite3_str_value(X) method returns a pointer to the current
-content of the dynamic string under construction in X.  The value
-returned by sqlite3_str_value(X) is managed by the sqlite3_str object X
-and might be freed or altered by any subsequent method on the same
-sqlite3_str object.  Applications must not use the pointer returned by
-sqlite3_str_value(X) after any subsequent method call on the same
-object.  Applications may change the content of the string returned
-by sqlite3_str_value(X) as long as they do not write into any bytes
-outside the range of 0 to sqlite3_str_length(X) and do not read or
-write any byte after any subsequent sqlite3_str method call.
+`sqlite3_str_value(X)` 方法返回指向 X 中正在构造的动态字符串当前内容的指针。`sqlite3_str_value(X)` 返回的值由 sqlite3_str 对象 X 管理，可能被对同一 sqlite3_str 对象的任何后续方法释放或更改。应用不得在后续对同一对象的方法调用后使用 `sqlite3_str_value(X)` 返回的指针。应用可更改 `sqlite3_str_value(X)` 返回的字符串内容，只要它们不写入 0 到 `sqlite3_str_length(X)` 范围之外的任何字节、且不在任何后续 sqlite3_str 方法调用后读或写任何字节。
 
 ---
 
-## Finalize A Dynamic String
+## 终结动态字符串（Finalize A Dynamic String）
 
 ```
-
 char *sqlite3_str_finish(sqlite3_str*);
 void sqlite3_str_free(sqlite3_str*);
-
 ```
 
-The sqlite3_str_finish(X) interface destroys the sqlite3_str object X
-and returns a pointer to a memory buffer obtained from sqlite3_malloc64()
-that contains the constructed string.  The calling application should
-pass the returned value to sqlite3_free() to avoid a memory leak.
-The sqlite3_str_finish(X) interface may return a NULL pointer if any
-errors were encountered during construction of the string.  The
-sqlite3_str_finish(X) interface might also return a NULL pointer if the
-string in sqlite3_str object X is zero bytes long.
+`sqlite3_str_finish(X)` 接口销毁 sqlite3_str 对象 X，并返回指向从 `sqlite3_malloc64()` 获得的、包含已构造字符串的内存缓冲区指针。调用应用应把返回值传给 `sqlite3_free()` 以避免内存泄漏。若构造字符串期间遇到任何错误，`sqlite3_str_finish(X)` 接口可能返回 NULL 指针。若 sqlite3_str 对象 X 中的字符串为零字节长，`sqlite3_str_finish(X)` 接口也可能返回 NULL 指针。
 
-The sqlite3_str_free(X) interface destroys both the sqlite3_str object
-X and the string content it contains.  Calling sqlite3_str_free(X) is
-the equivalent of calling sqlite3_free(sqlite3_str_finish(X)).
+`sqlite3_str_free(X)` 接口销毁 sqlite3_str 对象 X 及其包含的字符串内容。调用 `sqlite3_str_free(X)` 等价于调用 `sqlite3_free(sqlite3_str_finish(X))`。
 
 ---
 
-## String Comparison
+## 字符串比较（String Comparison）
 
 ```
-
 int sqlite3_stricmp(const char *, const char *);
 int sqlite3_strnicmp(const char *, const char *, int);
-
 ```
 
-The sqlite3_stricmp() and sqlite3_strnicmp() APIs allow applications
-and extensions to compare the contents of two buffers containing UTF-8
-strings in a case-independent fashion, using the same definition of "case
-independence" that SQLite uses internally when comparing identifiers.
+`sqlite3_stricmp()` 和 `sqlite3_strnicmp()` API 允许应用和扩展以不区分大小写的方式比较两个含 UTF-8 字符串的缓冲区的内容，使用 SQLite 内部比较标识符时所用的相同"不区分大小写"定义。
 
 ---
 
-## Total Number Of Rows Modified
+## 被修改行的总数（Total Number Of Rows Modified）
 
 ```
-
 int sqlite3_total_changes(sqlite3*);
 sqlite3_int64 sqlite3_total_changes64(sqlite3*);
-
 ```
 
-These functions return the total number of rows inserted, modified or
-deleted by all INSERT, UPDATE or DELETE statements completed
-since the database connection was opened, including those executed as
-part of trigger programs. The two functions are identical except for the
-type of the return value and that if the number of rows modified by the
-connection exceeds the maximum value supported by type "int", then
-the return value of sqlite3_total_changes() is undefined. Executing
-any other type of SQL statement does not affect the value returned by
-sqlite3_total_changes().
+这些函数返回数据库连接打开以来所有已完成的 INSERT、UPDATE 或 DELETE 语句插入、修改或删除的行总数，包括作为触发器程序一部分执行的语句。这两个函数唯一区别在于返回值的类型，以及若连接修改的行数超过 "int" 类型支持的最大值，则 `sqlite3_total_changes()` 的返回值未定义。执行任何其它类型的 SQL 语句不影响 `sqlite3_total_changes()` 返回的值。
 
-Changes made as part of foreign key actions are included in the
-count, but those made as part of REPLACE constraint resolution are
-not. Changes to a view that are intercepted by INSTEAD OF triggers
-are not counted.
+外键动作导致的更改计入该计数，但 REPLACE 约束解决导致的更改不计入。被 INSTEAD OF 触发器拦截的视图更改不被计数。
 
-The sqlite3_total_changes(D) interface only reports the number
-of rows that changed due to SQL statement run against database
-connection D.  Any changes by other database connections are ignored.
-To detect changes against a database file from other database
-connections use the PRAGMA data_version command or the
-SQLITE_FCNTL_DATA_VERSION file control.
+`sqlite3_total_changes(D)` 接口只报告对数据库连接 D 运行的 SQL 语句导致的更改行数。其它数据库连接的任何更改都被忽略。要检测其它数据库连接对数据库文件的更改，使用 `PRAGMA data_version` 命令或 `SQLITE_FCNTL_DATA_VERSION` 文件控制。
 
-If a separate thread makes changes on the same database connection
-while sqlite3_total_changes() is running then the value
-returned is unpredictable and not meaningful.
+若 `sqlite3_total_changes()` 运行时另一线程对同一数据库连接做更改，则返回的值不可预测且无意义。
 
-See also:
+另见：
 
--  the sqlite3_changes() interface
+-  `sqlite3_changes()` 接口
 
--  the count_changes pragma
+-  count_changes pragma
 
--  the changes() SQL function
+-  changes() SQL 函数
 
--  the data_version pragma
+-  data_version pragma
 
--  the SQLITE_FCNTL_DATA_VERSION file control
+-  `SQLITE_FCNTL_DATA_VERSION` 文件控制
 
 ---
 
-## Obtain Values For URI Parameters
+## 获取 URI 参数的值（Obtain Values For URI Parameters）
 
 ```
-
 const char *sqlite3_uri_parameter(sqlite3_filename z, const char *zParam);
 int sqlite3_uri_boolean(sqlite3_filename z, const char *zParam, int bDefault);
 sqlite3_int64 sqlite3_uri_int64(sqlite3_filename, const char*, sqlite3_int64);
 const char *sqlite3_uri_key(sqlite3_filename z, int N);
-
 ```
 
-These are utility routines, useful to custom VFS implementations,
-that check if a database file was a URI that contained a specific query
-parameter, and if so obtains the value of that query parameter.
+这些是对自定义 VFS 实现有用的工具例程，检查数据库文件是否是含特定查询参数的 URI，若是则获取该查询参数的值。
 
-The first parameter to these interfaces (hereafter referred to
-as F) must be one of:
+这些接口的第一参数（下文称为 F）必须是以下之一：
 
--  A database filename pointer created by the SQLite core and
-passed into the xOpen() method of a VFS implementation, or
+-  SQLite 核心创建、并传入 VFS 实现的 xOpen() 方法的数据库文件名指针，或
 
--  A filename obtained from sqlite3_db_filename(), or
+-  从 `sqlite3_db_filename()` 获得的文件名，或
 
--  A new filename constructed using sqlite3_create_filename().
+-  用 `sqlite3_create_filename()` 构造的新文件名。
 
-If the F parameter is not one of the above, then the behavior is
-undefined and probably undesirable.  Older versions of SQLite were
-more tolerant of invalid F parameters than newer versions.
+若 F 参数不是上述之一，则行为未定义且很可能不受欢迎。SQLite 的旧版本比新版本更宽容无效的 F 参数。
 
-If F is a suitable filename (as described in the previous paragraph)
-and if P is the name of the query parameter, then
-sqlite3_uri_parameter(F,P) returns the value of the P
-parameter if it exists or a NULL pointer if P does not appear as a
-query parameter on F.  If P is a query parameter of F and it
-has no explicit value, then sqlite3_uri_parameter(F,P) returns
-a pointer to an empty string.
+若 F 是合适的文件名（如前一段所述）、且 P 是查询参数的名字，则 `sqlite3_uri_parameter(F,P)` 在 P 存在时返回 P 参数的值，若 P 不作为 F 的查询参数出现则返回 NULL 指针。若 P 是 F 的查询参数且没有显式值，则 `sqlite3_uri_parameter(F,P)` 返回指向空字符串的指针。
 
-The sqlite3_uri_boolean(F,P,B) routine assumes that P is a boolean
-parameter and returns true (1) or false (0) according to the value
-of P.  The sqlite3_uri_boolean(F,P,B) routine returns true (1) if the
-value of query parameter P is one of "yes", "true", or "on" in any
-case or if the value begins with a non-zero number.  The
-sqlite3_uri_boolean(F,P,B) routines returns false (0) if the value of
-query parameter P is one of "no", "false", or "off" in any case or
-if the value begins with a numeric zero.  If P is not a query
-parameter on F or if the value of P does not match any of the
-above, then sqlite3_uri_boolean(F,P,B) returns (B!=0).
+`sqlite3_uri_boolean(F,P,B)` 例程假定 P 是布尔参数，按 P 的值返回真（1）或假（0）。若查询参数 P 的值是任意大小写的 "yes"、"true" 或 "on" 之一、或以非零数字开头，则 `sqlite3_uri_boolean(F,P,B)` 例程返回真（1）。若查询参数 P 的值是任意大小写的 "no"、"false" 或 "off" 之一、或以数字零开头，则 `sqlite3_uri_boolean(F,P,B)` 例程返回假（0）。若 P 不是 F 的查询参数、或 P 的值与上述任何情况都不匹配，则 `sqlite3_uri_boolean(F,P,B)` 返回 (B!=0)。
 
-The sqlite3_uri_int64(F,P,D) routine converts the value of P into a
-64-bit signed integer and returns that integer, or D if P does not
-exist.  If the value of P is something other than an integer, then
-zero is returned.
+`sqlite3_uri_int64(F,P,D)` 例程把 P 的值转换为 64 位有符号整数并返回该整数，若 P 不存在则返回 D。若 P 的值不是整数，则返回零。
 
-The sqlite3_uri_key(F,N) returns a pointer to the name (not
-the value) of the N-th query parameter for filename F, or a NULL
-pointer if N is less than zero or greater than the number of query
-parameters minus 1.  The N value is zero-based so N should be 0 to obtain
-the name of the first query parameter, 1 for the second parameter, and
-so forth.
+`sqlite3_uri_key(F,N)` 返回指向文件名 F 第 N 个查询参数名（非值）的指针，若 N 小于零或大于查询参数数减一，则返回 NULL 指针。N 值从零起算，因此取第一个查询参数的名字 N 应为 0，取第二个参数 N 应为 1，依此类推。
 
-If F is a NULL pointer, then sqlite3_uri_parameter(F,P) returns NULL and
-sqlite3_uri_boolean(F,P,B) returns B.  If F is not a NULL pointer and
-is not a database file pathname pointer that the SQLite core passed
-into the xOpen VFS method, then the behavior of this routine is undefined
-and probably undesirable.
+若 F 是 NULL 指针，则 `sqlite3_uri_parameter(F,P)` 返回 NULL，`sqlite3_uri_boolean(F,P,B)` 返回 B。若 F 非 NULL、且不是 SQLite 核心传入 xOpen VFS 方法的数据库文件路径名指针，则此例程的行为未定义且很可能不受欢迎。
 
-Beginning with SQLite version 3.31.0 (2020-01-22) the input F
-parameter can also be the name of a rollback journal file or WAL file
-in addition to the main database file.  Prior to version 3.31.0, these
-routines would only work if F was the name of the main database file.
-When the F parameter is the name of the rollback journal or WAL file,
-it has access to all the same query parameters as were found on the
-main database file.
+从 SQLite 3.31.0（2020-01-22）起，输入 F 参数除了主数据库文件外，也可以是回滚日志文件或 WAL 文件的名字。在 3.31.0 之前，这些例程只在 F 是主数据库文件的名字时有效。F 参数是回滚日志或 WAL 文件的名字时，它能访问与主数据库文件上找到的完全相同的所有查询参数。
 
-See the URI filename documentation for additional information.
+更多信息参见 URI 文件名文档。
 
 ---
 
-## Obtaining SQL Values
+## 获取 SQL 值（Obtaining SQL Values）
 
 ```
-
 const void *sqlite3_value_blob(sqlite3_value*);
 double sqlite3_value_double(sqlite3_value*);
 int sqlite3_value_int(sqlite3_value*);
@@ -13044,280 +7882,137 @@ int sqlite3_value_type(sqlite3_value*);
 int sqlite3_value_numeric_type(sqlite3_value*);
 int sqlite3_value_nochange(sqlite3_value*);
 int sqlite3_value_frombind(sqlite3_value*);
-
 ```
 
-Summary:
+摘要：
 
-sqlite3_value_blob→BLOB value
-sqlite3_value_double→REAL value
-sqlite3_value_int→32-bit INTEGER value
-sqlite3_value_int64→64-bit INTEGER value
-sqlite3_value_pointer→Pointer value
-sqlite3_value_text→UTF-8 TEXT value
-sqlite3_value_text16→UTF-16 TEXT value in
-the native byteorder
-sqlite3_value_text16be→UTF-16be TEXT value
-sqlite3_value_text16le→UTF-16le TEXT value
-   
-sqlite3_value_bytes→Size of a BLOB
-or a UTF-8 TEXT in bytes
-sqlite3_value_bytes16  
-→  Size of UTF-16
-TEXT in bytes
-sqlite3_value_type→Default
-datatype of the value
-sqlite3_value_numeric_type  
-→  Best numeric datatype of the value
-sqlite3_value_nochange  
-→  True if the column is unchanged in an UPDATE
-against a virtual table.
-sqlite3_value_frombind  
-→  True if value originated from a bound parameter
+sqlite3_value_blob→BLOB 值
+sqlite3_value_double→REAL 值
+sqlite3_value_int→32 位 INTEGER 值
+sqlite3_value_int64→64 位 INTEGER 值
+sqlite3_value_pointer→指针值
+sqlite3_value_text→UTF-8 TEXT 值
+sqlite3_value_text16→本机字节序的 UTF-16 TEXT 值
+sqlite3_value_text16be→UTF-16be TEXT 值
+sqlite3_value_text16le→UTF-16le TEXT 值
 
-Details:
+sqlite3_value_bytes→BLOB 或 UTF-8 TEXT 的字节大小
+sqlite3_value_bytes16→UTF-16 TEXT 的字节大小
+sqlite3_value_type→值的默认数据类型
+sqlite3_value_numeric_type→值的最佳数值数据类型
+sqlite3_value_nochange→虚拟表 UPDATE 中该列是否未改变
+sqlite3_value_frombind→值是否源自绑定参数
 
-These routines extract type, size, and content information from
-protected sqlite3_value objects.  Protected sqlite3_value objects
-are used to pass parameter information into the functions that
-implement application-defined SQL functions and virtual tables.
+详情：
 
-These routines work only with protected sqlite3_value objects.
-Any attempt to use these routines on an unprotected sqlite3_value
-is not threadsafe.
+这些例程从受保护的 sqlite3_value 对象提取类型、大小和内容信息。受保护的 sqlite3_value 对象用于把参数信息传入实现应用定义 SQL 函数和虚拟表的函数。
 
-These routines work just like the corresponding column access functions
-except that these routines take a single protected sqlite3_value object
-pointer instead of a sqlite3_stmt* pointer and an integer column number.
+这些例程只处理受保护的 sqlite3_value 对象。对不受保护的 sqlite3_value 对象使用这些例程的任何尝试都不是线程安全的。
 
-The sqlite3_value_text16() interface extracts a UTF-16 string
-in the native byte-order of the host machine.  The
-sqlite3_value_text16be() and sqlite3_value_text16le() interfaces
-extract UTF-16 strings as big-endian and little-endian respectively.
+## 获取 SQL 值（Obtaining SQL Values）
 
-If sqlite3_value object V was initialized
-using sqlite3_bind_pointer(S,I,P,X,D) or sqlite3_result_pointer(C,P,X,D)
-and if X and Y are strings that compare equal according to strcmp(X,Y),
-then sqlite3_value_pointer(V,Y) will return the pointer P.  Otherwise,
-sqlite3_value_pointer(V,Y) returns a NULL. The sqlite3_bind_pointer()
-routine is part of the pointer passing interface added for SQLite 3.20.0.
+这些例程的工作方式与对应的列访问函数完全相同，区别在于这些例程接受单个受保护的 sqlite3_value 对象指针，而非 sqlite3_stmt* 指针加整型列号。
 
-The sqlite3_value_type(V) interface returns the
-datatype code for the initial datatype of the
-sqlite3_value object V. The returned value is one of SQLITE_INTEGER,
-SQLITE_FLOAT, SQLITE_TEXT, SQLITE_BLOB, or SQLITE_NULL.
-Other interfaces might change the datatype for an sqlite3_value object.
-For example, if the datatype is initially SQLITE_INTEGER and
-sqlite3_value_text(V) is called to extract a text value for that
-integer, then subsequent calls to sqlite3_value_type(V) might return
-SQLITE_TEXT.  Whether or not a persistent internal datatype conversion
-occurs is undefined and may change from one release of SQLite to the next.
+`sqlite3_value_text16()` 接口提取宿主机器本机字节序的 UTF-16 字符串。`sqlite3_value_text16be()` 和 `sqlite3_value_text16le()` 接口分别以大端和小端提取 UTF-16 字符串。
 
-The sqlite3_value_numeric_type() interface attempts to apply
-numeric affinity to the value.  This means that an attempt is
-made to convert the value to an integer or floating point.  If
-such a conversion is possible without loss of information (in other
-words, if the value is a string that looks like a number)
-then the conversion is performed.  Otherwise no conversion occurs.
-The datatype after conversion is returned.
+若 sqlite3_value 对象 V 是用 `sqlite3_bind_pointer(S,I,P,X,D)` 或 `sqlite3_result_pointer(C,P,X,D)` 初始化的，且 X 和 Y 是按 strcmp(X,Y) 比较相等的字符串，则 `sqlite3_value_pointer(V,Y)` 返回指针 P。否则，`sqlite3_value_pointer(V,Y)` 返回 NULL。`sqlite3_bind_pointer()` 例程是 SQLite 3.20.0 加入的指针传递接口的一部分。
 
-Within the xUpdate method of a virtual table, the
-sqlite3_value_nochange(X) interface returns true if and only if
-the column corresponding to X is unchanged by the UPDATE operation
-that the xUpdate method call was invoked to implement and if
-the prior xColumn method call that was invoked to extract
-the value for that column returned without setting a result (probably
-because it queried sqlite3_vtab_nochange() and found that the column
-was unchanging).  Within an xUpdate method, any value for which
-sqlite3_value_nochange(X) is true will in all other respects appear
-to be a NULL value.  If sqlite3_value_nochange(X) is invoked anywhere other
-than within an xUpdate method call for an UPDATE statement, then
-the return value is arbitrary and meaningless.
+`sqlite3_value_type(V)` 接口返回 sqlite3_value 对象 V 初始数据类型的类型码。返回的值是 `SQLITE_INTEGER`、`SQLITE_FLOAT`、`SQLITE_TEXT`、`SQLITE_BLOB` 或 `SQLITE_NULL` 之一。其它接口可能改变 sqlite3_value 对象的数据类型。例如，若数据类型初始为 `SQLITE_INTEGER`，且调用 `sqlite3_value_text(V)` 为该整数提取文本值，则之后对 `sqlite3_value_type(V)` 的调用可能返回 `SQLITE_TEXT`。是否发生持久的内建数据类型转换未定义，且可能随 SQLite 版本而变。
 
-The sqlite3_value_frombind(X) interface returns non-zero if the
-value X originated from one of the sqlite3_bind()
-interfaces.  If X comes from an SQL literal value, or a table column,
-or an expression, then sqlite3_value_frombind(X) returns zero.
+`sqlite3_value_numeric_type()` 接口尝试对值应用数值亲和性。这意味着尝试把值转换为整数或浮点数。若这种转换能在不丢失信息的情况下完成（换句话说，若值是看起来像数字的字符串），则执行转换。否则不发生转换。返回转换后的数据类型。
 
-Please pay particular attention to the fact that the pointer returned
-from sqlite3_value_blob(), sqlite3_value_text(), or
-sqlite3_value_text16() can be invalidated by a subsequent call to
-sqlite3_value_bytes(), sqlite3_value_bytes16(), sqlite3_value_text(),
-or sqlite3_value_text16().
+在虚拟表的 xUpdate 方法内，`sqlite3_value_nochange(X)` 接口在且仅在以下情况下返回真：X 对应的列未被该 xUpdate 方法调用被调用所实现的 UPDATE 操作改变，且先前为提取该列值而调用的 xColumn 方法未设置结果就返回（很可能因为它查询了 `sqlite3_vtab_nochange()` 并发现该列未改变）。在 xUpdate 方法内，`sqlite3_value_nochange(X)` 为真的任何值在所有其它方面都表现为 NULL 值。若在 UPDATE 语句的 xUpdate 方法调用之外的任何地方调用 `sqlite3_value_nochange(X)`，则返回值任意且无意义。
 
-These routines must be called from the same thread as
-the SQL function that supplied the sqlite3_value* parameters.
+`sqlite3_value_frombind(X)` 接口在值 X 源自某个 `sqlite3_bind()` 接口时返回非零。若 X 来自 SQL 字面量值、表列或表达式，则 `sqlite3_value_frombind(X)` 返回零。
 
-As long as the input parameter is correct, these routines can only
-fail if an out-of-memory error occurs while trying to do a
-UTF8→UTF16 or UTF16→UTF8 conversion.
-If an out-of-memory error occurs, then the return value from these
-routines is the same as if the column had contained an SQL NULL value.
-If the input sqlite3_value was not obtained from sqlite3_value_dup(),
-then valid SQL NULL returns can also be distinguished from
-out-of-memory errors after extracting the value
-by invoking the sqlite3_errcode() immediately after the suspicious
-return value is obtained and before any
-other SQLite interface is called on the same database connection.
-If the input sqlite3_value was obtained from sqlite3_value_dup() then
-it is disconnected from the database connection and so sqlite3_errcode()
-will not work.
-In that case, the only way to distinguish an out-of-memory
-condition from a true SQL NULL is to invoke sqlite3_value_type() on the
-input to see if it is NULL prior to trying to extract the value.
+请特别注意，`sqlite3_value_blob()`、`sqlite3_value_text()` 或 `sqlite3_value_text16()` 返回的指针会被后续调用 `sqlite3_value_bytes()`、`sqlite3_value_bytes16()`、`sqlite3_value_text()` 或 `sqlite3_value_text16()` 失效。
+
+这些例程必须从提供 sqlite3_value* 参数的 SQL 函数所在的同一线程调用。
+
+只要输入参数正确，这些例程只在尝试做 UTF8→UTF16 或 UTF16→UTF8 转换时发生内存不足错误才会失败。若发生内存不足错误，则这些例程的返回值与列含 SQL NULL 值时相同。若输入 sqlite3_value 不是从 `sqlite3_value_dup()` 获得的，则提取值后、在对同一数据库连接调用任何其它 SQLite 接口之前立即调用 `sqlite3_errcode()`，可区分有效的 SQL NULL 返回值与内存不足错误。若输入 sqlite3_value 从 `sqlite3_value_dup()` 获得，则它与数据库连接断开，因此 `sqlite3_errcode()` 无效。此时，区分内存不足条件与真正 SQL NULL 的唯一方法是在尝试提取值之前对输入调用 `sqlite3_value_type()` 看它是否为 NULL。
 
 ---
 
-## Copy And Free SQL Values
+## 复制和释放 SQL 值（Copy And Free SQL Values）
 
 ```
-
 sqlite3_value *sqlite3_value_dup(const sqlite3_value*);
 void sqlite3_value_free(sqlite3_value*);
-
 ```
 
-The sqlite3_value_dup(V) interface makes a copy of the sqlite3_value
-object V and returns a pointer to that copy.  The sqlite3_value returned
-is a protected sqlite3_value object even if the input is not.
-The sqlite3_value_dup(V) interface returns NULL if V is NULL or if a
-memory allocation fails. If V is a pointer value, then the result
-of sqlite3_value_dup(V) is a NULL value.
+`sqlite3_value_dup(V)` 接口制作 sqlite3_value 对象 V 的副本并返回指向该副本的指针。返回的 sqlite3_value 是受保护的 sqlite3_value 对象，即使输入不是。若 V 是 NULL 或内存分配失败，`sqlite3_value_dup(V)` 接口返回 NULL。若 V 是指针值，则 `sqlite3_value_dup(V)` 的结果是 NULL 值。
 
-The sqlite3_value_free(V) interface frees an sqlite3_value object
-previously obtained from sqlite3_value_dup().  If V is a NULL pointer
-then sqlite3_value_free(V) is a harmless no-op.
+`sqlite3_value_free(V)` 接口释放先前从 `sqlite3_value_dup()` 获得的 sqlite3_value 对象。若 V 是 NULL 指针，则 `sqlite3_value_free(V)` 是无害的空操作。
 
 ---
 
-## Virtual File System Objects
+## 虚拟文件系统对象（Virtual File System Objects）
 
 ```
-
 sqlite3_vfs *sqlite3_vfs_find(const char *zVfsName);
 int sqlite3_vfs_register(sqlite3_vfs*, int makeDflt);
 int sqlite3_vfs_unregister(sqlite3_vfs*);
-
 ```
 
-A virtual filesystem (VFS) is an sqlite3_vfs object
-that SQLite uses to interact
-with the underlying operating system.  Most SQLite builds come with a
-single default VFS that is appropriate for the host computer.
-New VFSes can be registered and existing VFSes can be unregistered.
-The following interfaces are provided.
+虚拟文件系统（VFS）是 SQLite 用来与底层操作系统交互的 sqlite3_vfs 对象。大多数 SQLite 构建带有一个适合宿主计算机的默认 VFS。可注册新 VFS、可注销现有 VFS。提供以下接口。
 
-The sqlite3_vfs_find() interface returns a pointer to a VFS given its name.
-Names are case sensitive.
-Names are zero-terminated UTF-8 strings.
-If there is no match, a NULL pointer is returned.
-If zVfsName is NULL then the default VFS is returned.
+`sqlite3_vfs_find()` 接口按名字返回 VFS 指针。名字区分大小写。名字是零结尾的 UTF-8 字符串。若无匹配，返回 NULL 指针。若 zVfsName 是 NULL，则返回默认 VFS。
 
-New VFSes are registered with sqlite3_vfs_register().
-Each new VFS becomes the default VFS if the makeDflt flag is set.
-The same VFS can be registered multiple times without injury.
-To make an existing VFS into the default VFS, register it again
-with the makeDflt flag set.  If two different VFSes with the
-same name are registered, the behavior is undefined.  If a
-VFS is registered with a name that is NULL or an empty string,
-then the behavior is undefined.
+新 VFS 用 `sqlite3_vfs_register()` 注册。若设置 makeDflt 标志，则每个新 VFS 成为默认 VFS。同一 VFS 可多次注册而无害。要把现有 VFS 变为默认 VFS，用设置 makeDflt 标志再次注册它。若注册了两个同名的不同 VFS，则行为未定义。若注册的 VFS 名字是 NULL 或空字符串，则行为未定义。
 
-Unregister a VFS with the sqlite3_vfs_unregister() interface.
-If the default VFS is unregistered, another VFS is chosen as
-the default.  The choice for the new VFS is arbitrary.
+用 `sqlite3_vfs_unregister()` 接口注销 VFS。若默认 VFS 被注销，则选择另一 VFS 作为默认。新 VFS 的选择是任意的。
 
 ---
 
-## Find all elements on the right-hand side of an IN constraint.
+## 找出 IN 约束右侧的所有元素（Find all elements on the right-hand side of an IN constraint）
 
 ```
-
 int sqlite3_vtab_in_first(sqlite3_value *pVal, sqlite3_value **ppOut);
 int sqlite3_vtab_in_next(sqlite3_value *pVal, sqlite3_value **ppOut);
-
 ```
 
-These interfaces are only useful from within the
-xFilter() method of a virtual table implementation.
-The result of invoking these interfaces from any other context
-is undefined and probably harmful.
+这些接口只在虚拟表实现的 xFilter() 方法内有用。从任何其它上下文调用这些接口的结果未定义且很可能有害。
 
-The X parameter in a call to sqlite3_vtab_in_first(X,P) or
-sqlite3_vtab_in_next(X,P) should be one of the parameters to the
-xFilter method which invokes these routines, and specifically
-a parameter that was previously selected for all-at-once IN constraint
-processing using the sqlite3_vtab_in() interface in the
-xBestIndex method.  If the X parameter is not
-an xFilter argument that was selected for all-at-once IN constraint
-processing, then these routines return SQLITE_ERROR.
+对 `sqlite3_vtab_in_first(X,P)` 或 `sqlite3_vtab_in_next(X,P)` 的调用中的 X 参数应是调用这些例程的 xFilter 方法的参数之一，具体来说是先前在 xBestIndex 方法中用 `sqlite3_vtab_in()` 接口选择为一次性 IN 约束处理的参数。若 X 不是为一次性 IN 约束处理选择的 xFilter 参数，则这些例程返回 `SQLITE_ERROR`。
 
-Use these routines to access all values on the right-hand side
-of the IN constraint using code like the following:
+用如下代码访问 IN 约束右侧的所有值：
 
 ```
-
-   for(rc=sqlite3_vtab_in_first(pList, &pVal;);
-       rc==SQLITE_OK && pVal;
-       rc=sqlite3_vtab_in_next(pList, &pVal;)
-   ){
-     // do something with pVal
-   }
-   if( rc!=SQLITE_DONE ){
-     // an error has occurred
-   }
-
+   for(rc=sqlite3_vtab_in_first(pList, &pVal);
+       rc==SQLITE_OK && pVal;
+       rc=sqlite3_vtab_in_next(pList, &pVal)
+   ){
+     // do something with pVal
+   }
+   if( rc!=SQLITE_DONE ){
+     // an error has occurred
+   }
 ```
 
-On success, the sqlite3_vtab_in_first(X,P) and sqlite3_vtab_in_next(X,P)
-routines return SQLITE_OK and set *P to point to the first or next value
-on the RHS of the IN constraint.  If there are no more values on the
-right hand side of the IN constraint, then *P is set to NULL and these
-routines return SQLITE_DONE.  The return value might be
-some other value, such as SQLITE_NOMEM, in the event of a malfunction.
+成功时，`sqlite3_vtab_in_first(X,P)` 和 `sqlite3_vtab_in_next(X,P)` 例程返回 `SQLITE_OK`，并把 *P 设为指向 IN 约束右侧的第一个或下一个值。若 IN 约束右侧没有更多值，则 *P 被设为 NULL，这些例程返回 `SQLITE_DONE`。出现故障时返回值可能是 `SQLITE_NOMEM` 之类的其它值。
 
-The *ppOut values returned by these routines are only valid until the
-next call to either of these routines or until the end of the xFilter
-method from which these routines were called.  If the virtual table
-implementation needs to retain the *ppOut values for longer, it must make
-copies.  The *ppOut values are protected.
+这些例程返回的 *ppOut 值只在下次调用这两个例程之一、或调用这些例程的 xFilter 方法结束之前有效。若虚拟表实现需要更久保留 *ppOut 值，必须制作副本。*ppOut 值是受保护的。
 
 ---
 
-## Win32 Specific Interface
+## Win32 专用接口（Win32 Specific Interface）
 
 ```
-
 int sqlite3_win32_set_directory(
-  unsigned long type, /* Identifier for directory being set or reset */
-  void *zValue        /* New value for directory being set or reset */
+  unsigned long type, /* 正在设置或重置的目录标识符 */
+  void *zValue        /* 正在设置或重置的目录的新值 */
 );
 int sqlite3_win32_set_directory8(unsigned long type, const char *zValue);
 int sqlite3_win32_set_directory16(unsigned long type, const void *zValue);
-
 ```
 
-These interfaces are available only on Windows.  The
-sqlite3_win32_set_directory interface is used to set the value associated
-with the sqlite3_temp_directory or sqlite3_data_directory variable, to
-zValue, depending on the value of the type parameter.  The zValue parameter
-should be NULL to cause the previous value to be freed via sqlite3_free;
-a non-NULL value will be copied into memory obtained from sqlite3_malloc
-prior to being used.  The sqlite3_win32_set_directory interface returns
-SQLITE_OK to indicate success, SQLITE_ERROR if the type is unsupported,
-or SQLITE_NOMEM if memory could not be allocated.  The value of the
-sqlite3_data_directory variable is intended to act as a replacement for
-the current directory on the sub-platforms of Win32 where that concept is
-not present, e.g. WinRT and UWP.  The sqlite3_win32_set_directory8 and
-sqlite3_win32_set_directory16 interfaces behave exactly the same as the
-sqlite3_win32_set_directory interface except the string parameter must be
-UTF-8 or UTF-16, respectively.
+这些接口只在 Windows 上可用。`sqlite3_win32_set_directory` 接口根据 type 参数的值，把与 sqlite3_temp_directory 或 sqlite3_data_directory 变量关联的值设置为 zValue。zValue 参数应为 NULL 以通过 sqlite3_free 释放先前值；非 NULL 值在使用前被复制到从 sqlite3_malloc 获得的内存。`sqlite3_win32_set_directory` 接口返回 `SQLITE_OK` 表示成功，type 不受支持时返回 `SQLITE_ERROR`，内存无法分配时返回 `SQLITE_NOMEM`。sqlite3_data_directory 变量的值旨在作为 Win32 子平台（如 WinRT 和 UWP）上不存在的当前目录的替代。`sqlite3_win32_set_directory8` 和 `sqlite3_win32_set_directory16` 接口的行为与 `sqlite3_win32_set_directory` 接口完全相同，区别仅在于字符串参数必须分别为 UTF-8 或 UTF-16。
 
 ---
 
-## Binding Values To Prepared Statements
+## 绑定值到预编译语句（Binding Values To Prepared Statements）
 
 ```
-
 int sqlite3_bind_blob(sqlite3_stmt*, int, const void*, int n, void(*)(void*));
 int sqlite3_bind_blob64(sqlite3_stmt*, int, const void*, sqlite3_uint64,
                         void(*)(void*));
@@ -13333,12 +8028,9 @@ int sqlite3_bind_value(sqlite3_stmt*, int, const sqlite3_value*);
 int sqlite3_bind_pointer(sqlite3_stmt*, int, void*, const char*,void(*)(void*));
 int sqlite3_bind_zeroblob(sqlite3_stmt*, int, int n);
 int sqlite3_bind_zeroblob64(sqlite3_stmt*, int, sqlite3_uint64);
-
 ```
 
-In the SQL statement text input to sqlite3_prepare_v2() and its variants,
-literals may be replaced by a parameter that matches one of the following
-templates:
+在输入给 `sqlite3_prepare_v2()` 及其变体的 SQL 语句文本中，字面量可被替换为匹配以下模板之一的参数：
 
 -   ?
 
@@ -13350,477 +8042,200 @@ templates:
 
 -   $VVV
 
-In the templates above, NNN represents an integer literal,
-and VVV represents an alphanumeric identifier.  The values of these
-parameters (also called "host parameter names" or "SQL parameters")
-can be set using the sqlite3_bind_*() routines defined here.
+在上述模板中，NNN 表示整数字面量，VVV 表示字母数字标识符。这些参数（也称"宿主参数名"或"SQL 参数"）的值可用此处定义的 `sqlite3_bind_*()` 例程设置。
 
-The first argument to the sqlite3_bind_*() routines is always
-a pointer to the sqlite3_stmt object returned from
-sqlite3_prepare_v2() or its variants.
+`sqlite3_bind_*()` 例程的第一参数总是从 `sqlite3_prepare_v2()` 或其变体返回的 sqlite3_stmt 对象指针。
 
-The second argument is the index of the SQL parameter to be set.
-The leftmost SQL parameter has an index of 1.  When the same named
-SQL parameter is used more than once, second and subsequent
-occurrences have the same index as the first occurrence.
-The index for named parameters can be looked up using the
-sqlite3_bind_parameter_index() API if desired.  The index
-for "?NNN" parameters is the value of NNN.
-The NNN value must be between 1 and the sqlite3_limit()
-parameter SQLITE_LIMIT_VARIABLE_NUMBER (default value: 32766).
+第二参数是要设置的 SQL 参数的索引。最左边的 SQL 参数索引为 1。同一命名 SQL 参数多次使用时，第二次及以后出现的索引与第一次出现相同。命名参数的索引可酌情用 `sqlite3_bind_parameter_index()` API 查找。"?NNN" 参数的索引是 NNN 的值。NNN 值必须在 1 到 `sqlite3_limit()` 参数 `SQLITE_LIMIT_VARIABLE_NUMBER`（默认值：32766）之间。
 
-The third argument is the value to bind to the parameter.
-If the third parameter to sqlite3_bind_text() or sqlite3_bind_text16()
-or sqlite3_bind_blob() is a NULL pointer then the fourth parameter
-is ignored and the end result is the same as sqlite3_bind_null().
-If the third parameter to sqlite3_bind_text() is not NULL, then
-it should be a pointer to well-formed UTF8 text.
-If the third parameter to sqlite3_bind_text16() is not NULL, then
-it should be a pointer to well-formed UTF16 text.
-If the third parameter to sqlite3_bind_text64() is not NULL, then
-it should be a pointer to a well-formed unicode string that is
-either UTF8 if the sixth parameter is SQLITE_UTF8 or SQLITE_UTF8_ZT,
-or UTF16 otherwise.
+第三参数是要绑定到参数的值。若传给 `sqlite3_bind_text()`、`sqlite3_bind_text16()` 或 `sqlite3_bind_blob()` 的第三参数是 NULL 指针，则忽略第四参数，最终结果与 `sqlite3_bind_null()` 相同。若传给 `sqlite3_bind_text()` 的第三参数非 NULL，则它应是指向结构良好的 UTF8 文本的指针。若传给 `sqlite3_bind_text16()` 的第三参数非 NULL，则它应是指向结构良好的 UTF16 文本的指针。若传给 `sqlite3_bind_text64()` 的第三参数非 NULL，则它应是指向结构良好的 unicode 字符串的指针，第六参数是 `SQLITE_UTF8` 或 `SQLITE_UTF8_ZT` 时该字符串为 UTF8，否则为 UTF16。
 
- The byte-order of
-UTF16 input text is determined by the byte-order mark (BOM, U+FEFF)
-found in the first character, which is removed, or in the absence of a BOM
-the byte order is the native byte order of the host
-machine for sqlite3_bind_text16() or the byte order specified in
-the 6th parameter for sqlite3_bind_text64().
-If UTF16 input text contains invalid unicode
-characters, then SQLite might change those invalid characters
-into the unicode replacement character: U+FFFD.
+UTF16 输入文本的字节序由第一个字符中发现的字节序标记（BOM，U+FEFF）决定（该标记被移除）；若无 BOM，则字节序为宿主机器本机字节序（对 `sqlite3_bind_text16()`）或第六参数指定的字节序（对 `sqlite3_bind_text64()`）。
 
-In those routines that have a fourth argument, its value is the
-number of bytes in the parameter.  To be clear: the value is the
-number of bytes in the value, not the number of characters.
-If the fourth parameter to sqlite3_bind_text() or sqlite3_bind_text16()
-is negative, then the length of the string is
-the number of bytes up to the first zero terminator.
-If the fourth parameter to sqlite3_bind_blob() is negative, then
-the behavior is undefined.
-If a non-negative fourth parameter is provided to sqlite3_bind_text()
-or sqlite3_bind_text16() or sqlite3_bind_text64() then
-that parameter must be the byte offset
-where the NUL terminator would occur assuming the string were NUL
-terminated.  If any NUL characters occur at byte offsets less than
-the value of the fourth parameter then the resulting string value will
-contain embedded NULs.  The result of expressions involving strings
-with embedded NULs is undefined.
+## 绑定值到预编译语句（Binding Values To Prepared Statements）
 
-The fifth argument to the BLOB and string binding interfaces controls
-or indicates the lifetime of the object referenced by the third parameter.
-These three options exist:
- (1) A destructor to dispose of the BLOB or string after SQLite has finished
-with it may be passed. It is called to dispose of the BLOB or string even
-if the call to the bind API fails, except the destructor is not called if
-the third parameter is a NULL pointer or the fourth parameter is negative.
- (2) The special constant, SQLITE_STATIC, may be passed to indicate that
-the application remains responsible for disposing of the object. In this
-case, the object and the provided pointer to it must remain valid until
-either the prepared statement is finalized or the same SQL parameter is
-bound to something else, whichever occurs sooner.
- (3) The constant, SQLITE_TRANSIENT, may be passed to indicate that the
-object is to be copied prior to the return from sqlite3_bind_*(). The
-object and pointer to it must remain valid until then. SQLite will then
-manage the lifetime of its private copy.
+若 UTF16 输入文本包含无效的 unicode 字符，则 SQLite 可能把那些无效字符改为 unicode 替换字符：U+FFFD。
 
-The sixth argument (the E argument)
-to sqlite3_bind_text64(S,K,Z,N,D,E) must be one of
-SQLITE_UTF8, SQLITE_UTF8_ZT, SQLITE_UTF16, SQLITE_UTF16BE,
-or SQLITE_UTF16LE to specify the encoding of the text in the
-third parameter, Z.  The special value SQLITE_UTF8_ZT means that the
-string argument is both UTF-8 encoded and is zero-terminated.  In other
-words, SQLITE_UTF8_ZT means that the Z array is allocated to hold at
-least N+1 bytes and that the Z[N] byte is zero.  If
-the E argument to sqlite3_bind_text64(S,K,Z,N,D,E) is not one of the
-allowed values shown above, or if the text encoding is different
-from the encoding specified by the sixth parameter, then the behavior
-is undefined.
+在那些有第四参数的例程中，其值是参数中的字节数。明确地说：该值是值的字节数，不是字符数。若传给 `sqlite3_bind_text()` 或 `sqlite3_bind_text16()` 的第四参数为负，则字符串长度是到第一个零终止符为止的字节数。若传给 `sqlite3_bind_blob()` 的第四参数为负，则行为未定义。若为 `sqlite3_bind_text()`、`sqlite3_bind_text16()` 或 `sqlite3_bind_text64()` 提供非负的第四参数，则该参数必须是假定字符串以 NUL 结尾时 NUL 终止符会出现的字节偏移。若在小于第四参数值的字节偏移处出现任何 NUL 字符，则结果字符串值将包含内嵌 NUL。涉及含内嵌 NUL 字符串的表达式的结果未定义。
 
-The sqlite3_bind_zeroblob() routine binds a BLOB of length N that
-is filled with zeroes.  A zeroblob uses a fixed amount of memory
-(just an integer to hold its size) while it is being processed.
-Zeroblobs are intended to serve as placeholders for BLOBs whose
-content is later written using
-incremental BLOB I/O routines.
-A negative value for the zeroblob results in a zero-length BLOB.
+BLOB 和字符串绑定接口的第五参数控制或指示第三参数引用的对象的生存期。有以下三种选择：
+ (1) 可传入析构函数，在 SQLite 完成使用后处置 BLOB 或字符串。即使对 bind API 的调用失败，也会调用它处置 BLOB 或字符串，但第三参数是 NULL 指针或第四参数为负时不调用析构函数。
+ (2) 可传特殊常量 `SQLITE_STATIC`，指示应用仍负责处置该对象。此时，对象及其提供的指针必须保持有效，直到预编译语句被终结、或同一 SQL 参数被绑定到其它东西，以先发生者为准。
+ (3) 可传常量 `SQLITE_TRANSIENT`，指示对象要在 `sqlite3_bind_*()` 返回之前被复制。对象及其指针必须在此之前保持有效。之后 SQLite 管理其私有副本的生存期。
 
-The sqlite3_bind_pointer(S,I,P,T,D) routine causes the I-th parameter in
-prepared statement S to have an SQL value of NULL, but to also be
-associated with the pointer P of type T.  D is either a NULL pointer or
-a pointer to a destructor function for P. SQLite will invoke the
-destructor D with a single argument of P when it is finished using
-P, even if the call to sqlite3_bind_pointer() fails.  Due to a
-historical design quirk, results are undefined if D is
-SQLITE_TRANSIENT. The T parameter should be a static string,
-preferably a string literal. The sqlite3_bind_pointer() routine is
-part of the pointer passing interface added for SQLite 3.20.0.
+`sqlite3_bind_text64(S,K,Z,N,D,E)` 的第六参数（E 参数）必须是 `SQLITE_UTF8`、`SQLITE_UTF8_ZT`、`SQLITE_UTF16`、`SQLITE_UTF16BE` 或 `SQLITE_UTF16LE` 之一，以指定第三参数 Z 中文本的编码。特殊值 `SQLITE_UTF8_ZT` 表示字符串参数既是 UTF-8 编码又是零结尾的。换句话说，`SQLITE_UTF8_ZT` 表示 Z 数组被分配为至少持有 N+1 字节、且 Z[N] 字节为零。若 `sqlite3_bind_text64(S,K,Z,N,D,E)` 的 E 参数不是上面所示的允许值之一、或文本编码与第六参数指定的编码不同，则行为未定义。
 
-If any of the sqlite3_bind_*() routines are called with a NULL pointer
-for the prepared statement or with a prepared statement for which
-sqlite3_step() has been called more recently than sqlite3_reset(),
-then the call will return SQLITE_MISUSE.  If any sqlite3_bind_()
-routine is passed a prepared statement that has been finalized, the
-result is undefined and probably harmful.
+`sqlite3_bind_zeroblob()` 例程绑定长度为 N、填充零的 BLOB。zeroblob 处理期间使用固定数量的内存（只是一个保存其大小的整数）。Zeroblob 旨在作为内容稍后用增量 BLOB I/O 例程写入的 BLOB 的占位符。zeroblob 的负值导致零长度 BLOB。
 
-Bindings are not cleared by the sqlite3_reset() routine.
-Unbound parameters are interpreted as NULL.
+`sqlite3_bind_pointer(S,I,P,T,D)` 例程使预编译语句 S 中第 I 个参数具有 SQL 值 NULL，但还与类型 T 的指针 P 关联。D 是 NULL 指针或 P 的析构函数指针。SQLite 完成使用 P 时用单个参数 P 调用析构函数 D，即使对 `sqlite3_bind_pointer()` 的调用失败。由于历史设计缺陷，若 D 是 `SQLITE_TRANSIENT`，则结果未定义。T 参数应是静态字符串，最好是字符串字面量。`sqlite3_bind_pointer()` 例程是 SQLite 3.20.0 加入的指针传递接口的一部分。
 
-The sqlite3_bind_* routines return SQLITE_OK on success or an
-error code if anything goes wrong.
-SQLITE_TOOBIG might be returned if the size of a string or BLOB
-exceeds limits imposed by sqlite3_limit(SQLITE_LIMIT_LENGTH) or
-SQLITE_MAX_LENGTH.
-SQLITE_RANGE is returned if the parameter
-index is out of range.  SQLITE_NOMEM is returned if malloc() fails.
+若任何 `sqlite3_bind_*()` 例程以 NULL 指针作为预编译语句调用、或以 `sqlite3_step()` 比 `sqlite3_reset()` 更近被调用的预编译语句调用，则该调用返回 `SQLITE_MISUSE`。若任何 `sqlite3_bind_()` 例程收到已终结的预编译语句，则结果未定义且很可能有害。
 
-See also: sqlite3_bind_parameter_count(),
-sqlite3_bind_parameter_name(), and sqlite3_bind_parameter_index().
+绑定不会被 `sqlite3_reset()` 例程清除。未绑定的参数解释为 NULL。
+
+`sqlite3_bind_*` 例程成功时返回 `SQLITE_OK`，出问题时返回错误码。若字符串或 BLOB 的大小超过 `sqlite3_limit(SQLITE_LIMIT_LENGTH)` 或 `SQLITE_MAX_LENGTH` 施加的限制，则可能返回 `SQLITE_TOOBIG`。参数索引越界时返回 `SQLITE_RANGE`。malloc() 失败时返回 `SQLITE_NOMEM`。
+
+另见：`sqlite3_bind_parameter_count()`、`sqlite3_bind_parameter_name()` 和 `sqlite3_bind_parameter_index()`。
 
 ---
 
-## Compiling An SQL Statement
+## 编译 SQL 语句（Compiling An SQL Statement）
 
 ```
-
 int sqlite3_prepare(
-  sqlite3 *db,            /* Database handle */
-  const char *zSql,       /* SQL statement, UTF-8 encoded */
-  int nByte,              /* Maximum length of zSql in bytes. */
-  sqlite3_stmt **ppStmt,  /* OUT: Statement handle */
-  const char **pzTail     /* OUT: Pointer to unused portion of zSql */
+  sqlite3 *db,            /* 数据库句柄 */
+  const char *zSql,       /* SQL 语句，UTF-8 编码 */
+  int nByte,              /* zSql 的最大长度（字节） */
+  sqlite3_stmt **ppStmt,  /* OUT: 语句句柄 */
+  const char **pzTail     /* OUT: 指向 zSql 未使用部分的指针 */
 );
 int sqlite3_prepare_v2(
-  sqlite3 *db,            /* Database handle */
-  const char *zSql,       /* SQL statement, UTF-8 encoded */
-  int nByte,              /* Maximum length of zSql in bytes. */
-  sqlite3_stmt **ppStmt,  /* OUT: Statement handle */
-  const char **pzTail     /* OUT: Pointer to unused portion of zSql */
+  sqlite3 *db,            /* 数据库句柄 */
+  const char *zSql,       /* SQL 语句，UTF-8 编码 */
+  int nByte,              /* zSql 的最大长度（字节） */
+  sqlite3_stmt **ppStmt,  /* OUT: 语句句柄 */
+  const char **pzTail     /* OUT: 指向 zSql 未使用部分的指针 */
 );
 int sqlite3_prepare_v3(
-  sqlite3 *db,            /* Database handle */
-  const char *zSql,       /* SQL statement, UTF-8 encoded */
-  int nByte,              /* Maximum length of zSql in bytes. */
-  unsigned int prepFlags, /* Zero or more SQLITE_PREPARE_ flags */
-  sqlite3_stmt **ppStmt,  /* OUT: Statement handle */
-  const char **pzTail     /* OUT: Pointer to unused portion of zSql */
+  sqlite3 *db,            /* 数据库句柄 */
+  const char *zSql,       /* SQL 语句，UTF-8 编码 */
+  int nByte,              /* zSql 的最大长度（字节） */
+  unsigned int prepFlags, /* 零个或多个 SQLITE_PREPARE_ 标志 */
+  sqlite3_stmt **ppStmt,  /* OUT: 语句句柄 */
+  const char **pzTail     /* OUT: 指向 zSql 未使用部分的指针 */
 );
 int sqlite3_prepare16(
-  sqlite3 *db,            /* Database handle */
-  const void *zSql,       /* SQL statement, UTF-16 encoded */
-  int nByte,              /* Maximum length of zSql in bytes. */
-  sqlite3_stmt **ppStmt,  /* OUT: Statement handle */
-  const void **pzTail     /* OUT: Pointer to unused portion of zSql */
+  sqlite3 *db,            /* 数据库句柄 */
+  const void *zSql,       /* SQL 语句，UTF-16 编码 */
+  int nByte,              /* zSql 的最大长度（字节） */
+  sqlite3_stmt **ppStmt,  /* OUT: 语句句柄 */
+  const void **pzTail     /* OUT: 指向 zSql 未使用部分的指针 */
 );
 int sqlite3_prepare16_v2(
-  sqlite3 *db,            /* Database handle */
-  const void *zSql,       /* SQL statement, UTF-16 encoded */
-  int nByte,              /* Maximum length of zSql in bytes. */
-  sqlite3_stmt **ppStmt,  /* OUT: Statement handle */
-  const void **pzTail     /* OUT: Pointer to unused portion of zSql */
+  sqlite3 *db,            /* 数据库句柄 */
+  const void *zSql,       /* SQL 语句，UTF-16 编码 */
+  int nByte,              /* zSql 的最大长度（字节） */
+  sqlite3_stmt **ppStmt,  /* OUT: 语句句柄 */
+  const void **pzTail     /* OUT: 指向 zSql 未使用部分的指针 */
 );
 int sqlite3_prepare16_v3(
-  sqlite3 *db,            /* Database handle */
-  const void *zSql,       /* SQL statement, UTF-16 encoded */
-  int nByte,              /* Maximum length of zSql in bytes. */
-  unsigned int prepFlags, /* Zero or more SQLITE_PREPARE_ flags */
-  sqlite3_stmt **ppStmt,  /* OUT: Statement handle */
-  const void **pzTail     /* OUT: Pointer to unused portion of zSql */
+  sqlite3 *db,            /* 数据库句柄 */
+  const void *zSql,       /* SQL 语句，UTF-16 编码 */
+  int nByte,              /* zSql 的最大长度（字节） */
+  unsigned int prepFlags, /* 零个或多个 SQLITE_PREPARE_ 标志 */
+  sqlite3_stmt **ppStmt,  /* OUT: 语句句柄 */
+  const void **pzTail     /* OUT: 指向 zSql 未使用部分的指针 */
 );
-
 ```
 
-To execute an SQL statement, it must first be compiled into a byte-code
-program using one of these routines.  Or, in other words, these routines
-are constructors for the prepared statement object.
+要执行 SQL 语句，必须先用这些例程之一把它编译成字节码程序。或者换句话说，这些例程是预编译语句对象的构造器。
 
-The preferred routine to use is sqlite3_prepare_v2().  The
-sqlite3_prepare() interface is legacy and should be avoided.
-sqlite3_prepare_v3() has an extra
-"prepFlags" option that is sometimes
-needed for special purpose or to pass along security restrictions.
+首选使用的例程是 `sqlite3_prepare_v2()`。`sqlite3_prepare()` 接口是遗留接口，应避免使用。`sqlite3_prepare_v3()` 有额外的 "prepFlags" 选项，有时用于特殊目的或传递安全限制。
 
-The use of the UTF-8 interfaces is preferred, as SQLite currently
-does all parsing using UTF-8.  The UTF-16 interfaces are provided
-as a convenience.  The UTF-16 interfaces work by converting the
-input text into UTF-8, then invoking the corresponding UTF-8 interface.
+优先使用 UTF-8 接口，因为 SQLite 当前全部用 UTF-8 解析。提供 UTF-16 接口只是为了方便。UTF-16 接口的工作方式是把输入文本转换为 UTF-8，然后调用对应的 UTF-8 接口。
 
-The first argument, "db", is a database connection obtained from a
-prior successful call to sqlite3_open(), sqlite3_open_v2() or
-sqlite3_open16().  The database connection must not have been closed.
+第一参数 "db" 是先前成功调用 `sqlite3_open()`、`sqlite3_open_v2()` 或 `sqlite3_open16()` 获得的数据库连接。该数据库连接必须尚未关闭。
 
-The second argument, "zSql", is the statement to be compiled, encoded
-as either UTF-8 or UTF-16.  The sqlite3_prepare(), sqlite3_prepare_v2(),
-and sqlite3_prepare_v3()
-interfaces use UTF-8, and sqlite3_prepare16(), sqlite3_prepare16_v2(),
-and sqlite3_prepare16_v3() use UTF-16.
+第二参数 "zSql" 是要编译的语句，编码为 UTF-8 或 UTF-16。`sqlite3_prepare()`、`sqlite3_prepare_v2()` 和 `sqlite3_prepare_v3()` 接口使用 UTF-8，`sqlite3_prepare16()`、`sqlite3_prepare16_v2()` 和 `sqlite3_prepare16_v3()` 使用 UTF-16。
 
-If the nByte argument is negative, then zSql is read up to the
-first zero terminator. If nByte is positive, then it is the maximum
-number of bytes read from zSql.  When nByte is positive, zSql is read
-up to the first zero terminator or until the nByte bytes have been read,
-whichever comes first.  If nByte is zero, then no prepared
-statement is generated.
-If the caller knows that the supplied string is nul-terminated, then
-there is a small performance advantage to passing an nByte parameter that
-is the number of bytes in the input string including
-the nul-terminator.
-Note that nByte measures the length of the input in bytes, not
-characters, even for the UTF-16 interfaces.
+若 nByte 参数为负，则读取 zSql 直到第一个零终止符。若 nByte 为正，则它是从 zSql 读取的最大字节数。nByte 为正时，读取 zSql 直到第一个零终止符或读完 nByte 字节，以先发生者为准。若 nByte 为零，则不生成预编译语句。若调用者知道提供的字符串是 nul 结尾的，则传入等于输入字符串字节数（含 nul 终止符）的 nByte 参数有小的性能优势。注意 nByte 度量输入的长度（字节而非字符），即使对 UTF-16 接口也一样。
 
-If pzTail is not NULL then *pzTail is made to point to the first byte
-past the end of the first SQL statement in zSql.  These routines only
-compile the first statement in zSql, so *pzTail is left pointing to
-what remains uncompiled.
+若 pzTail 非 NULL，则 *pzTail 被设为指向 zSql 中第一条 SQL 语句末尾之后的第一个字节。这些例程只编译 zSql 中的第一条语句，因此 *pzTail 指向仍未编译的部分。
 
-*ppStmt is left pointing to a compiled prepared statement that can be
-executed using sqlite3_step().  If there is an error, *ppStmt is set
-to NULL.  If the input text contains no SQL (if the input is an empty
-string or a comment) then *ppStmt is set to NULL.
-The calling procedure is responsible for deleting the compiled
-SQL statement using sqlite3_finalize() after it has finished with it.
-ppStmt may not be NULL.
+*ppStmt 被设为指向可用 `sqlite3_step()` 执行的已编译预编译语句。若有错误，*ppStmt 被设为 NULL。若输入文本不含 SQL（输入是空字符串或注释），则 *ppStmt 被设为 NULL。调用过程负责在完成后用 `sqlite3_finalize()` 删除已编译的 SQL 语句。ppStmt 不能为 NULL。
 
-On success, the sqlite3_prepare() family of routines return SQLITE_OK;
-otherwise an error code is returned.
+成功时，`sqlite3_prepare()` 家族例程返回 `SQLITE_OK`；否则返回错误码。
 
-The sqlite3_prepare_v2(), sqlite3_prepare_v3(), sqlite3_prepare16_v2(),
-and sqlite3_prepare16_v3() interfaces are recommended for all new programs.
-The older interfaces (sqlite3_prepare() and sqlite3_prepare16())
-are retained for backwards compatibility, but their use is discouraged.
-In the "vX" interfaces, the prepared statement
-that is returned (the sqlite3_stmt object) contains a copy of the
-original SQL text. This causes the sqlite3_step() interface to
-behave differently in three ways:
+所有新程序都推荐使用 `sqlite3_prepare_v2()`、`sqlite3_prepare_v3()`、`sqlite3_prepare16_v2()` 和 `sqlite3_prepare16_v3()` 接口。旧接口（`sqlite3_prepare()` 和 `sqlite3_prepare16()`）为向后兼容保留，但不鼓励使用。在 "vX" 接口中，返回的预编译语句（sqlite3_stmt 对象）包含原始 SQL 文本的副本。这使 `sqlite3_step()` 接口在三个方面表现不同：
 
 1.
-If the database schema changes, instead of returning SQLITE_SCHEMA as it
-always used to do, sqlite3_step() will automatically recompile the SQL
-statement and try to run it again. As many as SQLITE_MAX_SCHEMA_RETRY
-retries will occur before sqlite3_step() gives up and returns an error.
+若数据库 schema 改变，`sqlite3_step()` 不再像以前那样总是返回 `SQLITE_SCHEMA`，而是自动重新编译 SQL 语句并尝试再次运行。`sqlite3_step()` 放弃并返回错误之前，最多发生 `SQLITE_MAX_SCHEMA_RETRY` 次重试。
 
 2.
-When an error occurs, sqlite3_step() will return one of the detailed
-error codes or extended error codes.  The legacy behavior was that
-sqlite3_step() would only return a generic SQLITE_ERROR result code
-and the application would have to make a second call to sqlite3_reset()
-in order to find the underlying cause of the problem. With the "v2" prepare
-interfaces, the underlying reason for the error is returned immediately.
+出错时，`sqlite3_step()` 返回详细错误码或扩展错误码之一。遗留行为是 `sqlite3_step()` 只返回通用 `SQLITE_ERROR` 结果码，应用必须二次调用 `sqlite3_reset()` 才能找到问题的根本原因。使用 "v2" prepare 接口时，错误的基本原因被立即返回。
 
 3.
-If the specific value bound to a host parameter in the
-WHERE clause might influence the choice of query plan for a statement,
-then the statement will be automatically recompiled, as if there had been
-a schema change, on the first sqlite3_step() call following any change
-to the bindings of that parameter.
-The specific value of a WHERE-clause parameter might influence the
-choice of query plan if the parameter is the left-hand side of a LIKE
-or GLOB operator or if the parameter is compared to an indexed column
-and the SQLITE_ENABLE_STAT4 compile-time option is enabled.
+若绑定到 WHERE 子句中宿主参数的特定值可能影响语句的查询计划选择，则在首次调用 `sqlite3_step()` 时、该参数的任何绑定改变之后，语句被自动重新编译，就像发生了 schema 改变一样。若参数是 LIKE 或 GLOB 运算符的左侧、或参数与索引列比较且启用了 `SQLITE_ENABLE_STAT4` 编译期选项，则 WHERE 子句参数的特定值可能影响查询计划选择。
 
-sqlite3_prepare_v3() differs from sqlite3_prepare_v2() only in having
-the extra prepFlags parameter, which is a bit array consisting of zero or
-more of the SQLITE_PREPARE_* flags.  The
-sqlite3_prepare_v2() interface works exactly the same as
-sqlite3_prepare_v3() with a zero prepFlags parameter.
+`sqlite3_prepare_v3()` 与 `sqlite3_prepare_v2()` 的唯一区别是多一个 prepFlags 参数，它是零个或多个 `SQLITE_PREPARE_*` 标志组成的位数组。`sqlite3_prepare_v2()` 接口的工作方式与 prepFlags 参数为零的 `sqlite3_prepare_v3()` 完全相同。
 
 ---
 
-## Compile-Time Authorization Callbacks
+## 编译期授权回调（Compile-Time Authorization Callbacks）
 
 ```
-
 int sqlite3_set_authorizer(
   sqlite3*,
   int (*xAuth)(void*,int,const char*,const char*,const char*,const char*),
   void *pUserData
 );
-
 ```
 
-This routine registers an authorizer callback with a particular
-database connection, supplied in the first argument.
-The authorizer callback is invoked as SQL statements are being compiled
-by sqlite3_prepare() or its variants sqlite3_prepare_v2(),
-sqlite3_prepare_v3(), sqlite3_prepare16(), sqlite3_prepare16_v2(),
-and sqlite3_prepare16_v3().  At various
-points during the compilation process, as logic is being created
-to perform various actions, the authorizer callback is invoked to
-see if those actions are allowed.  The authorizer callback should
-return SQLITE_OK to allow the action, SQLITE_IGNORE to disallow the
-specific action but allow the SQL statement to continue to be
-compiled, or SQLITE_DENY to cause the entire SQL statement to be
-rejected with an error.  If the authorizer callback returns
-any value other than SQLITE_IGNORE, SQLITE_OK, or SQLITE_DENY
-then the sqlite3_prepare_v2() or equivalent call that triggered
-the authorizer will fail with an error message.
+此例程向第一参数提供的特定数据库连接注册授权回调。`sqlite3_prepare()` 或其变体 `sqlite3_prepare_v2()`、`sqlite3_prepare_v3()`、`sqlite3_prepare16()`、`sqlite3_prepare16_v2()` 和 `sqlite3_prepare16_v3()` 编译 SQL 语句时调用授权回调。在编译过程的各个时刻，当逻辑被创建以执行各种动作时，调用授权回调看这些动作是否被允许。授权回调应返回 `SQLITE_OK` 允许动作，返回 `SQLITE_IGNORE` 禁止特定动作但允许 SQL 语句继续编译，返回 `SQLITE_DENY` 使整个 SQL 语句以错误被拒绝。若授权回调返回 `SQLITE_IGNORE`、`SQLITE_OK` 或 `SQLITE_DENY` 之外的任何值，则触发授权的 `sqlite3_prepare_v2()` 或等价调用以错误消息失败。
 
-When the callback returns SQLITE_OK, that means the operation
-requested is ok.  When the callback returns SQLITE_DENY, the
-sqlite3_prepare_v2() or equivalent call that triggered the
-authorizer will fail with an error message explaining that
-access is denied.
+回调返回 `SQLITE_OK` 时，表示请求的操作没问题。回调返回 `SQLITE_DENY` 时，触发授权的 `sqlite3_prepare_v2()` 或等价调用以解释访问被拒绝的错误消息失败。
 
-The first parameter to the authorizer callback is a copy of the third
-parameter to the sqlite3_set_authorizer() interface. The second parameter
-to the callback is an integer action code that specifies
-the particular action to be authorized. The third through sixth parameters
-to the callback are either NULL pointers or zero-terminated strings
-that contain additional details about the action to be authorized.
-Applications must always be prepared to encounter a NULL pointer in any
-of the third through the sixth parameters of the authorization callback.
+授权回调的第一参数是 `sqlite3_set_authorizer()` 接口第三参数的副本。回调的第二参数是指定要授权的特定动作的整型动作码。回调的第三到第六参数是 NULL 指针或含被授权动作附加细节的零结尾字符串。应用必须总是准备好遇到授权回调第三到第六参数中任何一个的 NULL 指针。
 
-If the action code is SQLITE_READ
-and the callback returns SQLITE_IGNORE then the
-prepared statement statement is constructed to substitute
-a NULL value in place of the table column that would have
-been read if SQLITE_OK had been returned.  The SQLITE_IGNORE
-return can be used to deny an untrusted user access to individual
-columns of a table.
-When a table is referenced by a SELECT but no column values are
-extracted from that table (for example in a query like
-"SELECT count(*) FROM tab") then the SQLITE_READ authorizer callback
-is invoked once for that table with a column name that is an empty string.
-If the action code is SQLITE_DELETE and the callback returns
-SQLITE_IGNORE then the DELETE operation proceeds but the
-truncate optimization is disabled and all rows are deleted individually.
+若动作码是 `SQLITE_READ` 且回调返回 `SQLITE_IGNORE`，则构造预编译语句时用 NULL 值替换本应在返回 `SQLITE_OK` 时被读取的表列。可用 `SQLITE_IGNORE` 返回值拒绝不受信任的用户访问表的个别列。SELECT 引用某表但未从该表提取列值时（例如 "SELECT count(*) FROM tab" 这样的查询），`SQLITE_READ` 授权回调以列为空字符串被调用一次。若动作码是 `SQLITE_DELETE` 且回调返回 `SQLITE_IGNORE`，则 DELETE 操作继续，但截断优化被禁用，所有行被逐个删除。
 
-An authorizer is used when preparing
-SQL statements from an untrusted source, to ensure that the SQL statements
-do not try to access data they are not allowed to see, or that they do not
-try to execute malicious statements that damage the database.  For
-example, an application may allow a user to enter arbitrary
-SQL queries for evaluation by a database.  But the application does
-not want the user to be able to make arbitrary changes to the
-database.  An authorizer could then be put in place while the
-user-entered SQL is being prepared that
-disallows everything except SELECT statements.
+## 编译期授权回调（Compile-Time Authorization Callbacks）
 
-Applications that need to process SQL from untrusted sources
-might also consider lowering resource limits using sqlite3_limit()
-and limiting database size using the max_page_count PRAGMA
-in addition to using an authorizer.
+准备来自不受信任来源的 SQL 语句时使用授权器，确保 SQL 语句不试图访问它们不允许看到的数据，或不试图执行损坏数据库的恶意语句。例如，应用可允许用户输入任意 SQL 查询供数据库求值。但应用不希望用户能对数据库做任意更改。此时可在用户输入的 SQL 被准备期间设置授权器，禁止除 SELECT 语句之外的一切。
 
-Only a single authorizer can be in place on a database connection
-at a time.  Each call to sqlite3_set_authorizer overrides the
-previous call.  Disable the authorizer by installing a NULL callback.
-The authorizer is disabled by default.
+需要处理来自不受信任来源 SQL 的应用除了使用授权器外，还可能考虑用 `sqlite3_limit()` 降低资源限制、用 max_page_count PRAGMA 限制数据库大小。
 
-The authorizer callback must not do anything that will modify
-the database connection that invoked the authorizer callback.
-Note that sqlite3_prepare_v2() and sqlite3_step() both modify their
-database connections for the meaning of "modify" in this paragraph.
+数据库连接上同一时间只能设置一个授权器。每次调用 `sqlite3_set_authorizer` 覆盖先前调用。安装 NULL 回调会禁用授权器。授权器默认禁用。
 
-When sqlite3_prepare_v2() is used to prepare a statement, the
-statement might be re-prepared during sqlite3_step() due to a
-schema change.  Hence, the application should ensure that the
-correct authorizer callback remains in place during the sqlite3_step().
+授权回调不得做任何会修改调用授权回调的数据库连接的事情。注意就本段的"修改"而言，`sqlite3_prepare_v2()` 和 `sqlite3_step()` 都会修改它们的数据库连接。
 
-Note that the authorizer callback is invoked only during
-sqlite3_prepare() or its variants.  Authorization is not
-performed during statement evaluation in sqlite3_step(), unless
-as stated in the previous paragraph, sqlite3_step() invokes
-sqlite3_prepare_v2() to reprepare a statement after a schema change.
+用 `sqlite3_prepare_v2()` 准备语句时，该语句可能因 schema 改变而在 `sqlite3_step()` 期间被重新准备。因此，应用应确保在 `sqlite3_step()` 期间正确的授权回调保持就位。
+
+注意授权回调只在 `sqlite3_prepare()` 或其变体期间被调用。授权不在 `sqlite3_step()` 的语句求值期间执行，除非如前一段所述，`sqlite3_step()` 在 schema 改变后调用 `sqlite3_prepare_v2()` 重新准备语句。
 
 ---
 
-## Test For Auto-Commit Mode
+## 测试自动提交模式（Test For Auto-Commit Mode）
 
 ```
-
 int sqlite3_get_autocommit(sqlite3*);
-
 ```
 
-The sqlite3_get_autocommit() interface returns non-zero or
-zero if the given database connection is or is not in autocommit mode,
-respectively.  Autocommit mode is on by default.
-Autocommit mode is disabled by a BEGIN statement.
-Autocommit mode is re-enabled by a COMMIT or ROLLBACK.
+`sqlite3_get_autocommit()` 接口在给定数据库连接处于自动提交模式时返回非零，否则返回零。自动提交模式默认开启。BEGIN 语句禁用自动提交模式。COMMIT 或 ROLLBACK 重新启用自动提交模式。
 
-If certain kinds of errors occur on a statement within a multi-statement
-transaction (errors including SQLITE_FULL, SQLITE_IOERR,
-SQLITE_NOMEM, SQLITE_BUSY, and SQLITE_INTERRUPT) then the
-transaction might be rolled back automatically.  The only way to
-find out whether SQLite automatically rolled back the transaction after
-an error is to use this function.
+若多语句事务内的语句发生某些错误（包括 `SQLITE_FULL`、`SQLITE_IOERR`、`SQLITE_NOMEM`、`SQLITE_BUSY` 和 `SQLITE_INTERRUPT`），则事务可能被自动回滚。找出 SQLite 是否在错误后自动回滚事务的唯一方法是用此函数。
 
-If another thread changes the autocommit status of the database
-connection while this routine is running, then the return value
-is undefined.
+若此例程运行时另一线程改变数据库连接的自动提交状态，则返回值未定义。
 
 ---
 
-## Register A Callback To Handle SQLITE_BUSY Errors
+## 注册处理 SQLITE_BUSY 错误的回调（Register A Callback To Handle SQLITE_BUSY Errors）
 
 ```
-
 int sqlite3_busy_handler(sqlite3*,int(*)(void*,int),void*);
-
 ```
 
-The sqlite3_busy_handler(D,X,P) routine sets a callback function X
-that might be invoked with argument P whenever
-an attempt is made to access a database table associated with
-database connection D when another thread
-or process has the table locked.
-The sqlite3_busy_handler() interface is used to implement
-sqlite3_busy_timeout() and PRAGMA busy_timeout.
+`sqlite3_busy_handler(D,X,P)` 例程设置回调函数 X，每当另一线程或进程锁定与数据库连接 D 关联的数据库表、而尝试访问该表时，可能用参数 P 调用它。`sqlite3_busy_handler()` 接口用于实现 `sqlite3_busy_timeout()` 和 PRAGMA busy_timeout。
 
-If the busy callback is NULL, then SQLITE_BUSY
-is returned immediately upon encountering the lock.  If the busy callback
-is not NULL, then the callback might be invoked with two arguments.
+若忙回调是 NULL，则遇到锁时立即返回 `SQLITE_BUSY`。若忙回调非 NULL，则可能用两个参数调用该回调。
 
-The first argument to the busy handler is a copy of the void* pointer which
-is the third argument to sqlite3_busy_handler().  The second argument to
-the busy handler callback is the number of times that the busy handler has
-been invoked previously for the same locking event.  If the
-busy callback returns 0, then no additional attempts are made to
-access the database and SQLITE_BUSY is returned
-to the application.
-If the callback returns non-zero, then another attempt
-is made to access the database and the cycle repeats.
+忙处理器的第一参数是 void* 指针的副本，即 `sqlite3_busy_handler()` 的第三参数。忙处理器回调的第二参数是同一锁定事件先前调用忙处理器的次数。若忙回调返回 0，则不再尝试访问数据库，向应用返回 `SQLITE_BUSY`。若回调返回非零，则再次尝试访问数据库，循环重复。
 
-The presence of a busy handler does not guarantee that it will be invoked
-when there is lock contention. If SQLite determines that invoking the busy
-handler could result in a deadlock, it will go ahead and return SQLITE_BUSY
-to the application instead of invoking the
-busy handler.
-Consider a scenario where one process is holding a read lock that
-it is trying to promote to a reserved lock and
-a second process is holding a reserved lock that it is trying
-to promote to an exclusive lock.  The first process cannot proceed
-because it is blocked by the second and the second process cannot
-proceed because it is blocked by the first.  If both processes
-invoke the busy handlers, neither will make any progress.  Therefore,
-SQLite returns SQLITE_BUSY for the first process, hoping that this
-will induce the first process to release its read lock and allow
-the second process to proceed.
+忙处理器的存在不保证锁争用时它会被调用。若 SQLite 确定调用忙处理器可能导致死锁，它会直接向应用返回 `SQLITE_BUSY`，而不是调用忙处理器。考虑这样的场景：一个进程持有它试图提升为保留锁的读锁，第二个进程持有它试图提升为排他锁的保留锁。第一个进程因被第二个阻塞而无法继续，第二个进程因被第一个阻塞而无法继续。若两个进程都调用忙处理器，则它们都无法推进。因此，SQLite 对第一个进程返回 `SQLITE_BUSY`，希望这能诱导第一个进程释放它的读锁、允许第二个进程继续。
 
-The default busy callback is NULL.
+默认忙回调是 NULL。
 
-There can only be a single busy handler defined for each
-database connection.  Setting a new busy handler clears any
-previously set handler.  Note that calling sqlite3_busy_timeout()
-or evaluating PRAGMA busy_timeout=N will change the
-busy handler and thus clear any previously set busy handler.
+每个数据库连接只能定义一个忙处理器。设置新忙处理器会清除任何先前设置的处理器。注意调用 `sqlite3_busy_timeout()` 或求值 `PRAGMA busy_timeout=N` 会改变忙处理器，从而清除任何先前设置的忙处理器。
 
-The busy callback should not take any actions which modify the
-database connection that invoked the busy handler.  In other words,
-the busy handler is not reentrant.  Any such actions
-result in undefined behavior.
+忙回调不应采取任何修改调用忙处理器的数据库连接的动作。换句话说，忙处理器不可重入。任何此类动作导致未定义行为。
 
-A busy handler must not close the database connection
-or prepared statement that invoked the busy handler.
+忙处理器不得关闭调用它的数据库连接或预编译语句。
 
 ---
 
-## Result Values From A Query
+## 查询的结果值（Result Values From A Query）
 
 ```
-
 const void *sqlite3_column_blob(sqlite3_stmt*, int iCol);
 double sqlite3_column_double(sqlite3_stmt*, int iCol);
 int sqlite3_column_int(sqlite3_stmt*, int iCol);
@@ -13831,268 +8246,125 @@ sqlite3_value *sqlite3_column_value(sqlite3_stmt*, int iCol);
 int sqlite3_column_bytes(sqlite3_stmt*, int iCol);
 int sqlite3_column_bytes16(sqlite3_stmt*, int iCol);
 int sqlite3_column_type(sqlite3_stmt*, int iCol);
-
 ```
 
-Summary:
+摘要：
 
-sqlite3_column_blob→BLOB result
-sqlite3_column_double→REAL result
-sqlite3_column_int→32-bit INTEGER result
-sqlite3_column_int64→64-bit INTEGER result
-sqlite3_column_text→UTF-8 TEXT result
-sqlite3_column_text16→UTF-16 TEXT result
-sqlite3_column_value→The result as an
-unprotected sqlite3_value object.
-   
-sqlite3_column_bytes→Size of a BLOB
-or a UTF-8 TEXT result in bytes
-sqlite3_column_bytes16  
-→  Size of UTF-16
-TEXT in bytes
-sqlite3_column_type→Default
-datatype of the result
+sqlite3_column_blob→BLOB 结果
+sqlite3_column_double→REAL 结果
+sqlite3_column_int→32 位 INTEGER 结果
+sqlite3_column_int64→64 位 INTEGER 结果
+sqlite3_column_text→UTF-8 TEXT 结果
+sqlite3_column_text16→UTF-16 TEXT 结果
+sqlite3_column_value→作为不受保护的 sqlite3_value 对象的结果
+sqlite3_column_bytes→BLOB 或 UTF-8 TEXT 结果的字节大小
+sqlite3_column_bytes16→UTF-16 TEXT 的字节大小
+sqlite3_column_type→结果的默认数据类型
 
-Details:
+详情：
 
-These routines return information about a single column of the current
-result row of a query.  In every case the first argument is a pointer
-to the prepared statement that is being evaluated (the sqlite3_stmt*
-that was returned from sqlite3_prepare_v2() or one of its variants)
-and the second argument is the index of the column for which information
-should be returned. The leftmost column of the result set has the index 0.
-The number of columns in the result can be determined using
-sqlite3_column_count().
+这些例程返回关于查询当前结果行单列的信息。每种情况第一参数都是指向正在求值的预编译语句的指针（从 `sqlite3_prepare_v2()` 或其变体返回的 sqlite3_stmt*），第二参数是要返回信息的列索引。结果集最左边的列索引为 0。结果中的列数可用 `sqlite3_column_count()` 确定。
 
-If the SQL statement does not currently point to a valid row, or if the
-column index is out of range, the result is undefined.
-These routines may only be called when the most recent call to
-sqlite3_step() has returned SQLITE_ROW and neither
-sqlite3_reset() nor sqlite3_finalize() have been called subsequently.
-If any of these routines are called after sqlite3_reset() or
-sqlite3_finalize() or after sqlite3_step() has returned
-something other than SQLITE_ROW, the results are undefined.
-If sqlite3_step() or sqlite3_reset() or sqlite3_finalize()
-are called from a different thread while any of these routines
-are pending, then the results are undefined.
+若 SQL 语句当前不指向有效行、或列索引越界，则结果未定义。这些例程只能在最近一次 `sqlite3_step()` 调用返回 `SQLITE_ROW`、且之后既未调用 `sqlite3_reset()` 也未调用 `sqlite3_finalize()` 时调用。若在 `sqlite3_reset()` 或 `sqlite3_finalize()` 之后、或 `sqlite3_step()` 返回 `SQLITE_ROW` 之外的值之后调用这些例程中的任何一个，则结果未定义。这些例程之一挂起时从不同线程调用 `sqlite3_step()`、`sqlite3_reset()` 或 `sqlite3_finalize()`，则结果未定义。
 
-The first six interfaces (_blob, _double, _int, _int64, _text, and _text16)
-each return the value of a result column in a specific data format.  If
-the result column is not initially in the requested format (for example,
-if the query returns an integer but the sqlite3_column_text() interface
-is used to extract the value) then an automatic type conversion is performed.
+前六个接口（_blob、_double、_int、_int64、_text 和 _text16）各以特定数据格式返回结果列的值。若结果列最初不是请求的格式（例如查询返回整数但用 `sqlite3_column_text()` 接口提取值），则执行自动类型转换。
 
-The sqlite3_column_type() routine returns the
-datatype code for the initial data type
-of the result column.  The returned value is one of SQLITE_INTEGER,
-SQLITE_FLOAT, SQLITE_TEXT, SQLITE_BLOB, or SQLITE_NULL.
-The return value of sqlite3_column_type() can be used to decide which
-of the first six interface should be used to extract the column value.
-The value returned by sqlite3_column_type() is only meaningful if no
-automatic type conversions have occurred for the value in question.
-After a type conversion, the result of calling sqlite3_column_type()
-is undefined, though harmless.  Future
-versions of SQLite may change the behavior of sqlite3_column_type()
-following a type conversion.
+`sqlite3_column_type()` 例程返回结果列初始数据类型的类型码。返回的值是 `SQLITE_INTEGER`、`SQLITE_FLOAT`、`SQLITE_TEXT`、`SQLITE_BLOB` 或 `SQLITE_NULL` 之一。`sqlite3_column_type()` 的返回值可用于决定应使用前六个接口中的哪个提取列值。`sqlite3_column_type()` 返回的值只在所涉值未发生自动类型转换时有意义。类型转换后，调用 `sqlite3_column_type()` 的结果未定义（尽管无害）。SQLite 的未来版本可能改变类型转换后 `sqlite3_column_type()` 的行为。
 
-If the result is a BLOB or a TEXT string, then the sqlite3_column_bytes()
-or sqlite3_column_bytes16() interfaces can be used to determine the size
-of that BLOB or string.
+若结果是 BLOB 或 TEXT 字符串，则可用 `sqlite3_column_bytes()` 或 `sqlite3_column_bytes16()` 接口确定该 BLOB 或字符串的大小。
 
-If the result is a BLOB or UTF-8 string then the sqlite3_column_bytes()
-routine returns the number of bytes in that BLOB or string.
-If the result is a UTF-16 string, then sqlite3_column_bytes() converts
-the string to UTF-8 and then returns the number of bytes.
-If the result is a numeric value then sqlite3_column_bytes() uses
-sqlite3_snprintf() to convert that value to a UTF-8 string and returns
-the number of bytes in that string.
-If the result is NULL, then sqlite3_column_bytes() returns zero.
+若结果是 BLOB 或 UTF-8 字符串，则 `sqlite3_column_bytes()` 例程返回该 BLOB 或字符串中的字节数。若结果是 UTF-16 字符串，则 `sqlite3_column_bytes()` 把字符串转换为 UTF-8，然后返回字节数。若结果是数值，则 `sqlite3_column_bytes()` 用 `sqlite3_snprintf()` 把该值转换为 UTF-8 字符串，返回该字符串的字节数。若结果是 NULL，则 `sqlite3_column_bytes()` 返回零。
 
-If the result is a BLOB or UTF-16 string then the sqlite3_column_bytes16()
-routine returns the number of bytes in that BLOB or string.
-If the result is a UTF-8 string, then sqlite3_column_bytes16() converts
-the string to UTF-16 and then returns the number of bytes.
-If the result is a numeric value then sqlite3_column_bytes16() uses
-sqlite3_snprintf() to convert that value to a UTF-16 string and returns
-the number of bytes in that string.
-If the result is NULL, then sqlite3_column_bytes16() returns zero.
+若结果是 BLOB 或 UTF-16 字符串，则 `sqlite3_column_bytes16()` 例程返回该 BLOB 或字符串中的字节数。若结果是 UTF-8 字符串，则 `sqlite3_column_bytes16()` 把字符串转换为 UTF-16，然后返回字节数。若结果是数值，则 `sqlite3_column_bytes16()` 用 `sqlite3_snprintf()` 把该值转换为 UTF-16 字符串，返回该字符串的字节数。若结果是 NULL，则 `sqlite3_column_bytes16()` 返回零。
 
-The values returned by sqlite3_column_bytes() and
-sqlite3_column_bytes16() do not include the zero terminators at the end
-of the string.  For clarity: the values returned by
-sqlite3_column_bytes() and sqlite3_column_bytes16() are the number of
-bytes in the string, not the number of characters.
+`sqlite3_column_bytes()` 和 `sqlite3_column_bytes16()` 返回的值不包括字符串末尾的零终止符。明确地说：`sqlite3_column_bytes()` 和 `sqlite3_column_bytes16()` 返回的值是字符串中的字节数，不是字符数。
 
-Strings returned by sqlite3_column_text() and sqlite3_column_text16(),
-even empty strings, are always zero-terminated.  The return
-value from sqlite3_column_blob() for a zero-length BLOB is a NULL pointer.
+`sqlite3_column_text()` 和 `sqlite3_column_text16()` 返回的字符串（即使是空字符串）总是零结尾的。零长度 BLOB 的 `sqlite3_column_blob()` 返回值是 NULL 指针。
 
-Strings returned by sqlite3_column_text16() always have the endianness
-which is native to the platform, regardless of the text encoding set
-for the database.
+`sqlite3_column_text16()` 返回的字符串总是平台原生的字节序，无论为数据库设置的文本编码如何。
 
-Warning: The object returned by sqlite3_column_value() is an
-unprotected sqlite3_value object.  In a multithreaded environment,
-an unprotected sqlite3_value object may only be used safely with
-sqlite3_bind_value() and sqlite3_result_value().
-If the unprotected sqlite3_value object returned by
-sqlite3_column_value() is used in any other way, including calls
-to routines like sqlite3_value_int(), sqlite3_value_text(),
-or sqlite3_value_bytes(), the behavior is not threadsafe.
-Hence, the sqlite3_column_value() interface
-is normally only useful within the implementation of
-application-defined SQL functions or virtual tables, not within
-top-level application code.
+警告：`sqlite3_column_value()` 返回的对象是不受保护的 sqlite3_value 对象。在多线程环境中，不受保护的 sqlite3_value 对象只能与 `sqlite3_bind_value()` 和 `sqlite3_result_value()` 一起安全使用。若 `sqlite3_column_value()` 返回的不受保护 sqlite3_value 对象以任何其它方式使用（包括调用 `sqlite3_value_int()`、`sqlite3_value_text()` 或 `sqlite3_value_bytes()` 之类的例程），则行为不是线程安全的。因此，`sqlite3_column_value()` 接口通常只在应用定义 SQL 函数或虚拟表的实现内有用，而不在顶层应用代码中有用。
 
-These routines may attempt to convert the datatype of the result.
-For example, if the internal representation is FLOAT and a text result
-is requested, sqlite3_snprintf() is used internally to perform the
-conversion automatically.  The following table details the conversions
-that are applied:
+这些例程可能尝试转换结果的类型。例如，若内部表示是 FLOAT 且请求文本结果，则内部用 `sqlite3_snprintf()` 自动执行转换。下表详细说明应用的转换：
 
- Internal
-Type  Requested
-Type   Conversion
+ 内部类型  请求类型  转换
 
-  NULL     INTEGER    Result is 0
-  NULL      FLOAT     Result is 0.0
-  NULL       TEXT     Result is a NULL pointer
-  NULL       BLOB     Result is a NULL pointer
- INTEGER    FLOAT     Convert from integer to float
- INTEGER     TEXT     ASCII rendering of the integer
- INTEGER     BLOB     Same as INTEGER->TEXT
-  FLOAT    INTEGER    CAST to INTEGER
-  FLOAT      TEXT     ASCII rendering of the float
-  FLOAT      BLOB     CAST to BLOB
-  TEXT     INTEGER    CAST to INTEGER
-  TEXT      FLOAT     CAST to REAL
-  TEXT       BLOB     No change
-  BLOB     INTEGER    CAST to INTEGER
-  BLOB      FLOAT     CAST to REAL
-  BLOB       TEXT     CAST to TEXT, ensure zero terminator
+  NULL     INTEGER    结果是 0
+  NULL      FLOAT     结果是 0.0
+  NULL       TEXT     结果是 NULL 指针
+  NULL       BLOB     结果是 NULL 指针
+ INTEGER    FLOAT     从整数转换为浮点
+ INTEGER     TEXT     整数的 ASCII 渲染
+ INTEGER     BLOB     同 INTEGER->TEXT
+  FLOAT    INTEGER    转换为 INTEGER
+  FLOAT      TEXT     浮点的 ASCII 渲染
+  FLOAT      BLOB     转换为 BLOB
+  TEXT     INTEGER    转换为 INTEGER
+  TEXT      FLOAT     转换为 REAL
+  TEXT       BLOB     不改变
+  BLOB     INTEGER    转换为 INTEGER
+  BLOB      FLOAT     转换为 REAL
+  BLOB       TEXT     转换为 TEXT，确保零终止符
 
-Note that when type conversions occur, pointers returned by prior
-calls to sqlite3_column_blob(), sqlite3_column_text(), and/or
-sqlite3_column_text16() may be invalidated.
-Type conversions and pointer invalidations might occur
-in the following cases:
+注意发生类型转换时，先前调用 `sqlite3_column_blob()`、`sqlite3_column_text()` 和/或 `sqlite3_column_text16()` 返回的指针可能被失效。在以下情况下可能发生类型转换和指针失效：
 
--  The initial content is a BLOB and sqlite3_column_text() or
-sqlite3_column_text16() is called.  A zero-terminator might
-need to be added to the string.
+-  初始内容是 BLOB 且调用了 `sqlite3_column_text()` 或 `sqlite3_column_text16()`。可能需要向字符串添加零终止符。
 
--  The initial content is UTF-8 text and sqlite3_column_bytes16() or
-sqlite3_column_text16() is called.  The content must be converted
-to UTF-16.
+-  初始内容是 UTF-8 文本且调用了 `sqlite3_column_bytes16()` 或 `sqlite3_column_text16()`。内容必须转换为 UTF-16。
 
--  The initial content is UTF-16 text and sqlite3_column_bytes() or
-sqlite3_column_text() is called.  The content must be converted
-to UTF-8.
+## 查询的结果值（Result Values From A Query）
 
-Conversions between UTF-16be and UTF-16le are always done in place and do
-not invalidate a prior pointer, though of course the content of the buffer
-that the prior pointer references will have been modified.  Other kinds
-of conversion are done in place when it is possible, but sometimes they
-are not possible and in those cases prior pointers are invalidated.
+-  初始内容是 UTF-16 文本且调用了 `sqlite3_column_bytes()` 或 `sqlite3_column_text()`。内容必须转换为 UTF-8。
 
-The safest policy is to invoke these routines
-in one of the following ways:
+UTF-16be 和 UTF-16le 之间的转换总是原地完成，不会使先前指针失效，当然先前指针引用的缓冲区内容会被修改。其它种类的转换在可能时原地完成，但有时无法原地转换，此时先前指针被失效。
 
-- sqlite3_column_text() followed by sqlite3_column_bytes()
+最安全的策略是按以下方式之一调用这些例程：
 
-- sqlite3_column_blob() followed by sqlite3_column_bytes()
+-  `sqlite3_column_text()` 后接 `sqlite3_column_bytes()`
 
-- sqlite3_column_text16() followed by sqlite3_column_bytes16()
+-  `sqlite3_column_blob()` 后接 `sqlite3_column_bytes()`
 
-In other words, you should call sqlite3_column_text(),
-sqlite3_column_blob(), or sqlite3_column_text16() first to force the result
-into the desired format, then invoke sqlite3_column_bytes() or
-sqlite3_column_bytes16() to find the size of the result.  Do not mix calls
-to sqlite3_column_text() or sqlite3_column_blob() with calls to
-sqlite3_column_bytes16(), and do not mix calls to sqlite3_column_text16()
-with calls to sqlite3_column_bytes().
+-  `sqlite3_column_text16()` 后接 `sqlite3_column_bytes16()`
 
-The pointers returned are valid until a type conversion occurs as
-described above, or until sqlite3_step() or sqlite3_reset() or
-sqlite3_finalize() is called.  The memory space used to hold strings
-and BLOBs is freed automatically.  Do not pass the pointers returned
-from sqlite3_column_blob(), sqlite3_column_text(), etc. into
-sqlite3_free().
+换句话说，应首先调用 `sqlite3_column_text()`、`sqlite3_column_blob()` 或 `sqlite3_column_text16()` 把结果强制为所需格式，然后调用 `sqlite3_column_bytes()` 或 `sqlite3_column_bytes16()` 找出结果的大小。不要把 `sqlite3_column_text()` 或 `sqlite3_column_blob()` 的调用与 `sqlite3_column_bytes16()` 的调用混用，也不要把 `sqlite3_column_text16()` 的调用与 `sqlite3_column_bytes()` 的调用混用。
 
-As long as the input parameters are correct, these routines will only
-fail if an out-of-memory error occurs during a format conversion.
-Only the following subset of interfaces are subject to out-of-memory
-errors:
+返回的指针在发生上述类型转换、或调用 `sqlite3_step()`、`sqlite3_reset()` 或 `sqlite3_finalize()` 之前有效。用于保存字符串和 BLOB 的内存空间被自动释放。不要把 `sqlite3_column_blob()`、`sqlite3_column_text()` 等返回的指针传入 `sqlite3_free()`。
 
--  sqlite3_column_blob()
+只要输入参数正确，这些例程只在格式转换期间发生内存不足错误时失败。只有以下接口子集会发生内存不足错误：
 
--  sqlite3_column_text()
+-  `sqlite3_column_blob()`
 
--  sqlite3_column_text16()
+-  `sqlite3_column_text()`
 
--  sqlite3_column_bytes()
+-  `sqlite3_column_text16()`
 
--  sqlite3_column_bytes16()
+-  `sqlite3_column_bytes()`
 
-If an out-of-memory error occurs, then the return value from these
-routines is the same as if the column had contained an SQL NULL value.
-Valid SQL NULL returns can be distinguished from out-of-memory errors
-by invoking the sqlite3_errcode() immediately after the suspect
-return value is obtained and before any
-other SQLite interface is called on the same database connection.
+-  `sqlite3_column_bytes16()`
+
+若发生内存不足错误，则这些例程的返回值与列含 SQL NULL 值时相同。获得可疑返回值后、在对同一数据库连接调用任何其它 SQLite 接口之前，立即调用 `sqlite3_errcode()`，可区分有效的 SQL NULL 返回值与内存不足错误。
 
 ---
 
-## Low-Level Control Of Database Files
+## 数据库文件的低级控制（Low-Level Control Of Database Files）
 
 ```
-
 int sqlite3_file_control(sqlite3*, const char *zDbName, int op, void*);
-
 ```
 
-The sqlite3_file_control() interface makes a direct call to the
-xFileControl method for the sqlite3_io_methods object associated
-with a particular database identified by the second argument. The
-name of the database is "main" for the main database or "temp" for the
-TEMP database, or the name that appears after the AS keyword for
-databases that are added using the ATTACH SQL command.
-A NULL pointer can be used in place of "main" to refer to the
-main database file.
-The third and fourth parameters to this routine
-are passed directly through to the second and third parameters of
-the xFileControl method.  The return value of the xFileControl
-method becomes the return value of this routine.
+`sqlite3_file_control()` 接口直接调用与第二参数标识的特定数据库关联的 sqlite3_io_methods 对象的 xFileControl 方法。数据库的名字对主数据库是 "main"，对 TEMP 数据库是 "temp"，或用 ATTACH SQL 命令添加的数据库 AS 关键字之后出现的名字。可用 NULL 指针代替 "main" 引用主数据库文件。此例程的第三和第四参数直接传给 xFileControl 方法的第二和第三参数。xFileControl 方法的返回值成为此例程的返回值。
 
-A few opcodes for sqlite3_file_control() are handled directly
-by the SQLite core and never invoke the
-sqlite3_io_methods.xFileControl method.
-The SQLITE_FCNTL_FILE_POINTER value for the op parameter causes
-a pointer to the underlying sqlite3_file object to be written into
-the space pointed to by the 4th parameter.  The
-SQLITE_FCNTL_JOURNAL_POINTER works similarly except that it returns
-the sqlite3_file object associated with the journal file instead of
-the main database.  The SQLITE_FCNTL_VFS_POINTER opcode returns
-a pointer to the underlying sqlite3_vfs object for the file.
-The SQLITE_FCNTL_DATA_VERSION returns the data version counter
-from the pager.
+`sqlite3_file_control()` 的几个操作码由 SQLite 核心直接处理，从不调用 sqlite3_io_methods.xFileControl 方法。op 参数的 `SQLITE_FCNTL_FILE_POINTER` 值使指向底层 sqlite3_file 对象的指针被写入第四参数指向的空间。`SQLITE_FCNTL_JOURNAL_POINTER` 工作方式类似，区别在于它返回与日志文件关联的 sqlite3_file 对象，而非主数据库。`SQLITE_FCNTL_VFS_POINTER` 操作码返回该文件的底层 sqlite3_vfs 对象指针。`SQLITE_FCNTL_DATA_VERSION` 从 pager 返回数据版本计数器。
 
-If the second parameter (zDbName) does not match the name of any
-open database file, then SQLITE_ERROR is returned.  This error
-code is not remembered and will not be recalled by sqlite3_errcode()
-or sqlite3_errmsg().  The underlying xFileControl method might
-also return SQLITE_ERROR.  There is no way to distinguish between
-an incorrect zDbName and an SQLITE_ERROR return from the underlying
-xFileControl method.
+若第二参数（zDbName）与任何打开的数据库文件的名字不匹配，则返回 `SQLITE_ERROR`。此错误码不会被记住，也不会被 `sqlite3_errcode()` 或 `sqlite3_errmsg()` 重新调用。底层 xFileControl 方法也可能返回 `SQLITE_ERROR`。无法区分错误的 zDbName 与底层 xFileControl 方法返回的 `SQLITE_ERROR`。
 
-See also: file control opcodes
+另见：文件控制操作码
 
 ---
 
-## Create Or Redefine SQL Functions
+## 创建或重定义 SQL 函数（Create Or Redefine SQL Functions）
 
 ```
-
 int sqlite3_create_function(
   sqlite3 *db,
   const char *zFunctionName,
@@ -14136,123 +8408,34 @@ int sqlite3_create_window_function(
   void (*xInverse)(sqlite3_context*,int,sqlite3_value**),
   void(*xDestroy)(void*)
 );
-
 ```
 
-These functions (collectively known as "function creation routines")
-are used to add SQL functions or aggregates or to redefine the behavior
-of existing SQL functions or aggregates. The only differences between
-the three "sqlite3_create_function*" routines are the text encoding
-expected for the second parameter (the name of the function being
-created) and the presence or absence of a destructor callback for
-the application data pointer. Function sqlite3_create_window_function()
-is similar, but allows the user to supply the extra callback functions
-needed by aggregate window functions.
+这些函数（合称"函数创建例程"）用于添加 SQL 函数或聚合函数、或重定义现有 SQL 函数或聚合函数的行为。三个 "sqlite3_create_function*" 例程之间的唯一区别是第二参数（被创建函数的名字）预期的文本编码、以及应用数据指针的析构回调存在与否。函数 `sqlite3_create_window_function()` 类似，但允许用户提供聚合窗口函数所需的额外回调函数。
 
-The first parameter is the database connection to which the SQL
-function is to be added.  If an application uses more than one database
-connection then application-defined SQL functions must be added
-to each database connection separately.
+第一参数是要添加 SQL 函数的数据库连接。若应用使用多个数据库连接，则应用定义 SQL 函数必须分别添加到每个数据库连接。
 
-The second parameter is the name of the SQL function to be created or
-redefined.  The length of the name is limited to 255 bytes in a UTF-8
-representation, exclusive of the zero-terminator.  Note that the name
-length limit is in UTF-8 bytes, not characters nor UTF-16 bytes.
-Any attempt to create a function with a longer name
-will result in SQLITE_MISUSE being returned.
+第二参数是要创建或重定义的 SQL 函数的名字。名字的长度在 UTF-8 表示中限制为 255 字节（不含零终止符）。注意名字长度限制以 UTF-8 字节计，不是字符、也不是 UTF-16 字节。任何创建更长名字函数的尝试都会导致返回 `SQLITE_MISUSE`。
 
-The third parameter (nArg)
-is the number of arguments that the SQL function or
-aggregate takes. If this parameter is -1, then the SQL function or
-aggregate may take any number of arguments between 0 and the limit
-set by sqlite3_limit(SQLITE_LIMIT_FUNCTION_ARG).  If the third
-parameter is less than -1 or greater than 127 then the behavior is
-undefined.
+第三参数（nArg）是 SQL 函数或聚合函数接受的参数个数。若此参数是 -1，则 SQL 函数或聚合函数可接受 0 到 `sqlite3_limit(SQLITE_LIMIT_FUNCTION_ARG)` 设置的限制之间的任意参数个数。若第三参数小于 -1 或大于 127，则行为未定义。
 
-The fourth parameter, eTextRep, specifies what
-text encoding this SQL function prefers for
-its parameters.  The application should set this parameter to
-SQLITE_UTF16LE if the function implementation invokes
-sqlite3_value_text16le() on an input, or SQLITE_UTF16BE if the
-implementation invokes sqlite3_value_text16be() on an input, or
-SQLITE_UTF16 if sqlite3_value_text16() is used, or SQLITE_UTF8
-otherwise.  The same SQL function may be registered multiple times using
-different preferred text encodings, with different implementations for
-each encoding.
-When multiple implementations of the same function are available, SQLite
-will pick the one that involves the least amount of data conversion.
+第四参数 eTextRep 指定此 SQL 函数为其参数偏好的文本编码。若函数实现对输入调用 `sqlite3_value_text16le()`，应用应把此参数设为 `SQLITE_UTF16LE`；若实现对输入调用 `sqlite3_value_text16be()`，设为 `SQLITE_UTF16BE`；若使用 `sqlite3_value_text16()`，设为 `SQLITE_UTF16`；否则设为 `SQLITE_UTF8`。同一 SQL 函数可用不同的偏好文本编码多次注册，每种编码用不同的实现。同一函数的多个实现可用时，SQLite 选择涉及最少数据转换的那个。
 
-The fourth parameter may optionally be ORed with SQLITE_DETERMINISTIC
-to signal that the function will always return the same result given
-the same inputs within a single SQL statement.  Most SQL functions are
-deterministic.  The built-in random() SQL function is an example of a
-function that is not deterministic.  The SQLite query planner is able to
-perform additional optimizations on deterministic functions, so use
-of the SQLITE_DETERMINISTIC flag is recommended where possible.
+第四参数可选地与 `SQLITE_DETERMINISTIC` 或运算，表示给定相同输入、在单个 SQL 语句内函数将总是返回相同结果。大多数 SQL 函数是确定性的。内置 random() SQL 函数是不确定性函数的例子。SQLite 查询规划器能对确定性函数做额外优化，因此尽可能使用 `SQLITE_DETERMINISTIC` 标志。
 
-The fourth parameter may also optionally include the SQLITE_DIRECTONLY
-flag, which if present prevents the function from being invoked from
-within VIEWs, TRIGGERs, CHECK constraints, generated column expressions,
-index expressions, or the WHERE clause of partial indexes.
+第四参数也可可选地包含 `SQLITE_DIRECTONLY` 标志，若存在则阻止从 VIEW、TRIGGER、CHECK 约束、生成列表达式、索引表达式或部分索引的 WHERE 子句内调用该函数。
 
-For best security, the SQLITE_DIRECTONLY flag is recommended for
-all application-defined SQL functions that do not need to be
-used inside of triggers, views, CHECK constraints, or other elements of
-the database schema.  This flag is especially recommended for SQL
-functions that have side effects or reveal internal application state.
-Without this flag, an attacker might be able to modify the schema of
-a database file to include invocations of the function with parameters
-chosen by the attacker, which the application will then execute when
-the database file is opened and read.
+为获得最佳安全性，建议所有不需要在触发器、视图、CHECK 约束或数据库 schema 的其它元素内使用的应用定义 SQL 函数都使用 `SQLITE_DIRECTONLY` 标志。此标志特别推荐给有副作用或揭示内部应用状态的 SQL 函数。没有此标志，攻击者可能修改数据库文件的 schema，使其包含带攻击者选择参数的函数调用，应用打开并读取数据库文件时随后会执行这些调用。
 
-The fifth parameter is an arbitrary pointer.  The implementation of the
-function can gain access to this pointer using sqlite3_user_data().
+第五参数是任意指针。函数的实现可用 `sqlite3_user_data()` 访问此指针。
 
-The sixth, seventh and eighth parameters passed to the three
-"sqlite3_create_function*" functions, xFunc, xStep and xFinal, are
-pointers to C-language functions that implement the SQL function or
-aggregate. A scalar SQL function requires an implementation of the xFunc
-callback only; NULL pointers must be passed as the xStep and xFinal
-parameters. An aggregate SQL function requires an implementation of xStep
-and xFinal and NULL pointer must be passed for xFunc. To delete an existing
-SQL function or aggregate, pass NULL pointers for all three function
-callbacks.
+传给三个 "sqlite3_create_function*" 函数的第六、第七和第八参数 xFunc、xStep 和 xFinal 是指向实现 SQL 函数或聚合函数的 C 语言函数的指针。标量 SQL 函数只需 xFunc 回调的实现；必须把 NULL 指针作为 xStep 和 xFinal 参数传入。聚合 SQL 函数需要 xStep 和 xFinal 的实现，必须为 xFunc 传 NULL 指针。要删除现有 SQL 函数或聚合函数，为三个函数回调都传 NULL 指针。
 
-The sixth, seventh, eighth and ninth parameters (xStep, xFinal, xValue
-and xInverse) passed to sqlite3_create_window_function are pointers to
-C-language callbacks that implement the new function. xStep and xFinal
-must both be non-NULL. xValue and xInverse may either both be NULL, in
-which case a regular aggregate function is created, or must both be
-non-NULL, in which case the new function may be used as either an aggregate
-or aggregate window function. More details regarding the implementation
-of aggregate window functions are
-available here.
+传给 `sqlite3_create_window_function` 的第六、第七、第八和第九参数（xStep、xFinal、xValue 和 xInverse）是指向实现新函数的 C 语言回调的指针。xStep 和 xFinal 必须都非 NULL。xValue 和 xInverse 可都传 NULL（此时创建普通聚合函数），或必须都非 NULL（此时新函数既可用作聚合函数也可用作聚合窗口函数）。关于聚合窗口函数实现的更多细节可在此处获得。
 
-If the final parameter to sqlite3_create_function_v2() or
-sqlite3_create_window_function() is not NULL, then it is the destructor for
-the application data pointer. The destructor is invoked when the function
-is deleted, either by being overloaded or when the database connection
-closes. The destructor is also invoked if the call to
-sqlite3_create_function_v2() fails.  When the destructor callback is
-invoked, it is passed a single argument which is a copy of the application
-data pointer which was the fifth parameter to sqlite3_create_function_v2().
+若传给 `sqlite3_create_function_v2()` 或 `sqlite3_create_window_function()` 的最后参数非 NULL，则它是应用数据指针的析构函数。函数被删除时调用析构函数——或被重载时、或数据库连接关闭时。对 `sqlite3_create_function_v2()` 的调用失败时也调用析构函数。调用析构回调时，传入单个参数，即 `sqlite3_create_function_v2()` 第五参数的应用数据指针的副本。
 
-It is permitted to register multiple implementations of the same
-functions with the same name but with either differing numbers of
-arguments or differing preferred text encodings.  SQLite will use
-the implementation that most closely matches the way in which the
-SQL function is used.  A function implementation with a non-negative
-nArg parameter is a better match than a function implementation with
-a negative nArg.  A function where the preferred text encoding
-matches the database encoding is a better
-match than a function where the encoding is different.
-A function where the encoding difference is between UTF16le and UTF16be
-is a closer match than a function where the encoding difference is
-between UTF8 and UTF16.
+允许以相同名字、但参数个数不同或偏好文本编码不同注册同一函数的多个实现。SQLite 使用与 SQL 函数使用方式最匹配的实现。nArg 参数非负的函数实现比 nArg 为负的实现更匹配。偏好文本编码匹配数据库编码的函数比编码不同的函数更匹配。编码差异在 UTF16le 和 UTF16be 之间的函数比编码差异在 UTF8 和 UTF16 之间的函数更匹配。
 
-Built-in functions may be overloaded by new application-defined functions.
+内置函数可被新的应用定义函数重载。
 
-An application-defined function is permitted to call other
-SQLite interfaces.  However, such calls must not
-close the database connection nor finalize or reset the prepared
-statement in which the function is running.
+应用定义函数允许调用其它 SQLite 接口。但这些调用不得关闭数据库连接、也不得终结或重置函数运行所在的预编译语句。
